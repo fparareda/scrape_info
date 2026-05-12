@@ -1,0 +1,17 @@
+name: Scrape · CA licensing bodies (ECRA Ontario)
+
+# Canadian provincial licensing bodies. Today only ECRA (Ontario
+# electricians, ~18k licensed). BCSA + CMMTQ blocked by robots /
+# B2C auth wall. Monthly — licence statuses change slowly.
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"  # 1st of month 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ca-licensing

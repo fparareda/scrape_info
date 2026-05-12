@@ -1,0 +1,28 @@
+name: Scrape · Google Places (PAID)
+
+# Google Places API (Nearby Search + Place Details). PAID — sized to
+# spend ~96% of the $200/mo free Maps credit per dispatch ($192 ≈ 6000
+# requests at $32/1k Pro Text Search).
+#
+# Cadence: workflow_dispatch only. Run once per billing cycle to use
+# the full credit; running multiple times within a cycle bills Google
+# directly. The internal budget guard in google-places.ts halts the
+# run if the request count exceeds `budget`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      budget:
+        description: "Max API requests this run (default 6000 ≈ $192 of $200 credit)"
+        required: false
+        default: "6000"
+        type: string
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: google
+      timeout_minutes: 240
+      budget: ${{ inputs.budget }}

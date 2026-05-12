@@ -1,0 +1,21 @@
+name: Scrape · US bar associations + AILA
+
+# US state bar associations (CA active; NY/TX stubbed) + AILA immigration
+# specialty bar (stubbed). CalBar QuickSearch + Detail HTML — server
+# rendered, no JS. Immigration practice areas tagged with
+# metadata.wedge_specialty='extranjeria' (Prolio revenue wedge in ES).
+# Cap: 1000 rows / 200 detail-page fetches per run.
+#
+# Bar renewals are annual; data is slow-moving — monthly cron is plenty.
+
+on:
+  schedule:
+    - cron: "0 5 3 * *" # day 3 of each month, 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: us-bars

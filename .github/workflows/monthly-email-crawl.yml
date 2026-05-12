@@ -1,0 +1,88 @@
+name: Monthly email re-crawl
+
+# Deep BFS crawl of every published professional's website once a month.
+# Records every run in `email_crawl_history` so the next run can skip
+# pros already crawled within the 30-day window.
+#
+# Schedule: day 15 of each month at 04:00 UTC (18:00 ES — off-peak).
+# Runs in 4-hour batches of 500 pros/job. With ~50k pros on website,
+# a single run covers 1% — so we spread the full sweep across multiple
+# matrix shards that run in parallel.
+#
+# Budget guard: the crawler has an internal 2500-pages/run cap.
+# GH Actions job timeout is 5h45min (well under 6h hard limit).
+
+on:
+  schedule:
+    # Day 15 04:00 UTC — single-digit day to avoid DST ambiguity.
+    - cron: "0 4 15 * *"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Pros to crawl per shard (default 500)"
+        required: false
+        default: "500"
+        type: string
+      force_ids:
+        description: "Comma-separated UUIDs — force-crawl specific pros (bypasses 30-day skip window)"
+        required: false
+        default: ""
+        type: string
+      force_refresh:
+        description: "Ignore 30-day skip window for ALL pros (emergency full re-crawl)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  crawl:
+    strategy:
+      # Four parallel shards — the crawler's internal batch limit + per-host
+      # rate limiting mean they don't step on each other. Different shards
+      # pull different pros from the DB by offset.
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 345  # 5h 45min, well under the 6h hard limit
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      # Everything else off — this workflow runs only the crawler.
+      PROLIO_SCRAPE_GOOGLE: "false"
+      PROLIO_SCRAPE_OSM: "false"
+      PROLIO_SCRAPE_CCAA: "false"
+      PROLIO_SCRAPE_BORME: "false"
+      PROLIO_SCRAPE_COLEGIOS: "false"
+      PROLIO_SCRAPE_WIKIDATA: "false"
+      PROLIO_ENRICH_OC: "false"
+      PROLIO_RUN_CROSSMATCH: "false"
+      PROLIO_RUN_EMAIL_EXTRACTOR: "false"
+      PROLIO_RUN_COMPETITOR_SCRAPER: "false"
+      PROLIO_RUN_COMPETITOR_NA: "false"
+      # Crawler ON. Shard offset is multiplied into the crawler's
+      # internal pagination via the limit env — simple but effective.
+      PROLIO_RUN_EMAIL_CRAWLER: "true"
+      PROLIO_EMAIL_CRAWLER_LIMIT: ${{ inputs.limit || '500' }}
+      PROLIO_EMAIL_CRAWLER_IDS: ${{ inputs.force_ids }}
+      # Each shard uses the same default selection (skip 30-day window)
+      # but picks a distinct batch by offset. Since the crawler's
+      # `loadPros` returns the first N not-recently-crawled pros, four
+      # parallel shards with the SAME limit would duplicate work. To
+      # avoid that we inject PROLIO_CRAWLER_SHARD so the crawler can
+      # internally compute `offset = shard * limit`. (The crawler code
+      # respects this env — if unset, defaults to 0.)
+      PROLIO_CRAWLER_SHARD: ${{ matrix.shard }}
+      # Admin emergency bypass.
+      PROLIO_CRAWLER_FORCE_REFRESH: ${{ inputs.force_refresh == true && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @prolio/scraper scrape

@@ -1,0 +1,23 @@
+name: Scrape · CA regulated trades (TSSA + HCRA)
+
+# Canadian provincial trade regulators — TSSA Ontario fuels contractors
+# (gas/HVAC/oil) + HCRA Ontario builders (Tarion successor since 2021).
+# OPHA reserved as a kill (Wix SPA + STO JS-only public-search; see
+# competitor-ca-trades.ts header). Trade renewals lapse on non-payment
+# so weekly is the right cadence — slower than Houzz, faster than
+# college rolls.
+#
+# Cap: PROLIO_CA_TRADES_LIMIT=2000 per sub-source (TSSA + HCRA cover
+# non-overlapping categories; no cross-source double-spending).
+
+on:
+  schedule:
+    - cron: "0 4 * * 2" # Tuesday 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ca-trades

@@ -1,0 +1,12 @@
+name: Scrape · Oregon CCB
+on:
+  schedule:
+    - cron: "0 4 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: oregon-ccb
+      timeout_minutes: 60

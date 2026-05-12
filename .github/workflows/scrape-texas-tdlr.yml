@@ -1,0 +1,12 @@
+name: Scrape · Texas TDLR
+on:
+  schedule:
+    - cron: "0 1 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: texas-tdlr
+      timeout_minutes: 60

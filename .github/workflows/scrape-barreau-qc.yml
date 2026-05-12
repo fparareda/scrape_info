@@ -1,0 +1,12 @@
+name: Scrape · Barreau du Québec
+on:
+  schedule:
+    - cron: "0 1 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: barreau-qc
+      timeout_minutes: 90

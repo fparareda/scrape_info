@@ -1,0 +1,238 @@
+name: _scrape-runner
+
+# Reusable workflow that runs ONE scraper/enricher source per call.
+# Per-source workflows (`scrape-osm.yml`, `scrape-borme.yml`, etc.)
+# call this with `inputs.source` set to a supported slug; everything
+# else stays off so we never accidentally run two heavy sources in
+# parallel inside a single GH Actions job.
+#
+# To add a new source:
+#   1. Add its env flag mapping below.
+#   2. Create a thin `scrape-{slug}.yml` (or `enrich-{slug}.yml`) with
+#      its own cron + `uses: ./.github/workflows/_scrape-runner.yml`.
+#
+# Source slugs (18 total):
+#   Free directories:    osm · ccaa · wikidata · overture
+#   Spanish directories: borme · pa · colegios-medicos
+#   US/CA directories:   ca-licensing · ca-professional · ca-trades · cslb · npi
+#   Marketplaces:        competitor-na · competitor-es-mega · houzz · us-lawyers · us-bars
+#   Email discovery:     pattern-mx · email-extractor · email-crawler
+#   Enrichment:          crossmatch · gleif · industry-ca
+#   Paid:                google
+#
+# Note: `industry-ca` is wired but blocked — the documented JSON API
+# does not exist (pre-flight 2026-04-24). Reserved for a future
+# Playwright adapter; today the slug is a no-op.
+#
+# `google` is paid — only runs from a per-source workflow that
+# gates it behind manual workflow_dispatch (Maps free tier exhausted
+# on this account until billing renews 2026-05-22).
+
+on:
+  workflow_call:
+    inputs:
+      source:
+        description: "Source slug — see list at top of file"
+        type: string
+        required: true
+      shard:
+        description: "Shard scope (default: rest — sources are city-independent)"
+        type: string
+        required: false
+        default: "rest"
+      timeout_minutes:
+        description: "Per-job timeout (default 60)"
+        type: number
+        required: false
+        default: 60
+      budget:
+        description: "Source-specific run budget (currently only `google` honours this — wired to PROLIO_PLACES_BUDGET in requests, default 6000 ≈ $192 of the $200/mo Maps credit)"
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      PROLIO_SCRAPE_SHARD: ${{ inputs.shard }}
+      PROLIO_REQUESTED_SHARD: ${{ inputs.shard }}
+
+      # SOURCE FLAG MATRIX. Exactly one true per run.
+
+      # Per-run budget plumbing. Only `google` reads PROLIO_PLACES_BUDGET
+      # today; other sources have their own LIMIT envs hard-coded below.
+      PROLIO_PLACES_BUDGET: ${{ inputs.budget }}
+
+      # Map sources / directories
+      PROLIO_SCRAPE_GOOGLE:    ${{ inputs.source == 'google' && 'true' || 'false' }}
+      PROLIO_SCRAPE_OSM:       ${{ inputs.source == 'osm' && 'true' || 'false' }}
+      PROLIO_SCRAPE_CCAA:      ${{ inputs.source == 'ccaa' && 'true' || 'false' }}
+      PROLIO_SCRAPE_WIKIDATA:  ${{ inputs.source == 'wikidata' && 'true' || 'false' }}
+      PROLIO_SCRAPE_OVERTURE:  ${{ inputs.source == 'overture' && 'true' || 'false' }}
+      PROLIO_SCRAPE_BORME:     ${{ inputs.source == 'borme' && 'true' || 'false' }}
+      PROLIO_SCRAPE_PA:        ${{ inputs.source == 'pa' && 'true' || 'false' }}
+      # Old colegios scraper is permanently disabled (WAF-blocked from
+      # datacenter IPs). Run via launchd locally if needed.
+      PROLIO_SCRAPE_COLEGIOS: "false"
+
+      # Marketplaces / competitors
+      PROLIO_RUN_COMPETITOR_NA:                ${{ inputs.source == 'competitor-na' && 'true' || 'false' }}
+      PROLIO_RUN_COMPETITOR_ES_MEGA:           ${{ inputs.source == 'competitor-es-mega' && 'true' || 'false' }}
+      PROLIO_RUN_COMPETITOR_SCRAPER:           ${{ inputs.source == 'competitor-es-mega' && 'true' || 'false' }}
+      PROLIO_RUN_COMPETITOR_HOUZZ:             ${{ inputs.source == 'houzz' && 'true' || 'false' }}
+      PROLIO_RUN_US_LAWYERS:                   ${{ inputs.source == 'us-lawyers' && 'true' || 'false' }}
+      PROLIO_RUN_US_BARS:                      ${{ inputs.source == 'us-bars' && 'true' || 'false' }}
+      PROLIO_RUN_COMPETITOR_ES_COLEGIOS_MEDICOS: ${{ inputs.source == 'colegios-medicos' && 'true' || 'false' }}
+      PROLIO_RUN_COLEGIOS_MEDICOS:             ${{ inputs.source == 'colegios-medicos' && 'true' || 'false' }}
+      PROLIO_RUN_COMPETITOR_CA_LICENSING:      ${{ inputs.source == 'ca-licensing' && 'true' || 'false' }}
+      PROLIO_RUN_CA_PROFESSIONAL:              ${{ inputs.source == 'ca-professional' && 'true' || 'false' }}
+      PROLIO_RUN_CA_TRADES:                    ${{ inputs.source == 'ca-trades' && 'true' || 'false' }}
+      PROLIO_RUN_CSLB:                         ${{ inputs.source == 'cslb' && 'true' || 'false' }}
+
+      # Email discovery
+      PROLIO_RUN_PATTERN_MX:        ${{ inputs.source == 'pattern-mx' && 'true' || 'false' }}
+      PROLIO_RUN_EMAIL_EXTRACTOR:   ${{ inputs.source == 'email-extractor' && 'true' || 'false' }}
+      PROLIO_RUN_EMAIL_CRAWLER:     ${{ inputs.source == 'email-crawler' && 'true' || 'false' }}
+
+      # Enrichment
+      PROLIO_RUN_CROSSMATCH: ${{ inputs.source == 'crossmatch' && 'true' || 'false' }}
+      PROLIO_RUN_GLEIF:      ${{ inputs.source == 'gleif' && 'true' || 'false' }}
+      # industry-ca was killed pre-flight 2026-04-24 (the documented
+      # JSON API at /cc/lgcy/api/v2/corporations does not exist). The
+      # slug is wired here so a future Playwright-based adapter can
+      # land without a runner edit; today the flag is a no-op.
+      PROLIO_RUN_INDUSTRY_CA: ${{ inputs.source == 'industry-ca' && 'true' || 'false' }}
+
+      # US healthcare registry
+      PROLIO_RUN_NPI: ${{ inputs.source == 'npi' && 'true' || 'false' }}
+      # NPI cap bumped 200→1000/state on 2026-05-07. With 51 states ×
+      # 5 taxonomies × 1000 the theoretical ceiling is ~255k US
+      # healthcare pros per run; in practice the per-state list query
+      # taps out before that. This single bump is the highest-leverage
+      # US move available (NPI is the only national federal bulk
+      # source).
+      PROLIO_NPI_LIMIT_PER_STATE: "1000"
+
+      # US contractor / professional state boards (added 2026-05). Each
+      # is a CSV bulk download from the state's open-data portal; URLs
+      # are best-effort and may need verification on first run (override
+      # via PROLIO_<NAME>_CSV).
+      PROLIO_RUN_FLORIDA_DBPR:        ${{ inputs.source == 'florida-dbpr' && 'true' || 'false' }}
+      PROLIO_RUN_TEXAS_TDLR:          ${{ inputs.source == 'texas-tdlr' && 'true' || 'false' }}
+      PROLIO_RUN_ARIZONA_ROC:         ${{ inputs.source == 'arizona-roc' && 'true' || 'false' }}
+      PROLIO_RUN_WASHINGTON_LI:       ${{ inputs.source == 'washington-li' && 'true' || 'false' }}
+      PROLIO_RUN_OREGON_CCB:          ${{ inputs.source == 'oregon-ccb' && 'true' || 'false' }}
+      PROLIO_RUN_NEVADA_NSCB:         ${{ inputs.source == 'nevada-nscb' && 'true' || 'false' }}
+      PROLIO_RUN_ILLINOIS_IDFPR:      ${{ inputs.source == 'illinois-idfpr' && 'true' || 'false' }}
+      PROLIO_RUN_NEW_YORK_DOS:        ${{ inputs.source == 'new-york-dos' && 'true' || 'false' }}
+      PROLIO_RUN_NORTH_CAROLINA_LBC:  ${{ inputs.source == 'north-carolina-lbc' && 'true' || 'false' }}
+      PROLIO_RUN_VIRGINIA_DPOR:       ${{ inputs.source == 'virginia-dpor' && 'true' || 'false' }}
+      PROLIO_RUN_MASSACHUSETTS_DPL:   ${{ inputs.source == 'massachusetts-dpl' && 'true' || 'false' }}
+      PROLIO_RUN_COLORADO_DORA:       ${{ inputs.source == 'colorado-dora' && 'true' || 'false' }}
+      PROLIO_RUN_GEORGIA_PLB:         ${{ inputs.source == 'georgia-plb' && 'true' || 'false' }}
+      PROLIO_RUN_PENNSYLVANIA_BPOA:   ${{ inputs.source == 'pennsylvania-bpoa' && 'true' || 'false' }}
+      PROLIO_RUN_WISCONSIN_DSPS:      ${{ inputs.source == 'wisconsin-dsps' && 'true' || 'false' }}
+      PROLIO_RUN_MINNESOTA_DLI:       ${{ inputs.source == 'minnesota-dli' && 'true' || 'false' }}
+      PROLIO_RUN_MISSOURI_DPR:        ${{ inputs.source == 'missouri-dpr' && 'true' || 'false' }}
+      PROLIO_RUN_OHIO_ELICENSE:       ${{ inputs.source == 'ohio-elicense' && 'true' || 'false' }}
+      PROLIO_RUN_MICHIGAN_LARA:       ${{ inputs.source == 'michigan-lara' && 'true' || 'false' }}
+      PROLIO_RUN_MARYLAND_DLLR:       ${{ inputs.source == 'maryland-dllr' && 'true' || 'false' }}
+      PROLIO_RUN_NEW_JERSEY_DCA:      ${{ inputs.source == 'new-jersey-dca' && 'true' || 'false' }}
+      PROLIO_RUN_TENNESSEE_TDCI:      ${{ inputs.source == 'tennessee-tdci' && 'true' || 'false' }}
+
+      # France national registries. CNB via data.gouv.fr CSV API
+      # (Lov2 license — commercial OK). Architectes via POST form on
+      # annuaire.architectes.org (no captcha; iterates by postal code).
+      # CNOM (médecins) blocked by CAPTCHA — not wired here. Sirene
+      # deferred until INSEE OAuth credentials are provisioned.
+      PROLIO_RUN_CNB_AVOCATS:           ${{ inputs.source == 'cnb-avocats' && 'true' || 'false' }}
+      PROLIO_RUN_ARCHITECTES_FR:        ${{ inputs.source == 'architectes-fr' && 'true' || 'false' }}
+      PROLIO_RUN_OEC_FR:                ${{ inputs.source == 'oec-fr' && 'true' || 'false' }}
+      PROLIO_RUN_ORDRE_VET_FR:          ${{ inputs.source == 'ordre-vet-fr' && 'true' || 'false' }}
+      PROLIO_ORDRE_VET_FR_LIMIT:        "2000"
+      PROLIO_RUN_ANNUAIRE_SANTE_AMELI:  ${{ inputs.source == 'annuaire-sante-ameli' && 'true' || 'false' }}
+      PROLIO_RUN_RPPS_FR:               ${{ inputs.source == 'rpps-fr' && 'true' || 'false' }}
+
+      # Mexico (added 2026-05-07).
+      PROLIO_RUN_DOCTORALIA_MX:         ${{ inputs.source == 'doctoralia-mx' && 'true' || 'false' }}
+      PROLIO_RUN_SENASICA_MX_VET:       ${{ inputs.source == 'senasica-mx-vet' && 'true' || 'false' }}
+      PROLIO_RUN_DENUE_MX:              ${{ inputs.source == 'denue-mx' && 'true' || 'false' }}
+
+      # CA Quebec + BC provincial regulators. HTML scrapers — each was
+      # pre-flighted against robots.txt before adding (Law Society BC
+      # was excluded because it Disallows the lawyer lookup paths).
+      PROLIO_RUN_CMQ:        ${{ inputs.source == 'cmq' && 'true' || 'false' }}
+      PROLIO_RUN_BARREAU_QC: ${{ inputs.source == 'barreau-qc' && 'true' || 'false' }}
+      PROLIO_RUN_ODQ:        ${{ inputs.source == 'odq' && 'true' || 'false' }}
+      PROLIO_RUN_OAQ:        ${{ inputs.source == 'oaq' && 'true' || 'false' }}
+      PROLIO_RUN_CPSBC:      ${{ inputs.source == 'cpsbc' && 'true' || 'false' }}
+
+      # CA Ontario architects (OAA, added 2026-05-07). HTML scraper
+      # behind a Sucuri JS challenge — solved per-run by the source.
+      # Listing only exposes name + type + status; addresses live on
+      # the practices directory which uses ASP.NET WebForms postbacks
+      # (not wired here).
+      PROLIO_RUN_OAA:        ${{ inputs.source == 'oaa' && 'true' || 'false' }}
+
+      # ES national colegios. HTML scrapers — datacenter-IP WAF risk
+      # similar to paginas-amarillas. If first runs come back empty, the
+      # fallback is the local launchd path used by paginas-amarillas
+      # (see apps/scraper/launchd/).
+      PROLIO_RUN_CGAE:  ${{ inputs.source == 'cgae' && 'true' || 'false' }}
+      PROLIO_RUN_CSCAE: ${{ inputs.source == 'cscae' && 'true' || 'false' }}
+
+      # Default budget knobs — per-source workflows can override via
+      # GH Actions vars or by setting an `env:` block before `uses:`.
+      PROLIO_BORME_DAYS: "7"      # bumped 1→7 days (weekly back-catalogue per run)
+      PROLIO_PATTERN_MX_LIMIT: "5000"  # bumped 1k→5k
+      PROLIO_HOUZZ_LIMIT: "2000"  # bumped 500→2k
+      PROLIO_US_LAWYERS_LIMIT: "5000"  # bumped 1k→5k 2026-05-07
+      PROLIO_US_BARS_LIMIT: "5000"                # bumped 1k→5k
+      PROLIO_US_BARS_DETAILS: "500"                # bumped 200→500
+      PROLIO_COMPETITOR_NA_LIMIT: "5000"           # bumped 2k→5k
+      PROLIO_COMPETITOR_ES_MEGA_LIMIT: "5000"      # bumped 2k→5k
+      PROLIO_COMPETITOR_CA_LICENSING_LIMIT: "2000" # bumped 500→2k (ECRA has ~18k electricians)
+      PROLIO_CA_PROFESSIONAL_LIMIT: "5000"         # bumped 1k→5k (RCDSO alone fetched 20k+)
+      PROLIO_CA_TRADES_LIMIT: "10000"              # bumped 2k→10k
+      PROLIO_CSLB_LIMIT: "10000"                   # bumped 2k→10k (CSLB has ~280k CA contractors)
+      PROLIO_COLEGIOS_MEDICOS_LIMIT: "2000"        # bumped 500→2k
+      # Doctoralia ES — bumped 1000→10000 on 2026-05-07. Source covers
+      # ES medicina + psicologia + dentista + fisioterapia (4 of 16
+      # categories); previous cap delivered ~547 rows total per run
+      # which barely scratched the ~150k professionals indexed. 10k
+      # keeps each run under 3 hours at the 1 req/sec polite delay.
+      PROLIO_DOCTORALIA_LIMIT: "10000"
+      PROLIO_EMAIL_EXTRACTOR_LIMIT: "5000"      # bumped 1k→5k 2026-05-07
+      PROLIO_EMAIL_CRAWLER_LIMIT: "2000"        # bumped 500→2k
+      PROLIO_GLEIF_LIMIT: "20000"               # bumped 10k→20k
+
+      # Verified-working FR/MX sources from earlier runs. Bump aggressively
+      # to push past the initial-discovery 5k caps now that we know they
+      # land cleanly. Each is a single CSV download or paginated API,
+      # so cap bumps don't hammer the host.
+      PROLIO_CNB_AVOCATS_LIMIT: "70000"         # full dataset is ~70k abogados
+      PROLIO_ARCHITECTES_FR_LIMIT: "20000"      # full ~30k national, capped to be safe
+      PROLIO_OEC_FR_LIMIT: "5000"               # OEC ~22k national; HTML scrape, polite cap
+      PROLIO_ANNUAIRE_SANTE_AMELI_LIMIT: "100000" # libéral pros FR ~600k, take 100k
+      PROLIO_RPPS_FR_LIMIT: "100000"            # RPPS national ~1.7M activity rows; cap to keep run under 4h
+
+      PROLIO_DENUE_MX_LIMIT: "100000"           # DENUE has 5M; 100k spread across 4 sectors
+      PROLIO_SENASICA_MX_VET_LIMIT: "20000"     # full SENASICA ~6k, leave headroom
+      PROLIO_DOCTORALIA_MX_LIMIT: "10000"       # boost in case Cloudflare lifts
+      PROLIO_OAA_LIMIT: "10000"                 # OAA architects ~8.7k total; 10k headroom
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: scrape ${{ inputs.source }}
+        run: npm run scrape

@@ -1,0 +1,136 @@
+name: Agent · scout new scrapers (daily)
+
+# Daily 01:00 Bogotá (06:00 UTC). Cold-start Claude agent scouts the web
+# per country (ES, US, CA in parallel) for new scrapeable trade
+# directories.
+#
+# Scope: scrapers only — this repo is independent of the web app.
+# When a brand-new trade is needed (not in current taxonomy), abort
+# gracefully and surface it in the summary so a human can add it on the
+# web repo first.
+#
+# Auth: Claude Code OAuth from a Max subscription — no API billing.
+# Telegram: post-step (deterministic), agent writes summary to a file.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write  # required by anthropics/claude-code-action for OIDC
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run Claude scout agent
+        id: agent
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash,Read,Write,Edit,Grep,Glob,WebFetch,WebSearch,Agent"'
+          prompt: |
+            Repo: scrape_info. Branch base: main. You are a scraper-expansion agent.
+
+            # Goal
+            Per country in {ES, US, CA}, find ONE new scrapeable web source for
+            verifiable company-contact records inside the EXISTING taxonomy used by
+            this repo's scrapers. If 0 viable candidates for a country OR the only
+            viable candidates would require a brand-new trade not in current
+            taxonomy, skip that country and report it in the summary — do NOT
+            touch web-app concerns (categories, landings, DB migrations live in a
+            separate repo).
+
+            # Snapshot (read-only)
+            - src/prolio-types.ts — current CategoryKey union (authoritative
+              taxonomy as seen by scrapers in this repo).
+            - src/sources/ — existing scraper implementations and patterns.
+            - docs/SCRAPING_*_PREFLIGHT.md if present.
+
+            # Steps (countries in parallel via 3 Agent subagent_type=general-purpose)
+            1. Web-research via WebSearch + WebFetch: licensing boards, professional
+               colleges, trade associations, public registries. Filter
+               robots-allowed, no JS-only SPA without API, ≥500 records, no
+               Cloudflare/captcha/login. Document candidates in
+               docs/SCRAPING_<COUNTRY>_<DATESTAMP>.md.
+            2. Decision tree:
+               - ≥1 viable inside current taxonomy → write
+                 src/sources/<slug>.ts following competitor-ca-trades.ts /
+                 competitor-us-bar-associations.ts / npi.ts patterns. Wire
+                 src/types.ts + src/index.ts (import + flag + early-exit + log +
+                 exec block) + .github/workflows/_scrape-runner.yml (env mapping +
+                 budget knob) + new scrape-<slug>.yml cron (annual data →
+                 monthly; weekly → weekly). Run `npm run typecheck`. Open PR
+                 `feat(scraper): <slug> — <country>`.
+               - 0 viable OR all candidates require new trades → skip; report in
+                 summary so a human can extend the web-app taxonomy first.
+            3. Constraints: never bypass robots/WAF; one PR per country per run
+               off origin/main fresh; scrapers off-by-default behind
+               PROLIO_RUN_<NAME>=true; skip a country if there's already an open
+               similar PR.
+
+            # Final summary (REQUIRED)
+            Last action of the run: write a Markdown summary to /tmp/summary.md.
+            DO NOT send Telegram yourself — a post-step does it. Format:
+
+            ```
+            🤖 scrape_info scout — <DATE>
+            ES: <PR url | skipped: <reason>>
+            US: <same>
+            CA: <same>
+            Total open PRs: N
+            Errors: <list or none>
+            Runtime: <minutes>
+            ```
+
+            # Honesty
+            - Never fabricate candidates. If web research returns nothing, say so.
+            - Cap web-research 15 min per country, total 60 min hard cap.
+            - If exceeded: write what you have to /tmp/summary.md and exit.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Send Telegram summary
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AGENT_OUTCOME: ${{ steps.agent.outcome }}
+        run: |
+          set +e
+          if [ -f /tmp/summary.md ]; then
+            MSG="$(cat /tmp/summary.md)"
+          else
+            MSG="🤖 scrape_info scout — $(date +%Y-%m-%d)
+          ⚠️ Agent step outcome: $AGENT_OUTCOME (no /tmp/summary.md). Check logs:
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          curl -sS -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MSG}"
+          echo
+
+      - name: Propagate agent failure
+        if: steps.agent.outcome == 'failure'
+        run: |
+          echo "Agent step failed; failing job after Telegram delivery."
+          exit 1

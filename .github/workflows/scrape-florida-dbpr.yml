@@ -1,0 +1,12 @@
+name: Scrape · Florida DBPR
+on:
+  schedule:
+    - cron: "0 0 * * 6" # Saturday 00:00 UTC weekly
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: florida-dbpr
+      timeout_minutes: 60

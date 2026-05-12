@@ -1,0 +1,16 @@
+name: Scrape · RPPS (France)
+on:
+  schedule:
+    # Sunday 12:30 UTC weekly. ~800 MB pipe-delimited file streamed
+    # with early-break on PROLIO_RPPS_FR_LIMIT; expect 10–30 min per
+    # run depending on cap. Offset from Annuaire Santé Ameli (11:00)
+    # so two heavy FR healthcare downloads don't share runner time.
+    - cron: "30 12 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rpps-fr
+      timeout_minutes: 240

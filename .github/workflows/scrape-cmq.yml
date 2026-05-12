@@ -1,0 +1,12 @@
+name: Scrape · CMQ (Quebec médecins)
+on:
+  schedule:
+    - cron: "0 0 * * 0" # Sunday 00:00 UTC weekly
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cmq
+      timeout_minutes: 240 # 30s crawl-delay × cities × pages

@@ -1,0 +1,19 @@
+name: Scrape · OSM
+
+# OpenStreetMap (Overpass API) — free, no key. Sweeps every seeded
+# city × 9 categories. Volume estimate after city-list unhardcode:
+# ~7k ES + ~10k US + ~3.5k CA rows per run. Weekly is plenty —
+# OSM is community-edited so day-to-day delta is small.
+
+on:
+  schedule:
+    - cron: "0 5 * * 0"  # Sunday 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: osm
+      timeout_minutes: 180

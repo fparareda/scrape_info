@@ -1,0 +1,12 @@
+name: Scrape · Minnesota DLI
+on:
+  schedule:
+    - cron: "0 15 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: minnesota-dli
+      timeout_minutes: 60

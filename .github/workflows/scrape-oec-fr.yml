@@ -1,0 +1,12 @@
+name: Scrape · OEC Experts-Comptables (France)
+on:
+  schedule:
+    - cron: "0 23 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: oec-fr
+      timeout_minutes: 240

@@ -1,0 +1,12 @@
+name: Scrape · New York DOS
+on:
+  schedule:
+    - cron: "0 7 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: new-york-dos
+      timeout_minutes: 60

@@ -1,0 +1,92 @@
+name: Daily enrichment
+
+# Runs every day at 04:00 UTC. Only uses sources that are genuinely
+# free per-day (no paid API): OpenCorporates (500 req/day free), the
+# cross-match job (internal), Wikidata (free, unlimited), and OSM
+# (we already pull once in the monthly run — skip here to avoid
+# hammering Overpass daily).
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+    inputs:
+      oc:
+        description: "OpenCorporates enrichment (max 500/day)"
+        required: false
+        default: true
+        type: boolean
+      wikidata:
+        description: "Wikidata SPARQL (hospitals/universities)"
+        required: false
+        default: true
+        type: boolean
+      crossmatch:
+        description: "Colegio ↔ Google Places cross-match"
+        required: false
+        default: true
+        type: boolean
+      emails:
+        description: "Website → email extractor (free, MX-verified)"
+        required: false
+        default: true
+        type: boolean
+      email_force_ids:
+        description: "Comma-separated UUIDs: force-extract emails only for these pros. Empty = normal batch."
+        required: false
+        default: ""
+        type: string
+      email_limit:
+        description: "Batch size for extractor (empty = default 500)."
+        required: false
+        default: ""
+        type: string
+      crawler:
+        description: "Deep BFS site crawler (depth 3, max 25 pages/site). Heavier than the shallow extractor — off by default."
+        required: false
+        default: false
+        type: boolean
+      crawler_force_ids:
+        description: "Comma-separated UUIDs: force deep-crawl only these pros. Bypasses exclusion filter."
+        required: false
+        default: ""
+        type: string
+      crawler_limit:
+        description: "Batch size for crawler (empty = default 100)."
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      # These scrapers don't iterate (category, city) targets — they run
+      # once when enabled. Leave source toggles off so nothing else kicks in.
+      PROLIO_SCRAPE_GOOGLE: "false"
+      PROLIO_SCRAPE_OSM: "false"
+      PROLIO_SCRAPE_CCAA: "false"
+      PROLIO_SCRAPE_BORME: "false"
+      PROLIO_SCRAPE_COLEGIOS: "false"
+      PROLIO_ENRICH_OC: ${{ inputs.oc == false && 'false' || 'true' }}
+      PROLIO_SCRAPE_WIKIDATA: ${{ inputs.wikidata == false && 'false' || 'true' }}
+      PROLIO_RUN_CROSSMATCH: ${{ inputs.crossmatch == false && 'false' || 'true' }}
+      PROLIO_RUN_EMAIL_EXTRACTOR: ${{ inputs.emails == false && 'false' || 'true' }}
+      PROLIO_EMAIL_EXTRACTOR_IDS: ${{ inputs.email_force_ids }}
+      PROLIO_EMAIL_EXTRACTOR_LIMIT: ${{ inputs.email_limit }}
+      PROLIO_RUN_EMAIL_CRAWLER: ${{ inputs.crawler == true && 'true' || 'false' }}
+      PROLIO_EMAIL_CRAWLER_IDS: ${{ inputs.crawler_force_ids }}
+      PROLIO_EMAIL_CRAWLER_LIMIT: ${{ inputs.crawler_limit }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @prolio/scraper scrape

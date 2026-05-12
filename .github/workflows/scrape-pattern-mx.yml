@@ -1,0 +1,18 @@
+name: Scrape · pattern+MX email discovery
+
+# Generates 8 candidate emails per pro (info@, contacto@, hola@,
+# admin@, plus name-based) and validates each via DNS MX lookup —
+# no SMTP probe (RBL-clean). Pool ~49k pros (with website + no
+# email). Daily runs at 1k/run mean ~50 days to saturate the pool.
+
+on:
+  schedule:
+    - cron: "0 4 * * *"  # daily 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: pattern-mx

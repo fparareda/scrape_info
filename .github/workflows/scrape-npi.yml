@@ -1,0 +1,20 @@
+name: Scrape · NPI Registry (US healthcare)
+
+# CMS National Provider Identifier registry. Public free JSON API.
+# Iterates 51 US states (50 + DC) × 5 taxonomies (Family Medicine,
+# Dentist, Psychologist, Physical Therapist, Anesthesiology) with a
+# 200-row per-state cap by default. Monthly — provider data changes
+# slowly.
+
+on:
+  schedule:
+    - cron: "0 15 1 * *"  # 1st of month 15:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: npi
+      timeout_minutes: 240

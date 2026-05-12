@@ -1,0 +1,12 @@
+name: Scrape · Georgia SoS PLB
+on:
+  schedule:
+    - cron: "0 12 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: georgia-plb
+      timeout_minutes: 60

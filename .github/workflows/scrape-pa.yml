@@ -1,0 +1,17 @@
+name: Scrape · Páginas Amarillas (legacy)
+
+# Standalone Páginas Amarillas adapter (the one in `paginas-
+# amarillas.ts`, NOT the bundle inside competitor-es-mega). Some
+# old wedge categories still hit this code path. Monthly is enough
+# — PA index updates slowly. Manual-only by default to avoid
+# hammering them.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: pa

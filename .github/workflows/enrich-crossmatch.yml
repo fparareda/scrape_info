@@ -1,0 +1,19 @@
+name: Enrich · cross-match dedup
+
+# Deduplication enricher: matches duplicate `professionals` rows
+# across different sources (Google + OSM + competitor scrapers
+# often surface the same business with subtle name/address diffs)
+# and merges metadata. Daily because every other scraper writes new
+# rows daily.
+
+on:
+  schedule:
+    - cron: "0 9 * * *"  # daily 09:00 UTC (after BORME + email-extractor land)
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: crossmatch

@@ -1,0 +1,20 @@
+name: Scrape · BORME
+
+# BORME (Boletín Oficial del Registro Mercantil) — daily company
+# registrations in Spain. Filtered to 9 target CNAEs (jurídicas,
+# fiscal, médicas, arquitectura, ingeniería, eléctricas, fontanería,
+# carpintería, taller). Daily because BORME publishes daily.
+# PROLIO_BORME_DAYS=1 means each run only ingests yesterday's batch
+# (dedup via source_id=CIF makes it safe to re-run).
+
+on:
+  schedule:
+    - cron: "0 7 * * *"  # daily 07:00 UTC (BORME publishes ~06:00)
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: borme

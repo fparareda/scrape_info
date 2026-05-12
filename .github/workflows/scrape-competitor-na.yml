@@ -1,0 +1,19 @@
+name: Scrape · NA marketplaces (HomeAdvisor + Thumbtack + HomeStars + TrustedPros)
+
+# North-American marketplace bundle. HomeAdvisor + Thumbtack (US) +
+# HomeStars + TrustedPros (CA). Cap 2000 rows/run. Weekly mirrors
+# competitive cadence — these sites add ~50-100 new pros/week per
+# major city.
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"  # Sunday 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: competitor-na
+      timeout_minutes: 90

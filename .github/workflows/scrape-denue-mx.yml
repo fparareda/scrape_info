@@ -1,0 +1,15 @@
+name: Scrape · DENUE MX (INEGI)
+on:
+  schedule:
+    # Sunday 18:00 UTC weekly. ~45 MB of zips downloaded + parsed
+    # across 4 SCIAN sectors. Expect 10–20 min per run at the
+    # default 10000-row cap.
+    - cron: "0 18 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: denue-mx
+      timeout_minutes: 240

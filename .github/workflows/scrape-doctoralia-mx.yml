@@ -1,0 +1,12 @@
+name: Scrape · Doctoralia MX
+on:
+  schedule:
+    - cron: "0 13 * * 0" # Sunday 13:00 UTC weekly
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: doctoralia-mx
+      timeout_minutes: 120

@@ -1,0 +1,12 @@
+name: Scrape · Nevada NSCB
+on:
+  schedule:
+    - cron: "0 5 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: nevada-nscb
+      timeout_minutes: 60

@@ -1,0 +1,24 @@
+name: Scrape · GLEIF (Global LEI enrichment)
+
+# GLEIF (Global LEI) enrichment via the public v1 API. Pre-flight
+# 2026-04-24 confirmed ES=187,965 / US=349,129 / CA=57,101 entities.
+# Per-run cap PROLIO_GLEIF_LIMIT (default 10,000 records scanned)
+# defends the first runs; lift to 600000 for full coverage. No auth,
+# no rate-limited keys, no new deps — just paginated GETs against
+# api.gleif.org/api/v1/lei-records.
+#
+# Cadence: weekly Sunday 14:00 UTC. The Golden Copy publishes daily
+# at 16:00 UTC; matching a single mid-week dataset is more than enough
+# for our enrichment cadence.
+
+on:
+  schedule:
+    - cron: "0 14 * * 0"
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: gleif

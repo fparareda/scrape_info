@@ -1,0 +1,12 @@
+name: Scrape · Maryland DLLR
+on:
+  schedule:
+    - cron: "0 19 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: maryland-dllr
+      timeout_minutes: 60

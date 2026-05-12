@@ -1,0 +1,18 @@
+name: Scrape · CCAA registries
+
+# Registros sanitarios autonómicos (RII Madrid, Cataluña, Aragón,
+# etc). CSV downloads ~37 MB. Weekly is fine — these are slow-moving
+# official datasets that publish quarterly.
+
+on:
+  schedule:
+    - cron: "0 6 * * 0"  # Sunday 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ccaa
+      timeout_minutes: 90

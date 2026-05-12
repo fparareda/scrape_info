@@ -1,0 +1,57 @@
+name: Scrape · CA professional colleges (CPSO + LSO + RCDSO)
+
+# Canadian professional regulators (Ontario). Today only RCDSO emits
+# rows (~10.5k dentists). CPSO blocked by Cloudflare interstitial,
+# LSO blocked by robots.txt + Cloudflare. Monthly — registrations
+# change slowly.
+#
+# `college_only` workflow_dispatch input lets us re-run a single
+# regulator (e.g. retest CPSO if Cloudflare drops). Empty = all three
+# (CPSO + LSO emit empty doc-only telemetry rows; RCDSO emits rows).
+#
+# This workflow does NOT use the reusable _scrape-runner.yml because
+# we need to forward the `college_only` input as an env var. The
+# scraper's env-flag matrix is set inline below.
+
+on:
+  schedule:
+    - cron: "0 13 1 * *"  # 1st of month 13:00 UTC
+  workflow_dispatch:
+    inputs:
+      college_only:
+        description: "Run a single college (cpso | lso | rcdso). Empty = all."
+        type: choice
+        options:
+          - ""
+          - cpso
+          - lso
+          - rcdso
+        required: false
+        default: ""
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      # Only this scraper enabled. Other env flags default to false in the
+      # scraper module-level checks.
+      PROLIO_RUN_CA_PROFESSIONAL: "true"
+      # Per-college selector. Empty = run all three regulators.
+      PROLIO_CA_PROFESSIONAL_COLLEGE: ${{ inputs.college_only || '' }}
+      PROLIO_CA_PROFESSIONAL_LIMIT: "1000"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: scrape ca-professional
+        run: pnpm --filter @prolio/scraper scrape

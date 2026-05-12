@@ -1,0 +1,60 @@
+name: Scrape — Doctoralia ES
+
+# Weekly Sunday 12:00 UTC. Doctoralia (https://www.doctoralia.es) is a
+# Spanish health-pro directory: médicos (specialty-indexed), psicólogos,
+# (with dentista + fisioterapeuta planned once those category_keys land
+# in @prolio/types). robots.txt allows the /<spec>/<city> browse paths
+# we use. Listing pages embed schema.org Physician microdata + data-eec-*
+# attributes for rating/review-count — no JS rendering required, no
+# Cloudflare interstitial observed (pre-flight 2026-04-24).
+#
+# Cap PROLIO_DOCTORALIA_LIMIT (default 1000) rows/run. The scraper iterates
+# (3 specialties × ~200 ES cities) but stops at the cap, so a typical run
+# touches ~30–35 pages.
+on:
+  schedule:
+    - cron: "0 12 * * 0"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Max rows per run (default 1000)."
+        required: false
+        default: "1000"
+        type: string
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      # Force every other source off — this workflow is single-purpose.
+      PROLIO_SCRAPE_GOOGLE: "false"
+      PROLIO_SCRAPE_OSM: "false"
+      PROLIO_SCRAPE_CCAA: "false"
+      PROLIO_SCRAPE_BORME: "false"
+      PROLIO_SCRAPE_COLEGIOS: "false"
+      PROLIO_SCRAPE_WIKIDATA: "false"
+      PROLIO_RUN_CROSSMATCH: "false"
+      PROLIO_RUN_EMAIL_EXTRACTOR: "false"
+      PROLIO_RUN_EMAIL_CRAWLER: "false"
+      PROLIO_RUN_COMPETITOR_NA: "false"
+      PROLIO_RUN_COMPETITOR_ES_COLEGIOS_MEDICOS: "false"
+      PROLIO_RUN_COMPETITOR_CA_LICENSING: "false"
+      PROLIO_RUN_COMPETITOR_HOUZZ: "false"
+      PROLIO_RUN_PATTERN_MX: "false"
+      # Doctoralia toggle.
+      PROLIO_RUN_DOCTORALIA: "true"
+      PROLIO_DOCTORALIA_LIMIT: ${{ inputs.limit || '1000' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @prolio/scraper scrape

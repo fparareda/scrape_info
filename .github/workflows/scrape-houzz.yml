@@ -1,0 +1,16 @@
+name: Scrape · Houzz US
+
+# Houzz home-services directory (US). LocalBusiness JSON-LD on
+# category browse pages. Cap 500 rows/run. Weekly cadence.
+
+on:
+  schedule:
+    - cron: "0 8 * * 0"  # Sunday 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: houzz

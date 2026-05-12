@@ -1,0 +1,12 @@
+name: Scrape · Wisconsin DSPS
+on:
+  schedule:
+    - cron: "0 14 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: wisconsin-dsps
+      timeout_minutes: 60

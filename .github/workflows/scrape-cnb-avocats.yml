@@ -1,0 +1,12 @@
+name: Scrape · CNB Avocats (France)
+on:
+  schedule:
+    - cron: "0 22 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cnb-avocats
+      timeout_minutes: 180

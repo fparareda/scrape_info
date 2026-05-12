@@ -1,0 +1,18 @@
+name: Scrape · single-page email extractor
+
+# Lightweight: fetches one page per pro (root + /contacto) and
+# extracts visible emails. Faster + cheaper than the BFS crawler.
+# Daily — pro websites add/change contact info constantly. The
+# deeper BFS crawler runs monthly via `monthly-email-crawl.yml`.
+
+on:
+  schedule:
+    - cron: "0 5 * * *"  # daily 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: email-extractor

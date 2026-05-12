@@ -1,0 +1,151 @@
+name: Agent · email crawl + 5-fail flag (daily)
+
+# Daily 07:00 Bogotá (12:00 UTC). Spaced 6h after scout (06:00 UTC) so
+# both fit outside a Max 5h rolling rate-limit window.
+#
+# Crawls professional websites for emails with attempt-tracking.
+# Flags 'no_emails' after 5 consecutive failures.
+#
+# Scope: scrapers/enrichment only — this repo is independent of the web
+# app. The required DB columns (email_scan_attempts, last_email_scan_at,
+# email_scan_status) must already exist; the migration lives in the web
+# repo. If they're missing, this agent aborts and surfaces it in the
+# summary.
+#
+# Sibling to scrape-email-extractor.yml (single-page, no tracking).
+# This one is BFS-deeper + tracks state in DB.
+#
+# Auth: Claude Code OAuth from a Max subscription.
+# Telegram: post-step (deterministic), agent writes summary to a file.
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write  # required by anthropics/claude-code-action for OIDC
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run Claude email-crawl agent
+        id: agent
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash,Read,Write,Edit,Grep,Glob,WebFetch,WebSearch"'
+          prompt: |
+            Repo: scrape_info. Branch base: main. You are an email-crawler agent.
+
+            # Goal
+            Iterate professionals table; for each pro with website but no email
+            and not flagged 'no_emails', crawl website to extract emails. Track
+            scan attempts. After 5 consecutive failures, mark 'no_emails'.
+
+            # Pre-flight: tracking columns
+            Use $SUPABASE_URL and $SUPABASE_SERVICE_ROLE_KEY (REST API or psql via
+            apt install postgresql-client && PGPASSWORD=$SUPABASE_SERVICE_ROLE_KEY).
+
+            Check professionals table for columns:
+            - email_scan_attempts INT DEFAULT 0 NOT NULL
+            - last_email_scan_at TIMESTAMPTZ
+            - email_scan_status TEXT — 'pending'|'scanned'|'no_emails', default 'pending'
+
+            If ANY column is missing, ABORT — DO NOT write a migration in this
+            repo. Migrations live in the web repo. Write the missing-column list
+            to /tmp/summary.md and exit so a human can apply the migration there.
+
+            # Crawl loop
+            1. Pick batch (1000/run):
+               SELECT id, website FROM professionals
+               WHERE website IS NOT NULL
+                 AND (email IS NULL OR email='')
+                 AND (email_scan_status IS NULL OR email_scan_status='pending')
+                 AND email_scan_attempts < 5
+               ORDER BY last_email_scan_at NULLS FIRST LIMIT 1000.
+            2. Per row: reuse src/sources/email-crawler.ts logic. Fetch /,
+               /contact, /contacto, footer. Respect robots.txt. UA Prolio-Bot/1.0.
+               Extract via mailto: + regex + JSON-LD ContactPoint. Filter junk
+               (example.com, noreply@, info@example).
+               - Found → UPDATE professionals SET email = <first valid>,
+                 email_scan_status = 'scanned',
+                 email_scan_attempts = email_scan_attempts + 1,
+                 last_email_scan_at = now() WHERE id = ?.
+               - Not found → UPDATE professionals SET
+                 email_scan_attempts = email_scan_attempts + 1,
+                 last_email_scan_at = now(),
+                 email_scan_status = CASE WHEN email_scan_attempts + 1 >= 5
+                                          THEN 'no_emails' ELSE 'pending' END
+                 WHERE id = ?.
+            3. Rate-limit ≥800ms between fetches per host. Respect 429/Retry-After.
+               15s hard timeout per fetch.
+            4. Crash isolation: per-row try/catch.
+
+            # Final summary (REQUIRED)
+            Last action of the run: write a Markdown summary to /tmp/summary.md.
+            DO NOT send Telegram yourself — a post-step does it. Format:
+
+            ```
+            📧 scrape_info email crawl — <DATE>
+            Scanned: N websites
+            Found emails: M
+            Marked no_emails (5 fails): K
+            Pending queue: Q
+            Errors: count (top 3 hosts)
+            Runtime: minutes
+            ```
+
+            # Constraints
+            - Never bypass robots.txt. DB writes via service role only.
+            - Atomic UPDATE pattern prevents double-increment.
+            - 60 min hard cap. If exceeded: write to /tmp/summary.md + exit.
+            - If column-pre-flight fails, abort + write reason to /tmp/summary.md.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Send Telegram summary
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AGENT_OUTCOME: ${{ steps.agent.outcome }}
+        run: |
+          set +e
+          if [ -f /tmp/summary.md ]; then
+            MSG="$(cat /tmp/summary.md)"
+          else
+            MSG="📧 scrape_info email crawl — $(date +%Y-%m-%d)
+          ⚠️ Agent step outcome: $AGENT_OUTCOME (no /tmp/summary.md). Check logs:
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          curl -sS -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MSG}"
+          echo
+
+      - name: Propagate agent failure
+        if: steps.agent.outcome == 'failure'
+        run: |
+          echo "Agent step failed; failing job after Telegram delivery."
+          exit 1

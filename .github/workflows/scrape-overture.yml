@@ -1,0 +1,19 @@
+name: Scrape · Overture Maps
+
+# Overture Maps (Microsoft + Meta + Amazon + TomTom open dataset).
+# Bulk place download, complementary to OSM. Heavy parquet files —
+# monthly cadence is plenty. NOTE: requires Overture release URLs
+# in `apps/scraper/src/sources/overture.ts`; refresh quarterly.
+
+on:
+  schedule:
+    - cron: "0 9 1 * *"  # 1st of month 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: overture
+      timeout_minutes: 180

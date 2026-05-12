@@ -1,0 +1,12 @@
+name: Scrape · New Jersey DCA
+on:
+  schedule:
+    - cron: "0 20 * * 6"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: new-jersey-dca
+      timeout_minutes: 60

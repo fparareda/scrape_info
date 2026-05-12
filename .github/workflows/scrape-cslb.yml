@@ -1,0 +1,25 @@
+name: Scrape · CSLB California Contractors
+
+# CSLB (Contractors State License Board) — California's official
+# licensing body for ~280k active contractors. Public bulk .xlsx
+# export per classification, no captcha, no auth. We ingest the
+# four classifications that map to our trade taxonomy: C-10
+# (Electrical) → electricidad, C-36 (Plumbing) → fontaneria,
+# C-20 (HVAC) → electricidad, C-6 (Carpentry) → carpinteria.
+# Cap 2000 rows/run.
+#
+# Cadence: weekly Sunday 11:00 UTC. CSLB statuses change daily but
+# our city catalogue is small enough that the per-run yield
+# plateaus quickly; weekly is enough to stay current.
+
+on:
+  schedule:
+    - cron: "0 11 * * 0"  # Sunday 11:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cslb

@@ -1,0 +1,26 @@
+name: Scrape · Colegios Oficiales de Médicos (ES)
+
+# Provincial COM rosters. 3 of 52 implemented today: COMZ Zaragoza,
+# ICOMEM Madrid (~47k), COMGI Gipuzkoa. Monthly — colegios update
+# their public buscadores slowly (new colegiados: handfuls per
+# week). Cap 500 per colegio = up to 1500 rows/run with current
+# adapters.
+
+on:
+  schedule:
+    - cron: "0 5 1 * *"  # 1st of month 05:00 UTC
+  workflow_dispatch:
+    inputs:
+      colegios_only:
+        description: "Comma-separated colegio codes (madrid,zaragoza,gipuzkoa). Empty = all."
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: colegios-medicos
+      timeout_minutes: 240
