@@ -19,15 +19,15 @@ on:
   workflow_dispatch:
     inputs:
       college_only:
-        description: "Run a single college (cpso | lso | rcdso). Empty = all."
+        description: "Run a single college (all | cpso | lso | rcdso)."
         type: choice
         options:
-          - ""
+          - all
           - cpso
           - lso
           - rcdso
         required: false
-        default: ""
+        default: all
 
 jobs:
   scrape:
@@ -43,7 +43,9 @@ jobs:
       # scraper module-level checks.
       PROLIO_RUN_CA_PROFESSIONAL: "true"
       # Per-college selector. Empty = run all three regulators.
-      PROLIO_CA_PROFESSIONAL_COLLEGE: ${{ inputs.college_only || '' }}
+      # Source treats empty string as "run all colleges"; map the
+      # `all` sentinel from the choice input to "" before passing through.
+      PROLIO_CA_PROFESSIONAL_COLLEGE: ${{ (inputs.college_only == 'all' && '') || inputs.college_only || '' }}
       PROLIO_CA_PROFESSIONAL_LIMIT: "1000"
     steps:
       - uses: actions/checkout@v5

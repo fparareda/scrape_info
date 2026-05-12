@@ -51,10 +51,20 @@ const REQUEST_DELAY_MS = 120;
  * billing surprises when pagination or synonym fan-out grows faster than
  * the cost model. Configurable via PROLIO_PLACES_BUDGET.
  *
- * Default: 4500 requests = ~$144 at Pro Text Search ($32/1k), leaving
- * a safety margin inside Google's $200/mo free Maps credit.
+ * Default: 6000 requests = ~$192 at Pro Text Search ($32/1k). Sized to
+ * spend ~96% of Google's $200/mo free Maps credit on a single
+ * workflow_dispatch run, leaving an $8 buffer for accidental
+ * out-of-cycle runs. The workflow is manual-only (see
+ * .github/workflows/scrape-google.yml) so this run cap effectively *is*
+ * the monthly cap.
  */
-const BUDGET = Number(process.env.PROLIO_PLACES_BUDGET ?? "4500");
+// Use `||` not `??` so an empty-string env var (passed by the GH Actions
+// reusable runner when no budget input is set) falls through to the
+// default instead of becoming Number("") = 0 → instant budget-exhausted.
+const BUDGET_DEFAULT = 6000;
+const BUDGET_RAW = Number(process.env.PROLIO_PLACES_BUDGET || BUDGET_DEFAULT);
+const BUDGET =
+  Number.isFinite(BUDGET_RAW) && BUDGET_RAW > 0 ? BUDGET_RAW : BUDGET_DEFAULT;
 
 let requestsUsed = 0;
 let budgetWarned = false;
@@ -84,7 +94,7 @@ async function fetchPage(
   apiKey: string,
   query: string,
   pageToken: string | undefined,
-  regionCode: "ES" | "CA" | "US",
+  regionCode: "ES" | "CA" | "US" | "FR" | "MX",
   languageCode: "es" | "en" | "fr",
 ): Promise<PlacesResponse> {
   const body: Record<string, unknown> = {

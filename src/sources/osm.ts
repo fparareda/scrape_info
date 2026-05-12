@@ -194,10 +194,26 @@ export const osmSource: ScraperSource = {
   },
 
   async fetch(target: ScrapeTarget): Promise<ScrapedProfessional[]> {
-    // OSM tag coverage for Canadian cities is inconsistent (admin_level
-    // varies by province); scope this source to Spain for now and rely
-    // on Google Places for CA. Opt-in for CA later with a tuned query.
-    if (target.country !== "ES") return [];
+    // Multi-country since 2026-05-07. Per OSM Wiki, admin_level=8 maps
+    // to "city/municipio/commune" across ES/FR/US/CA — the original
+    // ES-only gate was over-cautious. Veterinarios/notarios/cerrajeros/
+    // hvac/mecanica are sparse in our FR/CA/US official sources but
+    // OSM has decent coverage for tagged businesses, so this single
+    // change unlocks meaningful volume across the gaps.
+    //
+    // Tag quality varies — false negatives in CA/US suburbs are
+    // expected. Sink dedupes against Google Places via (source,
+    // source_id) so OSM rows complement rather than duplicate.
+    //
+    // Opt out via PROLIO_OSM_COUNTRIES (CSV); unset = iterate every
+    // target.
+    const allowedCountries = process.env.PROLIO_OSM_COUNTRIES
+      ?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (allowedCountries && !allowedCountries.includes(target.country)) {
+      return [];
+    }
     const tags = OSM_TAGS[target.categoryKey];
     if (!tags || tags.length === 0) return [];
 
