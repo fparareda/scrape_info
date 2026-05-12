@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent for running the COPC (Colegio Oficial de Psicologia de
+  Catalunya) scraper weekly from the founder's Mac. Needed because COPC
+  returns 403 to GitHub Actions datacenter IPs but 200 to residential.
+
+  Install:
+    1. Copy this file to ~/Library/LaunchAgents/
+    2. Edit WorkingDirectory below to match your repo path
+    3. launchctl load ~/Library/LaunchAgents/co.prolio.scraper-colegios.plist
+    4. Test with: launchctl start co.prolio.scraper-colegios
+
+  Schedule: every Monday at 05:15 local time. If the Mac is asleep or off
+  at that time, launchd runs it at next wake (RunAtLoad=false keeps it
+  disciplined — weekly, not every reboot).
+
+  Logs: /tmp/prolio-scraper-colegios.{out,err}.log
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>co.prolio.scraper-colegios</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>-lc</string>
+        <string>cd "$WORKING_DIR" && /Users/ferran.parareda/Library/pnpm/pnpm --filter @prolio/scraper scrape</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <!-- Edit this to your checkout path. -->
+        <key>WORKING_DIR</key>
+        <string>/Users/ferran.parareda/git/prolio</string>
+
+        <!-- Only COPC on; Google Places and BORME already run in GitHub. -->
+        <key>PROLIO_SCRAPE_COLEGIOS</key>
+        <string>true</string>
+        <key>PROLIO_SCRAPE_BORME</key>
+        <string>false</string>
+        <key>GOOGLE_PLACES_API_KEY</key>
+        <string></string>
+
+        <!-- Supabase creds: the scraper also reads apps/scraper/.env.local
+             so you can leave these blank and keep secrets in the .env.
+             If present, env-var wins. -->
+        <key>NEXT_PUBLIC_SUPABASE_URL</key>
+        <string></string>
+        <key>SUPABASE_SERVICE_ROLE_KEY</key>
+        <string></string>
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>5</integer>
+        <key>Minute</key>
+        <integer>15</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/prolio-scraper-colegios.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/prolio-scraper-colegios.err.log</string>
+</dict>
+</plist>
