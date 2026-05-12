@@ -80,6 +80,60 @@ import {
 } from "./sources/pattern-mx-email.js";
 import { gleifEnabled, runGleifEnrichment } from "./sources/gleif.js";
 import { npiSource, runNpi } from "./sources/npi.js";
+import { floridaDbprSource, runFloridaDbpr } from "./sources/florida-dbpr.js";
+import { texasTdlrSource, runTexasTdlr } from "./sources/texas-tdlr.js";
+import { arizonaRocSource, runArizonaRoc } from "./sources/arizona-roc.js";
+import { washingtonLiSource, runWashingtonLi } from "./sources/washington-li.js";
+import { oregonCcbSource, runOregonCcb } from "./sources/oregon-ccb.js";
+import { nevadaNscbSource, runNevadaNscb } from "./sources/nevada-nscb.js";
+import { cmqSource, runCmq } from "./sources/cmq.js";
+import { barreauQcSource, runBarreauQc } from "./sources/barreau-qc.js";
+import { odqSource, runOdq } from "./sources/odq.js";
+import { oaqSource, runOaq } from "./sources/oaq.js";
+import { cpsbcSource, runCpsbc } from "./sources/cpsbc.js";
+import { cgaeSource, runCgae } from "./sources/cgae.js";
+import { cscaeSource, runCscae } from "./sources/cscae.js";
+import { illinoisIdfprSource, runIllinoisIdfpr } from "./sources/illinois-idfpr.js";
+import { newYorkDosSource, runNewYorkDos } from "./sources/new-york-dos.js";
+import { northCarolinaLbcSource, runNorthCarolinaLbc } from "./sources/north-carolina-lbc.js";
+import { virginiaDporSource, runVirginiaDpor } from "./sources/virginia-dpor.js";
+import { massachusettsDplSource, runMassachusettsDpl } from "./sources/massachusetts-dpl.js";
+import { coloradoDoraSource, runColoradoDora } from "./sources/colorado-dora.js";
+import { georgiaPlbSource, runGeorgiaPlb } from "./sources/georgia-plb.js";
+import { pennsylvaniaBpoaSource, runPennsylvaniaBpoa } from "./sources/pennsylvania-bpoa.js";
+import { wisconsinDspsSource, runWisconsinDsps } from "./sources/wisconsin-dsps.js";
+import { minnesotaDliSource, runMinnesotaDli } from "./sources/minnesota-dli.js";
+import { missouriDprSource, runMissouriDpr } from "./sources/missouri-dpr.js";
+import { ohioElicenseSource, runOhioElicense } from "./sources/ohio-elicense.js";
+import { michiganLaraSource, runMichiganLara } from "./sources/michigan-lara.js";
+import { marylandDllrSource, runMarylandDllr } from "./sources/maryland-dllr.js";
+import { newJerseyDcaSource, runNewJerseyDca } from "./sources/new-jersey-dca.js";
+import { tennesseeTdciSource, runTennesseeTdci } from "./sources/tennessee-tdci.js";
+import { cnbAvocatsSource, runCnbAvocats } from "./sources/cnb-avocats.js";
+import { architectesFrSource, runArchitectesFr } from "./sources/architectes-fr.js";
+import { oecFrSource, runOecFr } from "./sources/oec-fr.js";
+import { ordreVetFrSource, runOrdreVetFr } from "./sources/ordre-vet-fr.js";
+import { annuaireSanteAmeliSource, runAnnuaireSanteAmeli } from "./sources/annuaire-sante-ameli.js";
+import { rppsFrSource, runRppsFr } from "./sources/rpps-fr.js";
+import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
+import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
+import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
+import { oaaSource, runOaa } from "./sources/oaa.js";
+import { louisianaLslbcSource, runLouisianaLslbc } from "./sources/louisiana-lslbc.js";
+import { nycDobSource, runNycDob } from "./sources/nyc-dob.js";
+import {
+  cgnNotariadoEnabled,
+  runCgnNotariado,
+} from "./sources/cgn-notariado.js";
+import {
+  overtureEnabled,
+  runOvertureEnrichment,
+} from "./sources/overture.js";
+import { competitorNaSource, runCompetitorNa } from "./sources/competitor-na.js";
+import {
+  competitorEsMegaEnabled,
+  runCompetitorEsMega,
+} from "./sources/competitor-es-mega.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -123,6 +177,51 @@ async function main(): Promise<void> {
   const patternMxOn = patternMxEnabled();
   const gleifOn = gleifEnabled();
   const npiOn = npiSource.enabled();
+  const floridaDbprOn = floridaDbprSource.enabled();
+  const texasTdlrOn = texasTdlrSource.enabled();
+  const arizonaRocOn = arizonaRocSource.enabled();
+  const washingtonLiOn = washingtonLiSource.enabled();
+  const oregonCcbOn = oregonCcbSource.enabled();
+  const nevadaNscbOn = nevadaNscbSource.enabled();
+  const cmqOn = cmqSource.enabled();
+  const barreauQcOn = barreauQcSource.enabled();
+  const odqOn = odqSource.enabled();
+  const oaqOn = oaqSource.enabled();
+  const cpsbcOn = cpsbcSource.enabled();
+  const cgaeOn = cgaeSource.enabled();
+  const cscaeOn = cscaeSource.enabled();
+  const illinoisIdfprOn = illinoisIdfprSource.enabled();
+  const newYorkDosOn = newYorkDosSource.enabled();
+  const northCarolinaLbcOn = northCarolinaLbcSource.enabled();
+  const virginiaDporOn = virginiaDporSource.enabled();
+  const massachusettsDplOn = massachusettsDplSource.enabled();
+  const coloradoDoraOn = coloradoDoraSource.enabled();
+  const georgiaPlbOn = georgiaPlbSource.enabled();
+  const pennsylvaniaBpoaOn = pennsylvaniaBpoaSource.enabled();
+  const wisconsinDspsOn = wisconsinDspsSource.enabled();
+  const minnesotaDliOn = minnesotaDliSource.enabled();
+  const missouriDprOn = missouriDprSource.enabled();
+  const ohioElicenseOn = ohioElicenseSource.enabled();
+  const michiganLaraOn = michiganLaraSource.enabled();
+  const marylandDllrOn = marylandDllrSource.enabled();
+  const newJerseyDcaOn = newJerseyDcaSource.enabled();
+  const tennesseeTdciOn = tennesseeTdciSource.enabled();
+  const cnbAvocatsOn = cnbAvocatsSource.enabled();
+  const architectesFrOn = architectesFrSource.enabled();
+  const oecFrOn = oecFrSource.enabled();
+  const ordreVetFrOn = ordreVetFrSource.enabled();
+  const annuaireSanteAmeliOn = annuaireSanteAmeliSource.enabled();
+  const rppsFrOn = rppsFrSource.enabled();
+  const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
+  const senasicaMxVetOn = senasicaMxVetSource.enabled();
+  const denueMxOn = denueMxSource.enabled();
+  const oaaOn = oaaSource.enabled();
+  const louisianaLslbcOn = louisianaLslbcSource.enabled();
+  const nycDobOn = nycDobSource.enabled();
+  const cgnNotariadoOn = cgnNotariadoEnabled();
+  const overtureOn = overtureEnabled();
+  const competitorNaOn = competitorNaSource.enabled();
+  const competitorEsMegaOn = competitorEsMegaEnabled();
 
   if (
     sources.length === 0 &&
@@ -142,7 +241,52 @@ async function main(): Promise<void> {
     !doctoraliaEnabled &&
     !patternMxOn &&
     !gleifOn &&
-    !npiOn
+    !npiOn &&
+    !floridaDbprOn &&
+    !texasTdlrOn &&
+    !arizonaRocOn &&
+    !washingtonLiOn &&
+    !oregonCcbOn &&
+    !nevadaNscbOn &&
+    !cmqOn &&
+    !barreauQcOn &&
+    !odqOn &&
+    !oaqOn &&
+    !cpsbcOn &&
+    !cgaeOn &&
+    !cscaeOn &&
+    !illinoisIdfprOn &&
+    !newYorkDosOn &&
+    !northCarolinaLbcOn &&
+    !virginiaDporOn &&
+    !massachusettsDplOn &&
+    !coloradoDoraOn &&
+    !georgiaPlbOn &&
+    !pennsylvaniaBpoaOn &&
+    !wisconsinDspsOn &&
+    !minnesotaDliOn &&
+    !missouriDprOn &&
+    !ohioElicenseOn &&
+    !michiganLaraOn &&
+    !marylandDllrOn &&
+    !newJerseyDcaOn &&
+    !tennesseeTdciOn &&
+    !cnbAvocatsOn &&
+    !architectesFrOn &&
+    !oecFrOn &&
+    !ordreVetFrOn &&
+    !annuaireSanteAmeliOn &&
+    !rppsFrOn &&
+    !doctoraliaMxOn &&
+    !senasicaMxVetOn &&
+    !denueMxOn &&
+    !oaaOn &&
+    !louisianaLslbcOn &&
+    !nycDobOn &&
+    !cgnNotariadoOn &&
+    !overtureOn &&
+    !competitorNaOn &&
+    !competitorEsMegaOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -161,7 +305,52 @@ async function main(): Promise<void> {
         "PROLIO_RUN_DOCTORALIA=true, " +
         "PROLIO_RUN_PATTERN_MX=true, " +
         "PROLIO_RUN_GLEIF=true, " +
-        "PROLIO_RUN_NPI=true",
+        "PROLIO_RUN_NPI=true, " +
+        "PROLIO_RUN_FLORIDA_DBPR=true, " +
+        "PROLIO_RUN_TEXAS_TDLR=true, " +
+        "PROLIO_RUN_ARIZONA_ROC=true, " +
+        "PROLIO_RUN_WASHINGTON_LI=true, " +
+        "PROLIO_RUN_OREGON_CCB=true, " +
+        "PROLIO_RUN_NEVADA_NSCB=true, " +
+        "PROLIO_RUN_CMQ=true, " +
+        "PROLIO_RUN_BARREAU_QC=true, " +
+        "PROLIO_RUN_ODQ=true, " +
+        "PROLIO_RUN_CPSBC=true, " +
+        "PROLIO_RUN_CGAE=true, " +
+        "PROLIO_RUN_CSCAE=true, " +
+        "PROLIO_RUN_ILLINOIS_IDFPR=true, " +
+        "PROLIO_RUN_NEW_YORK_DOS=true, " +
+        "PROLIO_RUN_NORTH_CAROLINA_LBC=true, " +
+        "PROLIO_RUN_VIRGINIA_DPOR=true, " +
+        "PROLIO_RUN_MASSACHUSETTS_DPL=true, " +
+        "PROLIO_RUN_COLORADO_DORA=true, " +
+        "PROLIO_RUN_GEORGIA_PLB=true, " +
+        "PROLIO_RUN_PENNSYLVANIA_BPOA=true, " +
+        "PROLIO_RUN_WISCONSIN_DSPS=true, " +
+        "PROLIO_RUN_MINNESOTA_DLI=true, " +
+        "PROLIO_RUN_MISSOURI_DPR=true, " +
+        "PROLIO_RUN_OHIO_ELICENSE=true, " +
+        "PROLIO_RUN_MICHIGAN_LARA=true, " +
+        "PROLIO_RUN_MARYLAND_DLLR=true, " +
+        "PROLIO_RUN_NEW_JERSEY_DCA=true, " +
+        "PROLIO_RUN_TENNESSEE_TDCI=true, " +
+        "PROLIO_RUN_CNB_AVOCATS=true, " +
+        "PROLIO_RUN_ARCHITECTES_FR=true, " +
+        "PROLIO_RUN_OEC_FR=true, " +
+        "PROLIO_RUN_ANNUAIRE_SANTE_AMELI=true, " +
+        "PROLIO_RUN_DOCTORALIA_MX=true, " +
+        "PROLIO_RUN_SENASICA_MX_VET=true, " +
+        "PROLIO_RUN_DENUE_MX=true, " +
+        "PROLIO_RUN_LOUISIANA_LSLBC=true, " +
+        "PROLIO_RUN_CGN_NOTARIADO=true, " +
+        "PROLIO_RUN_OAQ=true, " +
+        "PROLIO_RUN_OAA=true, " +
+        "PROLIO_RUN_NYC_DOB=true, " +
+        "PROLIO_RUN_ORDRE_VET_FR=true, " +
+        "PROLIO_RUN_RPPS_FR=true, " +
+        "PROLIO_RUN_COMPETITOR_NA=true, " +
+        "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
+        "PROLIO_SCRAPE_OVERTURE=true",
     );
     return;
   }
@@ -447,6 +636,250 @@ async function main(): Promise<void> {
     }).catch((e) => console.error(`[scraper] npi crashed:`, (e as Error).message));
   }
 
+  // US contractor boards (state-level). Each is a bulk CSV pull capped
+  // by its own LIMIT env. Endpoints documented in each source — must
+  // be verified on first run; sink filters rows whose city slug isn't
+  // seeded so unmapped cities are dropped silently.
+  if (floridaDbprOn) {
+    await withScrapeRun("florida-dbpr", async () => {
+      const res = await runFloridaDbpr();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] florida-dbpr crashed:`, (e as Error).message),
+    );
+  }
+
+  if (texasTdlrOn) {
+    await withScrapeRun("texas-tdlr", async () => {
+      const res = await runTexasTdlr();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] texas-tdlr crashed:`, (e as Error).message),
+    );
+  }
+
+  if (arizonaRocOn) {
+    await withScrapeRun("arizona-roc", async () => {
+      const res = await runArizonaRoc();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] arizona-roc crashed:`, (e as Error).message),
+    );
+  }
+
+  if (washingtonLiOn) {
+    await withScrapeRun("washington-li", async () => {
+      const res = await runWashingtonLi();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] washington-li crashed:`, (e as Error).message),
+    );
+  }
+
+  if (oregonCcbOn) {
+    await withScrapeRun("oregon-ccb", async () => {
+      const res = await runOregonCcb();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] oregon-ccb crashed:`, (e as Error).message),
+    );
+  }
+
+  if (nevadaNscbOn) {
+    await withScrapeRun("nevada-nscb", async () => {
+      const res = await runNevadaNscb();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] nevada-nscb crashed:`, (e as Error).message),
+    );
+  }
+
+  // CA provincial regulators (Quebec + BC). Pre-flight robots.txt
+  // verified per source — Law Society of BC was excluded because its
+  // robots.txt explicitly Disallows the lawyer lookup paths.
+  if (cmqOn) {
+    await withScrapeRun("cmq", async () => {
+      const res = await runCmq();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) => console.error(`[scraper] cmq crashed:`, (e as Error).message));
+  }
+
+  if (barreauQcOn) {
+    await withScrapeRun("barreau-qc", async () => {
+      const res = await runBarreauQc();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] barreau-qc crashed:`, (e as Error).message),
+    );
+  }
+
+  if (odqOn) {
+    await withScrapeRun("odq", async () => {
+      const res = await runOdq();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) => console.error(`[scraper] odq crashed:`, (e as Error).message));
+  }
+
+  if (oaqOn) {
+    await withScrapeRun("oaq", async () => {
+      const res = await runOaq();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) => console.error(`[scraper] oaq crashed:`, (e as Error).message));
+  }
+
+  if (cpsbcOn) {
+    await withScrapeRun("cpsbc", async () => {
+      const res = await runCpsbc();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] cpsbc crashed:`, (e as Error).message),
+    );
+  }
+
+  // ES national colegios. Single endpoint covers all autonomic
+  // colegios for that profession.
+  if (cgaeOn) {
+    await withScrapeRun("cgae", async () => {
+      const res = await runCgae();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] cgae crashed:`, (e as Error).message),
+    );
+  }
+
+  if (cscaeOn) {
+    await withScrapeRun("cscae", async () => {
+      const res = await runCscae();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] cscae crashed:`, (e as Error).message),
+    );
+  }
+
+  // Additional US state contractor / professional boards.
+  for (const [flag, name, runFn] of [
+    [illinoisIdfprOn, "illinois-idfpr", runIllinoisIdfpr],
+    [newYorkDosOn, "new-york-dos", runNewYorkDos],
+    [northCarolinaLbcOn, "north-carolina-lbc", runNorthCarolinaLbc],
+    [virginiaDporOn, "virginia-dpor", runVirginiaDpor],
+    [massachusettsDplOn, "massachusetts-dpl", runMassachusettsDpl],
+    [coloradoDoraOn, "colorado-dora", runColoradoDora],
+    [georgiaPlbOn, "georgia-plb", runGeorgiaPlb],
+    [pennsylvaniaBpoaOn, "pennsylvania-bpoa", runPennsylvaniaBpoa],
+    [wisconsinDspsOn, "wisconsin-dsps", runWisconsinDsps],
+    [minnesotaDliOn, "minnesota-dli", runMinnesotaDli],
+    [missouriDprOn, "missouri-dpr", runMissouriDpr],
+    [ohioElicenseOn, "ohio-elicense", runOhioElicense],
+    [michiganLaraOn, "michigan-lara", runMichiganLara],
+    [marylandDllrOn, "maryland-dllr", runMarylandDllr],
+    [newJerseyDcaOn, "new-jersey-dca", runNewJerseyDca],
+    [tennesseeTdciOn, "tennessee-tdci", runTennesseeTdci],
+    [cnbAvocatsOn, "cnb-avocats", runCnbAvocats],
+    [architectesFrOn, "architectes-fr", runArchitectesFr],
+    [oecFrOn, "oec-fr", runOecFr],
+    [ordreVetFrOn, "ordre-vet-fr", runOrdreVetFr],
+    [annuaireSanteAmeliOn, "annuaire-sante-ameli", runAnnuaireSanteAmeli],
+    [rppsFrOn, "rpps-fr", runRppsFr],
+    [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
+    [denueMxOn, "denue-mx", runDenueMx],
+    [oaaOn, "oaa", runOaa],
+    [louisianaLslbcOn, "louisiana-lslbc", runLouisianaLslbc],
+    [nycDobOn, "nyc-dob", runNycDob],
+    [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
+  ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
+    if (!flag) continue;
+    await withScrapeRun(name, async () => {
+      const res = await runFn();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] ${name} crashed:`, (e as Error).message),
+    );
+  }
+
   // Houzz US — workflow_dispatch only. Cap 500 rows/run.
   if (houzzEnabled) {
     await withScrapeRun("houzz", async () => {
@@ -537,6 +970,74 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] doctoralia crashed:`, (e as Error).message),
+    );
+  }
+
+  if (doctoraliaMxOn) {
+    await withScrapeRun("doctoralia-mx", async () => {
+      const res = await runCompetitorDoctoraliaMx();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] doctoralia-mx crashed:`, (e as Error).message),
+    );
+  }
+
+  // Overture Maps — bulk POI enrichment. One-shot fetch returning rows
+  // that go through the standard sink (same pattern as Wikidata).
+  if (overtureOn) {
+    await withScrapeRun("overture", async () => {
+      const rows = await runOvertureEnrichment();
+      if (rows.length === 0) return { rowsFetched: 0 };
+      const { inserted, updated, skipped } = await sink.upsert(rows);
+      total += inserted + updated;
+      console.log(
+        `[scraper] overture: found=${rows.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
+      );
+      return {
+        rowsFetched: rows.length,
+        rowsUpserted: inserted + updated,
+        rowsSkipped: skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] overture crashed:`, (e as Error).message),
+    );
+  }
+
+  // Competitor NA marketplace — self-managed sink. Cap via
+  // PROLIO_COMPETITOR_NA_LIMIT (default in source).
+  if (competitorNaOn) {
+    await withScrapeRun("competitor-na", async () => {
+      await runCompetitorNa();
+      return {};
+    }).catch((e) =>
+      console.error(`[scraper] competitor-na crashed:`, (e as Error).message),
+    );
+  }
+
+  // Competitor ES mega — aggregated ES marketplace sweep. Returns
+  // its own stats; emails are written directly to professional_emails.
+  if (competitorEsMegaOn) {
+    await withScrapeRun("competitor-es-mega", async () => {
+      const res = await runCompetitorEsMega();
+      total += res.inserted + res.updated;
+      console.log(
+        `[scraper] competitor-es-mega: fetched=${res.fetched} parsed=${res.parsed} ` +
+          `inserted=${res.inserted} updated=${res.updated} skipped=${res.skipped} emails=${res.emails}`,
+      );
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+        metadata: { emails: res.emails },
+      };
+    }).catch((e) =>
+      console.error(`[scraper] competitor-es-mega crashed:`, (e as Error).message),
     );
   }
 

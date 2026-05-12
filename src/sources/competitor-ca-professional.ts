@@ -58,11 +58,9 @@ const DEFAULT_LIMIT = 1000;
 // --- Category mapping --------------------------------------------------
 
 const CATEGORY_MEDICO: CategoryKey = "medicina";
-const CATEGORY_DENTISTA: CategoryKey = "medicina"; // closest CategoryKey today; specialty preserved in metadata
-const CATEGORY_ABOGADO: CategoryKey = "fiscal"; // closest professional-services key; see us-lawyers comment
-// Hold imports stable in case future refactors split categories — these
-// names document intent even though dentista/abogado don't yet have
-// dedicated CategoryKeys in the taxonomy.
+const CATEGORY_DENTISTA: CategoryKey = "dentista"; // taxonomy gained 'dentista' in 0059
+const CATEGORY_ABOGADO: CategoryKey = "extranjeria"; // closest professional-services key; specialty preserved in metadata
+// Hold imports stable in case future refactors split categories.
 void CATEGORY_MEDICO;
 void CATEGORY_ABOGADO;
 

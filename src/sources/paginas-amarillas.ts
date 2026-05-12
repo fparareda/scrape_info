@@ -171,7 +171,17 @@ export const paginasAmarillasSource: ScraperSource = {
   enabled() {
     // Off by default. Enable only in local launchd runs:
     //   export PROLIO_SCRAPE_PA=true
-    // In CI this stays false — PA blocks datacenter IPs.
+    //
+    // 2026-05-06 update: even from a residential IP, plain fetch hits
+    // an Imperva/Incapsula JS challenge (cookie names visid_incap_*
+    // and incap_ses_*). Curl with `-c -b` cookie jar gets back ~881
+    // bytes of <script> challenge stub instead of HTML. To make this
+    // work we'd need either:
+    //   (a) Playwright with stealth fingerprint to execute the JS and
+    //       earn the post-challenge cookie. Adds ~300MB browser dep.
+    //   (b) curl-cffi/undici with custom JA3 — Python-only realistically.
+    // Until one of those lands, this source returns 0 rows everywhere.
+    // Cobertura solapada con BORME + Doctoralia + Google Places + colegios.
     return process.env.PROLIO_SCRAPE_PA === "true";
   },
 

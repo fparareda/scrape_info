@@ -5,6 +5,11 @@ import { catalunyaInstaladores } from "./catalunya-instaladores.js";
 import { catalunyaTalleres } from "./catalunya-talleres.js";
 import { aragonInstaladores } from "./aragon-instaladores.js";
 import { aecaItv } from "./aeca-itv.js";
+import { paisVascoInstaladores } from "./pais-vasco-instaladores.js";
+import { castillaLeonInstaladores } from "./castilla-leon-instaladores.js";
+import { galiciaTalleres } from "./galicia-talleres.js";
+import { madridTalleres } from "./madrid-talleres.js";
+import { valenciaInstaladores } from "./valencia-instaladores.js";
 
 /**
  * CCAA-backed sources. Two layers:
@@ -29,6 +34,11 @@ const SOURCES: CcaaSource[] = [
   catalunyaTalleres,
   aragonInstaladores,
   aecaItv,
+  paisVascoInstaladores,
+  castillaLeonInstaladores,
+  galiciaTalleres,
+  madridTalleres,
+  valenciaInstaladores,
 ];
 
 export async function runAllCcaaSources(): Promise<ScrapedProfessional[]> {

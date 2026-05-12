@@ -36,12 +36,53 @@ export type ScrapeSource =
   | "gleif"
   | "industry-ca"
   | "tssa"
-  | "hcra";
+  | "hcra"
+  | "florida-dbpr"
+  | "texas-tdlr"
+  | "arizona-roc"
+  | "washington-li"
+  | "oregon-ccb"
+  | "nevada-nscb"
+  | "cmq"
+  | "barreau-qc"
+  | "odq"
+  | "oaq"
+  | "cpsbc"
+  | "law-society-bc"
+  | "illinois-idfpr"
+  | "new-york-dos"
+  | "north-carolina-lbc"
+  | "virginia-dpor"
+  | "massachusetts-dpl"
+  | "colorado-dora"
+  | "georgia-plb"
+  | "pennsylvania-bpoa"
+  | "wisconsin-dsps"
+  | "minnesota-dli"
+  | "missouri-dpr"
+  | "ohio-elicense"
+  | "michigan-lara"
+  | "maryland-dllr"
+  | "new-jersey-dca"
+  | "tennessee-tdci"
+  | "cnb-avocats"
+  | "architectes-fr"
+  | "oec-fr"
+  | "ordre-vet-fr"
+  | "annuaire-sante-ameli"
+  | "rpps-fr"
+  | "doctoralia-mx"
+  | "senasica-mx-vet"
+  | "denue-mx"
+  | "oaa"
+  | "louisiana-lslbc"
+  | "nyc-dob"
+  | "cgn-notariado";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
  * response into this shape; the sink upserts into Supabase. Deliberately
- * similar to ./prolio-types `Professional` but with source provenance and
+ * similar to @prolio/types `Professional` but with source provenance and
  * without DB-only fields (id, timestamps).
  */
 export interface ScrapedProfessional {
@@ -75,10 +116,10 @@ export interface ScrapeTarget {
   citySlug: string;
   /** Human-readable city name; sources use it to build localised queries. */
   cityName: string;
-  /** ISO country code — ES, CA, US today. Sources can choose to skip
-   *  (e.g. CCAA Spain-only registries) or adapt queries (e.g. EN/FR
-   *  synonyms per locale). */
-  country: "ES" | "CA" | "US";
+  /** ISO country code — ES, CA, US, FR, MX today. Sources can choose
+   *  to skip (e.g. CCAA Spain-only registries) or adapt queries
+   *  (e.g. EN/FR synonyms per locale). */
+  country: "ES" | "CA" | "US" | "FR" | "MX";
   /** Language to form the textQuery in for this city. */
   queryLocale: "es" | "en" | "fr";
 }

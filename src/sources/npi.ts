@@ -21,17 +21,38 @@ import { getCities } from "../cities.js";
  * "Family Medicine") because the API rejects bare codes for that
  * field. We retain the code in metadata + license_number flow.
  *
+ * --- Taxonomy → Prolio category map -------------------------------------
+ * NUCC Health Care Provider Taxonomy code roots
+ * (https://taxonomy.nucc.org/, version 25.0):
+ *
+ *   207Q…  Family Medicine                  → medicina
+ *   207L…  Anesthesiology                   → medicina
+ *   224P…  Physical Therapist (root 224P)   → medicina (no fisioterapia
+ *                                              slot used historically;
+ *                                              kept as medicina for
+ *                                              backwards compat)
+ *   103T…  Psychologist                     → psicologia
+ *   1223…  Dental Providers (root)          → dentista
+ *           e.g. 1223G0001X General Dentist,
+ *                1223D0001X Dental Public Health,
+ *                1223E0200X Endodontics, 1223P0221X Pediatric, etc.
+ *   174M…  Veterinarian (root)              → veterinario
+ *           e.g. 174MM1900N Veterinarian
+ *
+ * The granular taxonomy is preserved in metadata.npi_taxonomy +
+ * metadata.npi_taxonomy_desc so a future split can re-bucket without
+ * re-scraping.
+ *
  * Off by default. Enable via PROLIO_RUN_NPI=true. Per-state cap via
- * PROLIO_NPI_LIMIT_PER_STATE (default 200). Total ceiling
- * 51 × 5 × 200 = 51k absolute, ~10k realistic after city/taxonomy
- * pruning. Monthly cron — see .github/workflows/scrape-npi.yml.
+ * PROLIO_NPI_LIMIT_PER_STATE (default 1000). Monthly cron — see
+ * .github/workflows/scrape-npi.yml.
  */
 
 const POLITE_UA =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 const REQUEST_TIMEOUT_MS = 25_000;
 const PAGE_SIZE = 200;
-const DEFAULT_LIMIT_PER_STATE = 200;
+const DEFAULT_LIMIT_PER_STATE = 1000;
 
 const US_STATES: readonly string[] = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL",
@@ -47,23 +68,44 @@ interface TaxonomyEntry {
   category: CategoryKey;
 }
 
-// Five taxonomies — kept small so a full run stays well under any
-// reasonable wall-clock budget. Codes from the NUCC Health Care
-// Provider Taxonomy. `description` matches what the API returns and
-// is used for the search filter.
-// Note on category mapping: our public CategoryKey enum has only 9
-// keys today and lacks dedicated `dentista` / `fisioterapeuta` slots.
-// All medical taxonomies fold into `medicina`; Psychologist maps to
-// `psicologia`. The granular taxonomy is preserved in
-// metadata.npi_taxonomy + metadata.npi_taxonomy_desc so a future
-// taxonomy split can re-bucket without re-scraping.
-const TAXONOMIES: readonly TaxonomyEntry[] = [
-  { code: "207Q00000X", description: "Family Medicine",     category: "medicina" },
-  { code: "122300000X", description: "Dentist",             category: "medicina" },
-  { code: "103T00000X", description: "Psychologist",        category: "psicologia" },
-  { code: "224P00000X", description: "Physical Therapist",  category: "medicina" },
-  { code: "207L00000X", description: "Anesthesiology",      category: "medicina" },
+// Taxonomies queried per state. Codes from the NUCC Health Care
+// Provider Taxonomy (root prefixes documented at top of file). The
+// `description` field must match what the NPPES API returns — it is
+// the value sent in the `taxonomy_description` query param. The
+// `categoryRoot` field is the 4-char taxonomy root used downstream
+// to map a *result*'s primary taxonomy back to a Prolio category
+// (a result fetched under "Dentist" can ship back any 1223…X code).
+interface TaxonomyEntryExt extends TaxonomyEntry {
+  /** 4-char root used to classify results into Prolio categories. */
+  categoryRoot: string;
+}
+
+const TAXONOMIES: readonly TaxonomyEntryExt[] = [
+  { code: "207Q00000X", description: "Family Medicine",     category: "medicina",    categoryRoot: "207Q" },
+  { code: "122300000X", description: "Dentist",             category: "dentista",    categoryRoot: "1223" },
+  { code: "103T00000X", description: "Psychologist",        category: "psicologia",  categoryRoot: "103T" },
+  { code: "224P00000X", description: "Physical Therapist",  category: "medicina",    categoryRoot: "224P" },
+  { code: "207L00000X", description: "Anesthesiology",      category: "medicina",    categoryRoot: "207L" },
+  { code: "174M00000X", description: "Veterinarian",        category: "veterinario", categoryRoot: "174M" },
 ];
+
+/**
+ * Map a result's primary taxonomy code to a Prolio category. Falls back
+ * to the queried taxonomy's category if the result's taxonomy is missing
+ * or doesn't match a known root.
+ */
+function categoryFromTaxonomyCode(
+  code: string | undefined,
+  fallback: CategoryKey,
+): CategoryKey {
+  if (!code) return fallback;
+  const root = code.slice(0, 4).toUpperCase();
+  if (root === "1223") return "dentista";
+  if (root === "174M") return "veterinario";
+  if (root === "103T") return "psicologia";
+  if (root === "207Q" || root === "207L" || root === "224P") return "medicina";
+  return fallback;
+}
 
 // --- API types (loose; API ships nullable fields) ----------------------
 
@@ -245,12 +287,17 @@ export async function runNpi(): Promise<void> {
             .map((p) => (typeof p === "string" ? p.trim() : ""))
             .filter((p) => p.length > 0);
 
+          const resolvedCategory = categoryFromTaxonomyCode(
+            taxRow?.code,
+            tax.category,
+          );
+
           batch.push(
             normalise({
               source: "npi",
               sourceId,
               name,
-              categoryKey: tax.category,
+              categoryKey: resolvedCategory,
               citySlug,
               phone: normaliseUsPhone(addr?.telephone_number),
               address: addressParts.length > 0 ? addressParts.join(", ") : undefined,

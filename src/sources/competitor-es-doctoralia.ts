@@ -82,7 +82,7 @@ const REQUEST_DELAY_MS = 1_000;
  * only `nutricionista`). `dentista` + `fisioterapia` were added to the
  * taxonomy in 2026-04 (migration 0058) — both wired below.
  */
-interface DoctoraliaCategory {
+export interface DoctoraliaCategory {
   /** Doctoralia URL slug, used as `/<slug>/<city>`. */
   slug: string;
   /** Prolio category key for the produced rows. */
@@ -91,7 +91,7 @@ interface DoctoraliaCategory {
   specialty: string;
 }
 
-const DOCTORALIA_CATEGORIES: DoctoraliaCategory[] = [
+export const DOCTORALIA_CATEGORIES: DoctoraliaCategory[] = [
   {
     slug: "medico-de-familia",
     category: "medicina",
@@ -155,7 +155,7 @@ async function politeFetch(
 
 // --- Parsing -----------------------------------------------------------
 
-interface ParsedCard {
+export interface ParsedCard {
   sourceId: string;
   name: string;
   doctoraliaUrl: string;
@@ -178,7 +178,7 @@ interface ParsedCard {
  * doctor cards. Those carry `data-ga4-entity-type="clinic"`; we filter
  * them out by requiring `data-doctor-name=` (only set on doctor cards).
  */
-function splitCards(html: string): string[] {
+export function splitCards(html: string): string[] {
   const cards: string[] = [];
   const open = /data-test-id="result-item"/g;
   const positions: number[] = [];
@@ -238,7 +238,7 @@ function stripHonorific(name: string): string {
   return name.replace(/^(?:Dr|Dra|Sr|Sra|Lic)\.?\s+/i, "").trim();
 }
 
-function parseCard(card: string): ParsedCard | null {
+export function parseCard(card: string): ParsedCard | null {
   // Reject facility/clinic cards.
   const entityType = attr(card, "data-ga4-entity-type");
   if (entityType && entityType !== "doctor") return null;
@@ -274,6 +274,7 @@ async function fetchCategoryCityPage(
   categoryKey: CategoryKey,
   specialtyLabel: string,
   validCitySlugs: Set<string>,
+  pageNum: number = 1,
 ): Promise<{ records: ScrapedProfessional[]; status: number }> {
   // Doctoralia uses kebab-no-accent (same rule as our slugify): "san
   // sebastián" → "san-sebastian", "a coruña" → "a-coruna". Build the
@@ -283,7 +284,11 @@ async function fetchCategoryCityPage(
   // exist on Doctoralia for ES anyway.
   const urlCitySlug = slugify(citySpanishName);
   if (!urlCitySlug) return { records: [], status: 0 };
-  const url = `https://www.doctoralia.es/${doctoraliaSlug}/${urlCitySlug}`;
+  const baseUrl = `https://www.doctoralia.es/${doctoraliaSlug}/${urlCitySlug}`;
+  // Doctoralia paginates with ?page=N starting at page=1 (page=1 is
+  // identical to no param). Each page returns ~31 cards. Densest
+  // cities (Madrid, Barcelona) reach 50+ pages per specialty.
+  const url = pageNum > 1 ? `${baseUrl}?page=${pageNum}` : baseUrl;
 
   const response = await politeFetch(url);
   if (!response) return { records: [], status: 0 };
@@ -395,29 +400,44 @@ export async function runCompetitorDoctoralia(): Promise<DoctoraliaRunSummary | 
   const all: ScrapedProfessional[] = [];
   let pageCount = 0;
 
+  // Hard ceiling on pages per (city, category). Madrid + Barcelona
+  // reach 50+ pages on dense specialties (medicina, dentista). Cap
+  // here keeps a single popular city from monopolising the run cap.
+  const MAX_PAGES_PER_CITY_CAT = 25;
+
   outer: for (const city of cities) {
     for (const cat of DOCTORALIA_CATEGORIES) {
-      const { records, status } = await fetchCategoryCityPage(
-        cat.slug,
-        city.slug,
-        city.name,
-        cat.category,
-        cat.specialty,
-        validCitySlugs,
-      );
-      pageCount += 1;
-      if (status === 403 || status === 503) {
-        console.warn(
-          `[doctoralia] got ${status}; aborting run to respect rate limits`,
+      // Walk pages 1..N until empty or cap reached.
+      let lastPageNonEmpty = true;
+      for (let pageNum = 1; pageNum <= MAX_PAGES_PER_CITY_CAT && lastPageNonEmpty; pageNum += 1) {
+        const { records, status } = await fetchCategoryCityPage(
+          cat.slug,
+          city.slug,
+          city.name,
+          cat.category,
+          cat.specialty,
+          validCitySlugs,
+          pageNum,
         );
-        break outer;
+        pageCount += 1;
+        if (status === 403 || status === 503) {
+          console.warn(
+            `[doctoralia] got ${status}; aborting run to respect rate limits`,
+          );
+          break outer;
+        }
+        // Empty page = ran out of results for this city/category — move on.
+        if (records.length === 0) {
+          lastPageNonEmpty = false;
+          break;
+        }
+        all.push(...records);
+        if (all.length >= limit) {
+          console.log(`[doctoralia] reached cap ${limit}, stopping`);
+          break outer;
+        }
+        await delay(REQUEST_DELAY_MS);
       }
-      all.push(...records);
-      if (all.length >= limit) {
-        console.log(`[doctoralia] reached cap ${limit}, stopping`);
-        break outer;
-      }
-      await delay(REQUEST_DELAY_MS);
     }
   }
 

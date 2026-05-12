@@ -1,4 +1,4 @@
-export type CountryCode = "ES" | "CA" | "US";
+export type CountryCode = "ES" | "CA" | "US" | "FR" | "MX";
 
 export interface ScraperCity {
   slug: string;
@@ -30,6 +30,12 @@ function caFr(c: Base): ScraperCity {
 }
 function us(c: Base): ScraperCity {
   return { ...c, country: "US", queryLocale: "en" };
+}
+function fr(c: Base): ScraperCity {
+  return { ...c, country: "FR", queryLocale: "fr" };
+}
+function mx(c: Base): ScraperCity {
+  return { ...c, country: "MX", queryLocale: "es" };
 }
 
 /**
@@ -147,11 +153,89 @@ export const US_CITIES: ScraperCity[] = [
   us({ slug: "washington-dc", name: "Washington",    lat: 38.9072, lng: -77.0369 }),
 ];
 
+/**
+ * Top 30 French metro areas. Mirrors `0067_fr_cities_seed.sql`. Used
+ * by CNB Avocats (data.gouv) and Architectes-FR (annuaire) sources.
+ */
+export const FRENCH_CITIES: ScraperCity[] = [
+  fr({ slug: "paris",                  name: "Paris",                  lat: 48.8566, lng:  2.3522 }),
+  fr({ slug: "marseille",              name: "Marseille",              lat: 43.2965, lng:  5.3698 }),
+  fr({ slug: "lyon",                   name: "Lyon",                   lat: 45.7640, lng:  4.8357 }),
+  fr({ slug: "toulouse",               name: "Toulouse",               lat: 43.6047, lng:  1.4442 }),
+  fr({ slug: "nice",                   name: "Nice",                   lat: 43.7102, lng:  7.2620 }),
+  fr({ slug: "nantes",                 name: "Nantes",                 lat: 47.2184, lng: -1.5536 }),
+  fr({ slug: "montpellier",            name: "Montpellier",            lat: 43.6109, lng:  3.8772 }),
+  fr({ slug: "strasbourg",             name: "Strasbourg",             lat: 48.5734, lng:  7.7521 }),
+  fr({ slug: "bordeaux",               name: "Bordeaux",               lat: 44.8378, lng: -0.5792 }),
+  fr({ slug: "lille",                  name: "Lille",                  lat: 50.6292, lng:  3.0573 }),
+  fr({ slug: "rennes",                 name: "Rennes",                 lat: 48.1173, lng: -1.6778 }),
+  fr({ slug: "reims",                  name: "Reims",                  lat: 49.2583, lng:  4.0317 }),
+  fr({ slug: "le-havre",               name: "Le Havre",               lat: 49.4944, lng:  0.1079 }),
+  fr({ slug: "saint-etienne",          name: "Saint-Étienne",          lat: 45.4397, lng:  4.3872 }),
+  fr({ slug: "toulon",                 name: "Toulon",                 lat: 43.1242, lng:  5.9280 }),
+  fr({ slug: "grenoble",               name: "Grenoble",               lat: 45.1885, lng:  5.7245 }),
+  fr({ slug: "dijon",                  name: "Dijon",                  lat: 47.3220, lng:  5.0415 }),
+  fr({ slug: "angers",                 name: "Angers",                 lat: 47.4784, lng: -0.5632 }),
+  fr({ slug: "nimes",                  name: "Nîmes",                  lat: 43.8367, lng:  4.3601 }),
+  fr({ slug: "villeurbanne",           name: "Villeurbanne",           lat: 45.7665, lng:  4.8795 }),
+  fr({ slug: "clermont-ferrand",       name: "Clermont-Ferrand",       lat: 45.7772, lng:  3.0870 }),
+  fr({ slug: "aix-en-provence",        name: "Aix-en-Provence",        lat: 43.5297, lng:  5.4474 }),
+  fr({ slug: "le-mans",                name: "Le Mans",                lat: 48.0061, lng:  0.1996 }),
+  fr({ slug: "brest",                  name: "Brest",                  lat: 48.3905, lng: -4.4860 }),
+  fr({ slug: "tours",                  name: "Tours",                  lat: 47.3941, lng:  0.6848 }),
+  fr({ slug: "amiens",                 name: "Amiens",                 lat: 49.8941, lng:  2.2958 }),
+  fr({ slug: "limoges",                name: "Limoges",                lat: 45.8336, lng:  1.2611 }),
+  fr({ slug: "annecy",                 name: "Annecy",                 lat: 45.8992, lng:  6.1294 }),
+  fr({ slug: "perpignan",              name: "Perpignan",              lat: 42.6886, lng:  2.8949 }),
+  fr({ slug: "boulogne-billancourt",   name: "Boulogne-Billancourt",   lat: 48.8359, lng:  2.2406 }),
+];
+
 /** All cities the scraper knows about, across all countries. */
+/**
+ * Top 30 Mexican metro areas. Mirrors `0070_mx_cities_seed.sql`.
+ * INEGI 2020 censo. Slugs use `-mx` suffix where the bare slug
+ * collides with another country (e.g. `leon-mx`, `merida-mx`,
+ * `veracruz-mx`).
+ */
+export const MEXICAN_CITIES: ScraperCity[] = [
+  mx({ slug: "cdmx",            name: "Ciudad de México",     lat: 19.4326, lng: -99.1332 }),
+  mx({ slug: "guadalajara",     name: "Guadalajara",          lat: 20.6597, lng: -103.3496 }),
+  mx({ slug: "monterrey",       name: "Monterrey",            lat: 25.6866, lng: -100.3161 }),
+  mx({ slug: "puebla",          name: "Puebla",               lat: 19.0414, lng: -98.2063 }),
+  mx({ slug: "tijuana",         name: "Tijuana",              lat: 32.5149, lng: -117.0382 }),
+  mx({ slug: "leon-mx",         name: "León",                 lat: 21.1250, lng: -101.6860 }),
+  mx({ slug: "ciudad-juarez",   name: "Ciudad Juárez",        lat: 31.6904, lng: -106.4245 }),
+  mx({ slug: "zapopan",         name: "Zapopan",              lat: 20.7235, lng: -103.3848 }),
+  mx({ slug: "merida-mx",       name: "Mérida",               lat: 20.9674, lng: -89.5926 }),
+  mx({ slug: "san-luis-potosi", name: "San Luis Potosí",      lat: 22.1565, lng: -100.9855 }),
+  mx({ slug: "aguascalientes",  name: "Aguascalientes",       lat: 21.8853, lng: -102.2916 }),
+  mx({ slug: "saltillo",        name: "Saltillo",             lat: 25.4232, lng: -101.0053 }),
+  mx({ slug: "mexicali",        name: "Mexicali",             lat: 32.6245, lng: -115.4523 }),
+  mx({ slug: "culiacan",        name: "Culiacán",             lat: 24.8091, lng: -107.3940 }),
+  mx({ slug: "naucalpan",       name: "Naucalpan",            lat: 19.4710, lng: -99.2360 }),
+  mx({ slug: "acapulco",        name: "Acapulco",             lat: 16.8531, lng: -99.8237 }),
+  mx({ slug: "hermosillo",      name: "Hermosillo",           lat: 29.0892, lng: -110.9613 }),
+  mx({ slug: "queretaro",       name: "Querétaro",            lat: 20.5888, lng: -100.3899 }),
+  mx({ slug: "chihuahua",       name: "Chihuahua",            lat: 28.6353, lng: -106.0889 }),
+  mx({ slug: "morelia",         name: "Morelia",              lat: 19.7008, lng: -101.1844 }),
+  mx({ slug: "cancun",          name: "Cancún",               lat: 21.1619, lng: -86.8515 }),
+  mx({ slug: "tlalnepantla",    name: "Tlalnepantla de Baz",  lat: 19.5366, lng: -99.2034 }),
+  mx({ slug: "toluca",          name: "Toluca",               lat: 19.2826, lng: -99.6557 }),
+  mx({ slug: "veracruz-mx",     name: "Veracruz",             lat: 19.1738, lng: -96.1342 }),
+  mx({ slug: "reynosa",         name: "Reynosa",              lat: 26.0509, lng: -98.2962 }),
+  mx({ slug: "tampico",         name: "Tampico",              lat: 22.2553, lng: -97.8686 }),
+  mx({ slug: "cuernavaca",      name: "Cuernavaca",           lat: 18.9242, lng: -99.2216 }),
+  mx({ slug: "mazatlan",        name: "Mazatlán",             lat: 23.2494, lng: -106.4111 }),
+  mx({ slug: "torreon",         name: "Torreón",              lat: 25.5428, lng: -103.4068 }),
+  mx({ slug: "villahermosa",    name: "Villahermosa",         lat: 17.9892, lng: -92.9281 }),
+];
+
 export const ALL_CITIES: ScraperCity[] = [
   ...SPANISH_CITIES,
   ...CANADIAN_CITIES,
   ...US_CITIES,
+  ...FRENCH_CITIES,
+  ...MEXICAN_CITIES,
 ];
 
 // ---------------------------------------------------------------------------
@@ -220,7 +304,8 @@ const QC_KNOWN_SLUGS = new Set([
 ]);
 
 function deriveQueryLocale(country: CountryCode, slug: string): "es" | "en" | "fr" {
-  if (country === "ES") return "es";
+  if (country === "ES" || country === "MX") return "es";
+  if (country === "FR") return "fr";
   if (country !== "CA") return "en";
   if (QC_KNOWN_SLUGS.has(slug)) return "fr";
   if (QC_SLUG_HINTS.some((h) => slug.includes(h))) return "fr";
@@ -234,6 +319,8 @@ function staticByCountry(country: CountryCode | "all"): ScraperCity[] {
   if (country === "all") return ALL_CITIES;
   if (country === "ES") return SPANISH_CITIES;
   if (country === "US") return US_CITIES;
+  if (country === "FR") return FRENCH_CITIES;
+  if (country === "MX") return MEXICAN_CITIES;
   return CANADIAN_CITIES;
 }
 
