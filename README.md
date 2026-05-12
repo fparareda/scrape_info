@@ -1,6 +1,6 @@
-# @prolio/scraper
+# scraper
 
-Scraper de profesionales para Prolio.
+Scraper de profesionales.
 
 - **Fuentes**: Google Places API (bootstrap) + Playwright para colegios profesionales.
 - **Refresco**: cron semanal.
