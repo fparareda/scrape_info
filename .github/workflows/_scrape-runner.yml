@@ -177,7 +177,6 @@ jobs:
 
       # 2026-05 wave: MX federal + state directories
       PROLIO_RUN_NOTARIADO_MX:          ${{ inputs.source == 'notariado-mx' && 'true' || 'false' }}
-      PROLIO_RUN_SAT_CPR:               ${{ inputs.source == 'sat-cpr' && 'true' || 'false' }}
       PROLIO_RUN_SEDEMA_VERIFICENTROS_CDMX: ${{ inputs.source == 'sedema-verificentros-cdmx' && 'true' || 'false' }}
       PROLIO_RUN_VERIFICACION_EDOMEX:   ${{ inputs.source == 'verificacion-edomex' && 'true' || 'false' }}
       PROLIO_RUN_VERIFICACION_JALISCO:  ${{ inputs.source == 'verificacion-jalisco' && 'true' || 'false' }}

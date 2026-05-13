@@ -99,7 +99,6 @@ export type ScrapeSource =
   | "cnop-pharmaciens"
   // 2026-05 wave: MX federal + state directories
   | "notariado-mx"
-  | "sat-cpr"
   | "sedema-verificentros-cdmx"
   | "verificacion-edomex"
   | "verificacion-jalisco"

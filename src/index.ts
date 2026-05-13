@@ -137,7 +137,6 @@ import { lssSaskatchewanSource, runLssSaskatchewan } from "./sources/lss-saskatc
 import { amvicDealersSource, runAmvicDealers } from "./sources/amvic-dealers.js";
 import { apegaSource, runApega } from "./sources/apega.js";
 import { notariadoMxSource, runNotariadoMx } from "./sources/notariado-mx.js";
-import { satCprSource, runSatCpr } from "./sources/sat-cpr.js";
 import { sedemaVerificentrosCdmxSource, runSedemaVerificentrosCdmx } from "./sources/sedema-verificentros-cdmx.js";
 import { verificacionEdomexSource, runVerificacionEdomex } from "./sources/verificacion-edomex.js";
 import { verificacionJaliscoSource, runVerificacionJalisco } from "./sources/verificacion-jalisco.js";
@@ -264,7 +263,6 @@ async function main(): Promise<void> {
   const apegaOn = apegaSource.enabled();
   // 2026-05 wave: MX
   const notariadoMxOn = notariadoMxSource.enabled();
-  const satCprOn = satCprSource.enabled();
   const sedemaVerificentrosCdmxOn = sedemaVerificentrosCdmxSource.enabled();
   const verificacionEdomexOn = verificacionEdomexSource.enabled();
   const verificacionJaliscoOn = verificacionJaliscoSource.enabled();
@@ -356,7 +354,6 @@ async function main(): Promise<void> {
     !amvicDealersOn &&
     !apegaOn &&
     !notariadoMxOn &&
-    !satCprOn &&
     !sedemaVerificentrosCdmxOn &&
     !verificacionEdomexOn &&
     !verificacionJaliscoOn &&
@@ -448,7 +445,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CAP_PSYCHOLOGISTS=true, PROLIO_RUN_CPM_PHYSIO=true, " +
         "PROLIO_RUN_LSS_SASKATCHEWAN=true, PROLIO_RUN_AMVIC_DEALERS=true, " +
         "PROLIO_RUN_APEGA=true, " +
-        "PROLIO_RUN_NOTARIADO_MX=true, PROLIO_RUN_SAT_CPR=true, " +
+        "PROLIO_RUN_NOTARIADO_MX=true, " +
         "PROLIO_RUN_SEDEMA_VERIFICENTROS_CDMX=true, " +
         "PROLIO_RUN_VERIFICACION_EDOMEX=true, PROLIO_RUN_VERIFICACION_JALISCO=true, " +
         "PROLIO_RUN_CNSF_AGENTES=true, PROLIO_RUN_COLEGIO_NOTARIOS_CDMX=true, " +
@@ -982,7 +979,6 @@ async function main(): Promise<void> {
     [amvicDealersOn, "amvic-dealers", runAmvicDealers],
     [apegaOn, "apega", runApega],
     [notariadoMxOn, "notariado-mx", runNotariadoMx],
-    [satCprOn, "sat-cpr", runSatCpr],
     [sedemaVerificentrosCdmxOn, "sedema-verificentros-cdmx", runSedemaVerificentrosCdmx],
     [verificacionEdomexOn, "verificacion-edomex", runVerificacionEdomex],
     [verificacionJaliscoOn, "verificacion-jalisco", runVerificacionJalisco],
