@@ -1,0 +1,12 @@
+name: Scrape · CPM (MB physios)
+on:
+  schedule:
+    - cron: "0 8 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cpm-physio
+      timeout_minutes: 90

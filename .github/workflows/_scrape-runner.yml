@@ -157,13 +157,35 @@ jobs:
       PROLIO_RUN_OEC_FR:                ${{ inputs.source == 'oec-fr' && 'true' || 'false' }}
       PROLIO_RUN_ORDRE_VET_FR:          ${{ inputs.source == 'ordre-vet-fr' && 'true' || 'false' }}
       PROLIO_ORDRE_VET_FR_LIMIT:        "2000"
-      PROLIO_RUN_ANNUAIRE_SANTE_AMELI:  ${{ inputs.source == 'annuaire-sante-ameli' && 'true' || 'false' }}
-      PROLIO_RUN_RPPS_FR:               ${{ inputs.source == 'rpps-fr' && 'true' || 'false' }}
+      # 2026-05 consolidation: rpps-fr + annuaire-sante-ameli → annuaire-sante-ans
+      # (multi-table ANS extraction covering RPPS+ADELI bascule).
+      PROLIO_RUN_ANNUAIRE_SANTE_ANS:    ${{ inputs.source == 'annuaire-sante-ans' && 'true' || 'false' }}
+
+      # 2026-05 wave: FR data.gouv bulk + open data
+      PROLIO_RUN_SIRENE_INSEE:          ${{ inputs.source == 'sirene-insee' && 'true' || 'false' }}
+      PROLIO_RUN_ADEME_RGE:             ${{ inputs.source == 'ademe-rge' && 'true' || 'false' }}
+      PROLIO_RUN_FINESS:                ${{ inputs.source == 'finess' && 'true' || 'false' }}
+      PROLIO_RUN_PRIX_CONTROLE_TECHNIQUE: ${{ inputs.source == 'prix-controle-technique' && 'true' || 'false' }}
+      PROLIO_RUN_AUTO_ECOLES_FR:        ${{ inputs.source == 'auto-ecoles-fr' && 'true' || 'false' }}
+      PROLIO_RUN_GEOMETRES_FR:          ${{ inputs.source == 'geometres-fr' && 'true' || 'false' }}
+      PROLIO_RUN_CNOP_PHARMACIENS:      ${{ inputs.source == 'cnop-pharmaciens' && 'true' || 'false' }}
 
       # Mexico (added 2026-05-07).
       PROLIO_RUN_DOCTORALIA_MX:         ${{ inputs.source == 'doctoralia-mx' && 'true' || 'false' }}
       PROLIO_RUN_SENASICA_MX_VET:       ${{ inputs.source == 'senasica-mx-vet' && 'true' || 'false' }}
       PROLIO_RUN_DENUE_MX:              ${{ inputs.source == 'denue-mx' && 'true' || 'false' }}
+
+      # 2026-05 wave: MX federal + state directories
+      PROLIO_RUN_NOTARIADO_MX:          ${{ inputs.source == 'notariado-mx' && 'true' || 'false' }}
+      PROLIO_RUN_SAT_CPR:               ${{ inputs.source == 'sat-cpr' && 'true' || 'false' }}
+      PROLIO_RUN_SEDEMA_VERIFICENTROS_CDMX: ${{ inputs.source == 'sedema-verificentros-cdmx' && 'true' || 'false' }}
+      PROLIO_RUN_VERIFICACION_EDOMEX:   ${{ inputs.source == 'verificacion-edomex' && 'true' || 'false' }}
+      PROLIO_RUN_VERIFICACION_JALISCO:  ${{ inputs.source == 'verificacion-jalisco' && 'true' || 'false' }}
+      PROLIO_RUN_CNSF_AGENTES:          ${{ inputs.source == 'cnsf-agentes' && 'true' || 'false' }}
+      PROLIO_RUN_COLEGIO_NOTARIOS_CDMX: ${{ inputs.source == 'colegio-notarios-cdmx' && 'true' || 'false' }}
+      PROLIO_RUN_FCARM_ARQUITECTOS:     ${{ inputs.source == 'fcarm-arquitectos' && 'true' || 'false' }}
+      PROLIO_RUN_FEDMVZ_COLEGIOS_VET:   ${{ inputs.source == 'fedmvz-colegios-vet' && 'true' || 'false' }}
+      PROLIO_RUN_CONAHCYT_SNII:         ${{ inputs.source == 'conahcyt-snii' && 'true' || 'false' }}
 
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC
@@ -173,6 +195,19 @@ jobs:
       PROLIO_RUN_ODQ:        ${{ inputs.source == 'odq' && 'true' || 'false' }}
       PROLIO_RUN_OAQ:        ${{ inputs.source == 'oaq' && 'true' || 'false' }}
       PROLIO_RUN_CPSBC:      ${{ inputs.source == 'cpsbc' && 'true' || 'false' }}
+
+      # 2026-05 wave: CA — Alinity/Thentia hosted + provincial regulators
+      PROLIO_RUN_TSASK:               ${{ inputs.source == 'tsask' && 'true' || 'false' }}
+      PROLIO_RUN_TSBC:                ${{ inputs.source == 'tsbc' && 'true' || 'false' }}
+      PROLIO_RUN_CPSA:                ${{ inputs.source == 'cpsa' && 'true' || 'false' }}
+      PROLIO_RUN_CPSM:                ${{ inputs.source == 'cpsm' && 'true' || 'false' }}
+      PROLIO_RUN_CPSNL:               ${{ inputs.source == 'cpsnl' && 'true' || 'false' }}
+      PROLIO_RUN_CPSPEI:              ${{ inputs.source == 'cpspei' && 'true' || 'false' }}
+      PROLIO_RUN_CAP_PSYCHOLOGISTS:   ${{ inputs.source == 'cap-psychologists' && 'true' || 'false' }}
+      PROLIO_RUN_CPM_PHYSIO:          ${{ inputs.source == 'cpm-physio' && 'true' || 'false' }}
+      PROLIO_RUN_LSS_SASKATCHEWAN:    ${{ inputs.source == 'lss-saskatchewan' && 'true' || 'false' }}
+      PROLIO_RUN_AMVIC_DEALERS:       ${{ inputs.source == 'amvic-dealers' && 'true' || 'false' }}
+      PROLIO_RUN_APEGA:               ${{ inputs.source == 'apega' && 'true' || 'false' }}
 
       # CA Ontario architects (OAA, added 2026-05-07). HTML scraper
       # behind a Sucuri JS challenge — solved per-run by the source.

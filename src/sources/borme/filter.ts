@@ -166,6 +166,12 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
     "estacion itv",
     "itv",
   ],
+  ingenieria: [
+    "ingenieria",
+    "ingeniero",
+    "ingenieria civil",
+    "ingenieria industrial",
+  ],
 };
 
 /** Strip diacritics, lowercase, collapse whitespace. */

@@ -1,0 +1,12 @@
+name: Scrape · sat cpr
+on:
+  schedule:
+    - cron: "0 14 * * 0" # Sunday 14:00 UTC weekly
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: sat-cpr
+      timeout_minutes: 60

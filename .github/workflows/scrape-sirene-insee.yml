@@ -1,0 +1,15 @@
+name: Scrape · SIRENE INSEE (France)
+on:
+  schedule:
+    # Monthly first Sunday 06:00 UTC. Heavy bulk (~2 GB) — relies on
+    # PROLIO_SIRENE_INSEE_CSV pointing at a pre-filtered slice produced
+    # by scripts/download-sirene.mjs offline.
+    - cron: "0 6 1-7 * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: sirene-insee
+      timeout_minutes: 300
