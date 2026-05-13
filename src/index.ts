@@ -120,6 +120,7 @@ import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
 import { oaaSource, runOaa } from "./sources/oaa.js";
 import { louisianaLslbcSource, runLouisianaLslbc } from "./sources/louisiana-lslbc.js";
+import { rhodeIslandCrbSource, runRhodeIslandCrb } from "./sources/rhode-island-crb.js";
 import { nycDobSource, runNycDob } from "./sources/nyc-dob.js";
 import {
   cgnNotariadoEnabled,
@@ -217,6 +218,7 @@ async function main(): Promise<void> {
   const denueMxOn = denueMxSource.enabled();
   const oaaOn = oaaSource.enabled();
   const louisianaLslbcOn = louisianaLslbcSource.enabled();
+  const rhodeIslandCrbOn = rhodeIslandCrbSource.enabled();
   const nycDobOn = nycDobSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
@@ -286,7 +288,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !rhodeIslandCrbOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -350,6 +353,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_RPPS_FR=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
+        "PROLIO_RUN_RHODE_ISLAND_CRB=true, " +
         "PROLIO_SCRAPE_OVERTURE=true",
     );
     return;
@@ -863,6 +867,7 @@ async function main(): Promise<void> {
     [oaaOn, "oaa", runOaa],
     [louisianaLslbcOn, "louisiana-lslbc", runLouisianaLslbc],
     [nycDobOn, "nyc-dob", runNycDob],
+    [rhodeIslandCrbOn, "rhode-island-crb", runRhodeIslandCrb],
     [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;

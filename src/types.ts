@@ -70,6 +70,7 @@ export type ScrapeSource =
   | "oec-fr"
   | "ordre-vet-fr"
   | "annuaire-sante-ameli"
+  | "rhode-island-crb"
   | "rpps-fr"
   | "doctoralia-mx"
   | "senasica-mx-vet"
