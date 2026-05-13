@@ -2,233 +2,273 @@ import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapeSource, ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
-import { splitCsvLine, frPostalCodeToCitySlug } from "./_bulk-utils.js";
+import { frPostalCodeToCitySlug } from "./_bulk-utils.js";
 
 /**
- * SIRENE — Base SIRENE des entreprises et de leurs établissements
- * (SIREN/SIRET). Published monthly by INSEE on data.gouv.fr under
- * Lov2. ~30M établissements covering every registered business in
- * France, with NAF/APE code that maps cleanly to Prolio categories.
+ * SIRENE / Recherche d'Entreprises — INSEE base maestra de empresas FR.
  *
- *   Dataset: https://www.data.gouv.fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret
- *   Bulk files (CSV, gzipped):
- *     StockEtablissement_utf8.zip  (~2 GB unpacked, ~30M rows)
- *     StockUniteLegale_utf8.zip    (~1 GB unpacked, ~20M rows)
+ *   API REST (sin auth, sin rate-limit anunciado, licencia Etalab):
+ *     https://recherche-entreprises.api.gouv.fr/search
+ *     Docs: https://recherche-entreprises.api.gouv.fr/docs
  *
- * NAF/APE → Prolio category mapping (sub-set; expand as needed):
- *   4322A  Travaux d'installation d'eau et de gaz                → fontaneria
- *   4322B  Travaux d'installation d'équipements thermiques/clim → hvac
- *   4321A  Travaux d'installation électrique                    → electricidad
- *   4520A  Entretien et réparation de véhicules automobiles    → mecanica
- *   7120A  Contrôle technique automobile                        → itv
- *   4332A  Travaux de menuiserie bois et PVC                    → carpinteria
- *   6920Z  Activités comptables                                 → fiscal
- *   7111Z  Activités d'architecture                             → arquitecto
- *   6910Z  Activités juridiques                                 → extranjeria
- *   7112B  Ingénierie, études techniques                        → ingenieria
- *   8690D  Activités des infirmiers et des sages-femmes         → medicina
- *   8623Z  Pratique dentaire                                    → dentista
- *   8690E  Activités des médecins généralistes/spéc.            → medicina
- *   8690F  Activités des auxiliaires médicaux                   → fisioterapia
- *   7500Z  Activités vétérinaires                               → veterinario
- *   6910Z (notaire — distinguished by libelle)                  → notario
+ * Reemplaza el approach previo de ZIP bulk (~2-3 GB) por la API REST
+ * que envuelve Sirene + INPI con filtros directos por NAF/APE,
+ * department, código postal, geo bbox, etc.
  *
- * Implementation status: STUB. The full bulk download is ~2-3 GB of
- * ZIP and parsing CSV inside ZIP on a GH free runner requires a
- * dedicated streaming approach (ZIP + chunked CSV + early-break per
- * NAF). For first pass we ship:
+ * Constraints verified live 2026-05-13:
+ *   - `per_page` MAX = 25 (default 10).
+ *   - `page * per_page` MAX = 10,000 — la API rechaza más allá.
+ *     Por eso fan-out por department es obligatorio para NAFs > 10k.
+ *   - `activite_principale` requiere FORMATO CON PUNTOS (e.g. "43.22A").
+ *   - Filtros útiles: `departement`, `code_postal`, `siege=true`,
+ *     `etat_administratif=A` (sólo empresas activas).
  *
- *   1. Source enabled() / runSireneInsee() entry points
- *   2. A category-specific override URL `PROLIO_SIRENE_INSEE_CSV`
- *      pointing to a pre-filtered subset (e.g. a CSV produced offline)
- *   3. `PROLIO_SIRENE_CATEGORY` to process one category per run.
- *   4. NAF→category mapping table (verified above)
+ * Pre-flight totales (nacional, sin filtro geo):
+ *   43.22A (plomberie)       ~75k  → fan-out por dept
+ *   43.21A (electricidad)    ~90k  → fan-out por dept
+ *   45.20A (mecanica)        ~50k  → fan-out por dept
+ *   71.20A (controle tech)    ~7k  → fits 10k cap
+ *   71.11Z (architectes)     ~40k  → fan-out
+ *   69.20Z (comptabilité)    ~30k  → fan-out
  *
- * Full streaming-ZIP implementation tracked in scripts/download-sirene.mjs
- * — that script can be run locally to generate per-category CSVs that
- * are then uploaded as private artifacts the runner can pull cheaply.
+ * Modo de operación: UN run = UNA categoría completa.
+ *   PROLIO_SIRENE_CATEGORY env elige qué categoría procesar (default
+ *   "fontaneria"). El cron debe rotar la categoría entre runs.
  *
- * Off by default. `PROLIO_RUN_SIRENE_INSEE=true` to enable.
- * Cap with `PROLIO_SIRENE_LIMIT_PER_CATEGORY` (default 5000).
+ * Off by default. `PROLIO_RUN_SIRENE_INSEE=true`. Cap con
+ * `PROLIO_SIRENE_LIMIT_PER_CATEGORY` (default 10000).
+ *
+ * Latencia: ~300ms entre requests, 25 reg/req → ~15 min para 10k.
  */
 
-const DEFAULT_LIMIT_PER_CATEGORY = 5000;
+const API_BASE = "https://recherche-entreprises.api.gouv.fr/search";
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
+const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_DELAY_MS = 300;
+const PER_PAGE = 25;
+const MAX_PAGE = Math.floor(10_000 / PER_PAGE); // = 400, hard API cap
+const DEFAULT_LIMIT_PER_CATEGORY = 10_000;
 
+// NAF/APE codes → Prolio category. Codes use INSEE format with dots.
+// Verified against the API's `activite_principale` enum list.
 const NAF_TO_CATEGORY: Record<string, CategoryKey> = {
-  "4322A": "fontaneria",
-  "4322B": "hvac",
-  "4321A": "electricidad",
-  "4520A": "mecanica",
-  "7120A": "itv",
-  "4332A": "carpinteria",
-  "6920Z": "fiscal",
-  "7111Z": "arquitecto",
-  "6910Z": "extranjeria",
-  "7112B": "ingenieria",
-  "8690D": "medicina",
-  "8623Z": "dentista",
-  "8690E": "medicina",
-  "8690F": "fisioterapia",
-  "7500Z": "veterinario",
+  "43.22A": "fontaneria",
+  "43.22B": "hvac",
+  "43.21A": "electricidad",
+  "45.20A": "mecanica",
+  "45.20B": "mecanica",
+  "71.20A": "itv",
+  "43.32A": "carpinteria",
+  "43.32B": "carpinteria",
+  "43.32C": "cerrajero",
+  "69.20Z": "fiscal",
+  "71.11Z": "arquitecto",
+  "69.10Z": "extranjeria",
+  "71.12B": "ingenieria",
+  "86.21Z": "medicina",
+  "86.23Z": "dentista",
+  "86.90F": "fisioterapia",
+  "86.90E": "psicologia",
+  "75.00Z": "veterinario",
 };
 
-function nafToCategory(naf: string): CategoryKey | undefined {
-  if (!naf) return undefined;
-  // Normalise (lower vs upper case Z, drop spaces).
-  const key = naf.trim().toUpperCase().replace(/\s+/g, "");
-  return NAF_TO_CATEGORY[key];
+const CATEGORY_TO_NAFS: Record<string, string[]> = {};
+for (const [naf, cat] of Object.entries(NAF_TO_CATEGORY)) {
+  (CATEGORY_TO_NAFS[cat] ||= []).push(naf);
 }
 
-/**
- * Parse a pre-filtered SIRENE CSV (semicolon-separated) — produced
- * either by `scripts/download-sirene.mjs` or by INSEE's own API.
- * Expected columns: siret, denominationUniteLegale, enseigne1Etablissement,
- * numeroVoieEtablissement, typeVoieEtablissement, libelleVoieEtablissement,
- * codePostalEtablissement, libelleCommuneEtablissement,
- * activitePrincipaleEtablissement, etatAdministratifEtablissement.
- */
-async function fetchFromCsv(
-  url: string,
-  limitPerCategory: number,
-  filterCategory: CategoryKey | undefined,
-): Promise<ScrapedProfessional[]> {
-  const response = await fetch(url, {
-    headers: { "User-Agent": USER_AGENT },
-    signal: AbortSignal.timeout(30 * 60_000),
+// 101 French departments. Metro 01-95 (sans 20, qui est 2A+2B) + DOM-TOM.
+const FR_DEPARTMENTS: string[] = (() => {
+  const out: string[] = [];
+  for (let i = 1; i <= 95; i++) {
+    if (i === 20) continue; // split into 2A/2B
+    out.push(String(i).padStart(2, "0"));
+  }
+  out.push("2A", "2B");
+  out.push("971", "972", "973", "974", "976"); // Guadeloupe/Martinique/Guyane/Réunion/Mayotte
+  return out;
+})();
+
+interface RechercheSiege {
+  activite_principale?: string;
+  adresse?: string;
+  cedex?: string;
+  code_postal?: string;
+  commune?: string;
+  complement_adresse?: string;
+  coordonnees?: string; // "lat,lng"
+  departement?: string;
+  date_creation?: string;
+  date_debut_activite?: string;
+  date_fermeture?: string | null;
+  etat_administratif?: string; // "A" active, "F" fermé
+  geo_id?: string;
+  libelle_commune?: string;
+  numero_voie?: string;
+  type_voie?: string;
+  libelle_voie?: string;
+  region?: string;
+}
+
+interface RechercheResult {
+  siren?: string;
+  nom_complet?: string;
+  nom_raison_sociale?: string;
+  sigle?: string | null;
+  nature_juridique?: string;
+  date_creation?: string;
+  date_mise_a_jour?: string;
+  tranche_effectif_salarie?: string;
+  caractere_employeur?: string;
+  activite_principale?: string;
+  section_activite_principale?: string;
+  etat_administratif?: string;
+  nombre_etablissements?: number;
+  nombre_etablissements_ouverts?: number;
+  siege?: RechercheSiege;
+  // matching_etablissements typically also present (deepest match);
+  // we use siege as canonical contact info.
+}
+
+interface RechercheResponse {
+  total_results?: number;
+  total_pages?: number;
+  results?: RechercheResult[];
+  page?: number;
+  per_page?: number;
+}
+
+async function fetchPage(
+  naf: string,
+  dept: string,
+  page: number,
+): Promise<RechercheResponse | null> {
+  const url =
+    `${API_BASE}?activite_principale=${encodeURIComponent(naf)}` +
+    `&departement=${encodeURIComponent(dept)}` +
+    `&etat_administratif=A&per_page=${PER_PAGE}&page=${page}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.warn(`[sirene-insee] ${res.status} on ${naf}/${dept} page=${page}`);
+      return null;
+    }
+    return (await res.json()) as RechercheResponse;
+  } catch (err) {
+    console.warn(
+      `[sirene-insee] network error on ${naf}/${dept} page=${page}: ${(err as Error).message}`,
+    );
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function parseCoordinates(
+  raw: string | undefined,
+): { lat: number; lng: number } | undefined {
+  if (!raw) return undefined;
+  const parts = raw.split(",").map((s) => parseFloat(s.trim()));
+  if (parts.length !== 2 || parts.some((n) => Number.isNaN(n))) return undefined;
+  return { lat: parts[0], lng: parts[1] };
+}
+
+function toRecord(
+  e: RechercheResult,
+  naf: string,
+  category: CategoryKey,
+): ScrapedProfessional | null {
+  const siren = (e.siren ?? "").trim();
+  const name = (e.nom_complet || e.nom_raison_sociale || "").trim();
+  if (!siren || !name) return null;
+  const siege = e.siege ?? {};
+  const cp = siege.code_postal;
+  const citySlug = frPostalCodeToCitySlug(cp ?? "") ?? "paris";
+  const coords = parseCoordinates(siege.coordonnees);
+  return normalise({
+    source: "sirene-insee" as ScrapeSource,
+    sourceId: `sirene:${siren}`,
+    name,
+    categoryKey: category,
+    citySlug,
+    licenseNumber: siren,
+    lat: coords?.lat,
+    lng: coords?.lng,
+    address: siege.adresse,
+    metadata: {
+      country: "FR",
+      authority: "INSEE",
+      verified_by_authority: true,
+      siren,
+      naf_code: naf,
+      naf_label: siege.activite_principale || e.activite_principale,
+      raw_postal_code: cp,
+      raw_commune: siege.libelle_commune || siege.commune,
+      raw_departement: siege.departement,
+      raw_region: siege.region,
+      nombre_etablissements: e.nombre_etablissements,
+      nombre_etablissements_ouverts: e.nombre_etablissements_ouverts,
+      date_creation: e.date_creation,
+      nature_juridique: e.nature_juridique,
+      etat_administratif: e.etat_administratif,
+    },
   });
-  if (!response.ok || !response.body) {
-    console.error(`[sirene-insee] ${response.status} on ${url}`);
+}
+
+async function fetchCategory(
+  category: CategoryKey,
+  limit: number,
+): Promise<ScrapedProfessional[]> {
+  const nafs = CATEGORY_TO_NAFS[category];
+  if (!nafs || nafs.length === 0) {
+    console.warn(`[sirene-insee] no NAF codes mapped for category=${category}`);
     return [];
   }
-  const decoder = new TextDecoder("utf-8", { fatal: false });
-  const reader = response.body.getReader();
-  let buffer = "";
-  let header: string[] | null = null;
-  const counts = new Map<CategoryKey, number>();
-  const seen = new Set<string>();
   const out: ScrapedProfessional[] = [];
-
-  const handle = (line: string): void => {
-    if (!line) return;
-    const cells = splitCsvLine(line, line.includes(";") ? ";" : ",");
-    if (!header) {
-      header = cells.map((h) =>
-        h
-          .trim()
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[̀-ͯ]/g, "")
-          .replace(/[^a-z0-9]+/g, "_")
-          .replace(/^_+|_+$/g, ""),
-      );
-      return;
-    }
-    const row: Record<string, string> = {};
-    for (let i = 0; i < header.length; i += 1) {
-      row[header[i]] = (cells[i] ?? "").trim();
-    }
-
-    const naf =
-      row["activiteprincipaleetablissement"] ||
-      row["activite_principale_etablissement"] ||
-      row["activite_principale"] ||
-      "";
-    const category = nafToCategory(naf);
-    if (!category) return;
-    if (filterCategory && category !== filterCategory) return;
-    if ((counts.get(category) ?? 0) >= limitPerCategory) return;
-
-    const state =
-      row["etatadministratifetablissement"] ||
-      row["etat_administratif_etablissement"] ||
-      "A";
-    if (state !== "A") return; // skip closed établissements
-
-    const siret = row["siret"];
-    if (!siret || seen.has(siret)) return;
-    seen.add(siret);
-
-    const cp =
-      row["codepostaletablissement"] ||
-      row["code_postal_etablissement"] ||
-      "";
-    const citySlug = frPostalCodeToCitySlug(cp);
-    if (!citySlug) return;
-
-    const denom =
-      row["denominationunitelegale"] ||
-      row["denomination_unite_legale"] ||
-      "";
-    const enseigne =
-      row["enseigne1etablissement"] ||
-      row["enseigne_1_etablissement"] ||
-      "";
-    const name = (enseigne || denom || "").trim();
-    if (!name) return;
-
-    const street = [
-      row["numerovoieetablissement"] || row["numero_voie_etablissement"],
-      row["typevoieetablissement"] || row["type_voie_etablissement"],
-      row["libellevoieetablissement"] || row["libelle_voie_etablissement"],
-    ]
-      .filter(Boolean)
-      .join(" ");
-    const city =
-      row["libellecommuneetablissement"] ||
-      row["libelle_commune_etablissement"] ||
-      "";
-    const address = [street, cp, city].filter(Boolean).join(", ");
-
-    counts.set(category, (counts.get(category) ?? 0) + 1);
-
-    out.push(
-      normalise({
-        source: "sirene-insee" as ScrapeSource,
-        sourceId: `sirene:${siret}`,
-        name,
-        categoryKey: category,
-        citySlug,
-        address: address || undefined,
-        licenseNumber: siret,
-        metadata: {
-          country: "FR",
-          authority: "INSEE — Base SIRENE",
-          verified_by_authority: true,
-          siren: siret.slice(0, 9),
-          siret,
-          naf,
-        },
-      }),
-    );
-  };
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let nl = buffer.indexOf("\n");
-    while (nl !== -1) {
-      const raw = buffer.slice(0, nl).replace(/\r$/, "");
-      buffer = buffer.slice(nl + 1);
-      handle(raw);
-      nl = buffer.indexOf("\n");
+  const seen = new Set<string>();
+  for (const naf of nafs) {
+    if (out.length >= limit) break;
+    for (const dept of FR_DEPARTMENTS) {
+      if (out.length >= limit) break;
+      let page = 1;
+      let total: number | undefined;
+      while (out.length < limit && page <= MAX_PAGE) {
+        const data = await fetchPage(naf, dept, page);
+        if (!data || !data.results || data.results.length === 0) break;
+        if (total === undefined && typeof data.total_results === "number") {
+          total = data.total_results;
+          if (total > 0) {
+            console.log(
+              `[sirene-insee] ${naf}/${dept}: total=${total} pages=${Math.min(data.total_pages ?? 0, MAX_PAGE)}`,
+            );
+          }
+        }
+        for (const e of data.results) {
+          const r = toRecord(e, naf, category);
+          if (!r) continue;
+          const key = r.sourceId;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          out.push(r);
+          if (out.length >= limit) break;
+        }
+        if (data.results.length < PER_PAGE) break;
+        if (total !== undefined && page * PER_PAGE >= total) break;
+        page += 1;
+        await sleep(REQUEST_DELAY_MS);
+      }
     }
   }
-  buffer += decoder.decode();
-  if (buffer.trim().length > 0) handle(buffer.replace(/\r$/, ""));
-  try {
-    await reader.cancel();
-  } catch {
-    // ignore
-  }
-
-  console.log(
-    `[sirene-insee] parsed=${out.length} categories=${[...counts.entries()]
-      .map(([k, v]) => `${k}:${v}`)
-      .join(",")}`,
-  );
   return out;
 }
 
@@ -250,34 +290,21 @@ export async function runSireneInsee(): Promise<{
 }> {
   if (!sireneInseeSource.enabled())
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-
-  const csvUrl = process.env.PROLIO_SIRENE_INSEE_CSV;
-  if (!csvUrl) {
-    console.log(
-      "[sirene-insee] PROLIO_SIRENE_INSEE_CSV not set — see scripts/download-sirene.mjs " +
-        "to pre-filter the 2 GB StockEtablissement_utf8.zip into per-category CSVs. " +
-        "TODO: implement bulk Parquet/CSV streaming directly in this scraper.",
-    );
-    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-  }
-
-  const rawLimit = Number(
+  const category = (process.env.PROLIO_SIRENE_CATEGORY ||
+    "fontaneria") as CategoryKey;
+  const limit = Number(
     process.env.PROLIO_SIRENE_LIMIT_PER_CATEGORY ?? DEFAULT_LIMIT_PER_CATEGORY,
   );
-  const limit =
-    Number.isFinite(rawLimit) && rawLimit > 0
-      ? rawLimit
-      : DEFAULT_LIMIT_PER_CATEGORY;
-  const filterCategory = (process.env.PROLIO_SIRENE_CATEGORY ||
-    undefined) as CategoryKey | undefined;
-
-  const records = await fetchFromCsv(csvUrl, limit, filterCategory);
-  if (records.length === 0)
+  const cap = Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_LIMIT_PER_CATEGORY;
+  console.log(`[sirene-insee] starting category=${category} cap=${cap}`);
+  const records = await fetchCategory(category, cap);
+  if (records.length === 0) {
+    console.warn(`[sirene-insee] no rows for category=${category}`);
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-  const sink = getSink();
-  const { inserted, updated, skipped } = await sink.upsert(records);
+  }
+  const { inserted, updated, skipped } = await getSink().upsert(records);
   console.log(
-    `[sirene-insee] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
+    `[sirene-insee] done — category=${category} fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
   );
   return { fetched: records.length, inserted, updated, skipped };
 }
