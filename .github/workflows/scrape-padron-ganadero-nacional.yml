@@ -1,0 +1,12 @@
+name: Scrape · Padrón Ganadero Nacional (MX)
+on:
+  schedule:
+    - cron: "0 6 8 * *" # 08th of each month, 06:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: padron-ganadero-nacional
+      timeout_minutes: 120

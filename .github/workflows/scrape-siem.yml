@@ -1,0 +1,12 @@
+name: Scrape · siem
+on:
+  schedule:
+    - cron: "0 5 5 * *" # Day 5 of each month at 05:00 UTC (SIEM refreshes monthly)
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: siem
+      timeout_minutes: 120

@@ -110,7 +110,12 @@ export type ScrapeSource =
   // 2026-05-13 wave: MX fraud/risk + regulatory permits
   | "sat-efos-edos"
   | "profeco-sancionados"
-  | "cre-permisionarios";
+  | "cre-permisionarios"
+  // 2026-05-13 wave 2: MX business directories
+  | "siem"
+  | "cofepris-farmacias"
+  | "cnbv-entidades"
+  | "padron-ganadero-nacional";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
