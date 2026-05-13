@@ -6,26 +6,32 @@ import { delay, toTitleCase } from "./_bulk-utils.js";
 
 /**
  * APEGA — Association of Professional Engineers and Geoscientists of
- * Alberta. Member directory at
+ * Alberta. The public member directory at
  *   https://www.apega.ca/members/member-directory
+ * is backed by an OData v1 feed at
+ *   https://ods.apega.ca/odata/v1/Register/members
  *
- * Pre-flight 2026-05: the directory is an ASP.NET WebForms search that
- * posts an antiforgery / __VIEWSTATE / __EVENTVALIDATION tuple before
- * returning rows. A complete reverse-engineering is out of scope for
- * this commit; we ship as a STUB that attempts the public XHR shape
- * if it exists (some deployments expose /api/Directory/Search) and
- * cleanly degrades to 0 rows + warning otherwise. Replace the body of
- * \`fetchAll\` once the endpoint is reverse-engineered.
+ * Pre-flight 2026-05-13: confirmed total `@odata.count` = 71,477.
+ * Max page size accepted is 500 ($top=1000 returns empty). We
+ * paginate `$skip=N&$top=500` ordered by MemberId for stable cursor.
  *
- * Off by default; \`PROLIO_RUN_APEGA=true\`.
+ * Output: one row per member with PreferredAddressCity → city slug
+ * (calgary / edmonton; everything else clamps to calgary as the
+ * default AB metro until cities.ts grows). Designation + Member Type
+ * preserved in metadata so downstream can filter Professional
+ * Members (P.Eng.) vs Members-In-Training (E.I.T.) etc.
+ *
+ * Off by default; `PROLIO_RUN_APEGA=true`. Cap with
+ * `PROLIO_APEGA_LIMIT` (default 5000; full sweep needs ~72000).
  */
 
-const BASE = "https://www.apega.ca";
+const ODATA_BASE = "https://ods.apega.ca/odata/v1/Register/members";
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 const REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_LIMIT = 5000;
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 500;
+const REQUEST_DELAY_MS = 400;
 const CATEGORY: CategoryKey = "ingenieria";
 
 const AB_CITY_MAP: Record<string, string> = {
@@ -39,99 +45,126 @@ function mapCity(raw: string | undefined): string {
   return AB_CITY_MAP[k] ?? DEFAULT_CITY;
 }
 
-interface ApegaRow {
-  Name?: string;
-  FullName?: string;
-  FirstName?: string;
-  LastName?: string;
-  City?: string;
-  MemberId?: string;
-  RegistrationNumber?: string;
-  MembershipType?: string;
-  [k: string]: unknown;
+interface ApegaMember {
+  MemberId: string;
+  Title?: string;
+  PreferredFirstName?: string;
+  LegalFirstName?: string;
+  LegalMiddleName?: string;
+  LegalLastName?: string;
+  PreferredLastName?: string;
+  Designation?: string;
+  PracticingStatus?: string;
+  MemberType?: string;
+  ScopeOfPractice?: string;
+  RegistrationDate?: string;
+  EnrollmentDate?: string;
+  PreferredAddressCity?: string;
+  LastPublicDisciplineDecisionYears?: string;
+  MemberStampNames?: unknown[];
 }
 
-async function tryEndpoint(page: number): Promise<ApegaRow[]> {
-  const candidates = [
-    `${BASE}/api/Directory/Search?page=${page}&pageSize=${PAGE_SIZE}`,
-    `${BASE}/Members/MemberDirectory/Search?page=${page}&pageSize=${PAGE_SIZE}`,
-  ];
-  for (const url of candidates) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    try {
-      const response = await fetch(url, {
-        headers: { "User-Agent": USER_AGENT, Accept: "application/json,*/*" },
-        signal: controller.signal,
-      });
-      if (!response.ok) continue;
-      const ct = response.headers.get("content-type") || "";
-      if (!ct.includes("json")) continue;
-      const json = (await response.json()) as unknown;
-      if (Array.isArray(json)) return json as ApegaRow[];
-      if (json && typeof json === "object") {
-        const o = json as Record<string, unknown>;
-        for (const k of ["data", "results", "items", "Results"]) {
-          const v = o[k];
-          if (Array.isArray(v)) return v as ApegaRow[];
-        }
-      }
-    } catch {
-      /* try next */
-    } finally {
-      clearTimeout(timer);
+interface ApegaPage {
+  "@odata.count"?: number;
+  value?: ApegaMember[];
+}
+
+function buildName(m: ApegaMember): string | undefined {
+  const first = (m.PreferredFirstName || m.LegalFirstName || "").trim();
+  const last = (m.PreferredLastName || m.LegalLastName || "").trim();
+  if (first && last) return `${first} ${last}`;
+  if (last) return last;
+  if (first) return first;
+  // Title is duplicated in the source ("Name Name"); fall back to half.
+  if (m.Title) return m.Title.split(/\s+/).slice(0, 2).join(" ");
+  return undefined;
+}
+
+async function fetchPage(skip: number): Promise<ApegaPage | null> {
+  const url =
+    `${ODATA_BASE}?$count=true&$top=${PAGE_SIZE}&$skip=${skip}` +
+    `&$orderby=MemberId&$expand=MemberStampNames`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/json",
+        Origin: "https://www.apega.ca",
+        Referer: "https://www.apega.ca/",
+      },
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      console.warn(`[apega] ${response.status} on skip=${skip}`);
+      return null;
     }
+    return (await response.json()) as ApegaPage;
+  } catch (err) {
+    console.warn(`[apega] network error on skip=${skip}: ${(err as Error).message}`);
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
-  return [];
-}
-
-function rowName(r: ApegaRow): string | undefined {
-  if (r.FullName) return r.FullName;
-  if (r.Name) return r.Name;
-  if (r.FirstName && r.LastName) return `${r.FirstName} ${r.LastName}`;
-  return r.LastName ?? r.FirstName;
 }
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
-  for (let page = 1; out.length < limit; page += 1) {
-    const rows = await tryEndpoint(page);
-    if (rows.length === 0) break;
-    for (const r of rows) {
-      const name = rowName(r)?.trim();
-      const num = (r.MemberId ?? r.RegistrationNumber ?? "").toString().trim();
-      if (!name || !num) continue;
-      const key = `apega:${num}`;
+  let skip = 0;
+  let total: number | undefined;
+  while (out.length < limit) {
+    const page = await fetchPage(skip);
+    if (!page || !page.value || page.value.length === 0) break;
+    if (total === undefined && typeof page["@odata.count"] === "number") {
+      total = page["@odata.count"];
+      console.log(`[apega] total members reported: ${total}`);
+    }
+    for (const m of page.value) {
+      const name = buildName(m)?.trim();
+      const memberId = (m.MemberId ?? "").toString().trim();
+      if (!name || !memberId) continue;
+      const key = `apega:${memberId}`;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push(
         normalise({
-          source: "tssa" as ScrapeSource,
+          source: "apega" as ScrapeSource,
           sourceId: key,
           name: toTitleCase(name),
           categoryKey: CATEGORY,
-          citySlug: mapCity(r.City),
-          licenseNumber: num,
+          citySlug: mapCity(m.PreferredAddressCity),
+          licenseNumber: memberId,
           metadata: {
             country: "CA",
             province: "AB",
             authority: "APEGA",
             verified_by_authority: true,
-            membership_type: r.MembershipType,
+            designation: m.Designation || undefined,
+            member_type: m.MemberType || undefined,
+            practicing_status: m.PracticingStatus || undefined,
+            scope_of_practice: m.ScopeOfPractice || undefined,
+            registration_date: m.RegistrationDate || undefined,
+            enrollment_date: m.EnrollmentDate || undefined,
+            raw_city: m.PreferredAddressCity || undefined,
+            discipline_decisions:
+              m.LastPublicDisciplineDecisionYears || undefined,
           },
         }),
       );
       if (out.length >= limit) return out;
     }
-    if (rows.length < PAGE_SIZE) break;
-    await delay(1500);
+    skip += page.value.length;
+    if (total !== undefined && skip >= total) break;
+    if (page.value.length < PAGE_SIZE) break;
+    await delay(REQUEST_DELAY_MS);
   }
   return out;
 }
 
 export const apegaSource: ScraperSource = {
-  name: "tssa" as ScrapeSource,
+  name: "apega" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_APEGA === "true";
   },
@@ -146,14 +179,13 @@ export async function runApega(): Promise<{
   updated: number;
   skipped: number;
 }> {
-  if (!apegaSource.enabled()) return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
+  if (!apegaSource.enabled())
+    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   const limit = Number(process.env.PROLIO_APEGA_LIMIT ?? DEFAULT_LIMIT);
   const cap = Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_LIMIT;
   const records = await fetchAll(cap);
   if (records.length === 0) {
-    console.warn(
-      "[apega] no rows — directory likely requires __VIEWSTATE handshake (TODO)",
-    );
+    console.warn("[apega] no rows fetched — OData endpoint may have changed");
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   }
   const { inserted, updated, skipped } = await getSink().upsert(records);
