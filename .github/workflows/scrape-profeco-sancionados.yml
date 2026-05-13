@@ -1,0 +1,12 @@
+name: Scrape · profeco sancionados
+on:
+  schedule:
+    - cron: "0 6 2 * *" # Day 2 of each month, 06:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: profeco-sancionados
+      timeout_minutes: 60

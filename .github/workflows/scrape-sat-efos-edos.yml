@@ -1,0 +1,15 @@
+name: Scrape · SAT EFOS/EDOS (69-B CFF)
+on:
+  schedule:
+    # First day of each month at 06:00 UTC. The SAT updates the
+    # 69-B list ~weekly, but the deltas are small and this dataset
+    # is used as a fiscal risk flag (not a high-frequency signal).
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: sat-efos-edos
+      timeout_minutes: 30

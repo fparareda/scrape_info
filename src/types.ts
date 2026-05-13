@@ -106,7 +106,11 @@ export type ScrapeSource =
   | "colegio-notarios-cdmx"
   | "fcarm-arquitectos"
   | "fedmvz-colegios-vet"
-  | "conahcyt-snii";
+  | "conahcyt-snii"
+  // 2026-05-13 wave: MX fraud/risk + regulatory permits
+  | "sat-efos-edos"
+  | "profeco-sancionados"
+  | "cre-permisionarios";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

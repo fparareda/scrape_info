@@ -192,6 +192,11 @@ jobs:
       PROLIO_RUN_FEDMVZ_COLEGIOS_VET:   ${{ inputs.source == 'fedmvz-colegios-vet' && 'true' || 'false' }}
       PROLIO_RUN_CONAHCYT_SNII:         ${{ inputs.source == 'conahcyt-snii' && 'true' || 'false' }}
 
+      # 2026-05-13 wave: MX fraud/risk + regulatory permits
+      PROLIO_RUN_SAT_EFOS_EDOS:         ${{ inputs.source == 'sat-efos-edos' && 'true' || 'false' }}
+      PROLIO_RUN_PROFECO_SANCIONADOS:   ${{ inputs.source == 'profeco-sancionados' && 'true' || 'false' }}
+      PROLIO_RUN_CRE_PERMISIONARIOS:    ${{ inputs.source == 'cre-permisionarios' && 'true' || 'false' }}
+
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC
       # was excluded because it Disallows the lawyer lookup paths).

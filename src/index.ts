@@ -145,6 +145,9 @@ import { colegioNotariosCdmxSource, runColegioNotariosCdmx } from "./sources/col
 import { fcarmArquitectosSource, runFcarmArquitectos } from "./sources/fcarm-arquitectos.js";
 import { fedmvzColegiosVetSource, runFedmvzColegiosVet } from "./sources/fedmvz-colegios-vet.js";
 import { conahcytSniiSource, runConahcytSnii } from "./sources/conahcyt-snii.js";
+import { satEfosEdosSource, runSatEfosEdos } from "./sources/sat-efos-edos.js";
+import { profecoSancionadosSource, runProfecoSancionados } from "./sources/profeco-sancionados.js";
+import { crePermisionariosSource, runCrePermisionarios } from "./sources/cre-permisionarios.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -271,6 +274,9 @@ async function main(): Promise<void> {
   const fcarmArquitectosOn = fcarmArquitectosSource.enabled();
   const fedmvzColegiosVetOn = fedmvzColegiosVetSource.enabled();
   const conahcytSniiOn = conahcytSniiSource.enabled();
+  const satEfosEdosOn = satEfosEdosSource.enabled();
+  const profecoSancionadosOn = profecoSancionadosSource.enabled();
+  const crePermisionariosOn = crePermisionariosSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -362,6 +368,9 @@ async function main(): Promise<void> {
     !fcarmArquitectosOn &&
     !fedmvzColegiosVetOn &&
     !conahcytSniiOn &&
+    !satEfosEdosOn &&
+    !profecoSancionadosOn &&
+    !crePermisionariosOn &&
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
@@ -987,6 +996,9 @@ async function main(): Promise<void> {
     [fcarmArquitectosOn, "fcarm-arquitectos", runFcarmArquitectos],
     [fedmvzColegiosVetOn, "fedmvz-colegios-vet", runFedmvzColegiosVet],
     [conahcytSniiOn, "conahcyt-snii", runConahcytSnii],
+    [satEfosEdosOn, "sat-efos-edos", runSatEfosEdos],
+    [profecoSancionadosOn, "profeco-sancionados", runProfecoSancionados],
+    [crePermisionariosOn, "cre-permisionarios", runCrePermisionarios],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],
