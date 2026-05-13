@@ -119,6 +119,7 @@ import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sourc
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
 import { oaaSource, runOaa } from "./sources/oaa.js";
+import { rcdsoSource, runRcdso } from "./sources/rcdso.js";
 import { louisianaLslbcSource, runLouisianaLslbc } from "./sources/louisiana-lslbc.js";
 import { nycDobSource, runNycDob } from "./sources/nyc-dob.js";
 import {
@@ -216,6 +217,7 @@ async function main(): Promise<void> {
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
   const oaaOn = oaaSource.enabled();
+  const rcdsoOn = rcdsoSource.enabled();
   const louisianaLslbcOn = louisianaLslbcSource.enabled();
   const nycDobOn = nycDobSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
@@ -281,6 +283,7 @@ async function main(): Promise<void> {
     !senasicaMxVetOn &&
     !denueMxOn &&
     !oaaOn &&
+    !rcdsoOn &&
     !louisianaLslbcOn &&
     !nycDobOn &&
     !cgnNotariadoOn &&
@@ -861,6 +864,7 @@ async function main(): Promise<void> {
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],
+    [rcdsoOn, "rcdso", runRcdso],
     [louisianaLslbcOn, "louisiana-lslbc", runLouisianaLslbc],
     [nycDobOn, "nyc-dob", runNycDob],
     [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
