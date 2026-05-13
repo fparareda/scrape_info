@@ -6,128 +6,179 @@ import { delay } from "./_bulk-utils.js";
 /**
  * TSASK — Technical Safety Authority of Saskatchewan.
  *
- * Licenses electrical, gas, plumbing, boiler, elevator and amusement-
- * ride contractors in SK. Public search at
+ * Public licence lookup at
  *   https://www.tsask.ca/licence-lookup/
- * is an ASP.NET / Sitefinity SPA backed by an AJAX endpoint:
- *   POST /SearchService.svc/SearchContractors  (JSON body, JSON reply)
- * Pre-flight 2026-05: endpoint shape can change between deploys; we
- * therefore wrap the call in a defensive parser. If TSASK ever locks
- * the endpoint behind an antiforgery token we degrade to 0 rows and
- * log instead of failing the run.
+ * is a WordPress front-end backed by a custom WP REST endpoint at
+ *   https://api.tsask.ca/wp-json/licence/v1/licences
  *
- * Off by default; `PROLIO_RUN_TSASK=true` to enable.
+ * Pre-flight 2026-05-13 (live):
+ *   GET ?per_page=500&page=1
+ *     -> meta.total = 23,219
+ *     -> meta.total_pages = 47 at per_page=500
+ *   Categories observed: Electrical Contractor, Gas Contractor,
+ *   Elevator Contractor, Elevator Mechanic, Quality Control Program
+ *   Technologies: electrical, gas, elevating-devices,
+ *   boilers-and-pressure-vessels
+ *
+ * Strategy: enumerate all pages (no filter needed — the endpoint
+ * returns every category). Filter out placeholder/draft rows that
+ * carry empty `name` AND empty `licence_number`. Map each row's
+ * `technology` to a Prolio category. Records include city, province,
+ * expiry date, restriction text and subtype.
+ *
+ * Off by default; `PROLIO_RUN_TSASK=true`. Cap with `PROLIO_TSASK_LIMIT`
+ * (default 25000 — covers full sweep with headroom).
  */
 
-const BASE = process.env.PROLIO_TSASK_BASE || "https://www.tsask.ca";
+const ENDPOINT = "https://api.tsask.ca/wp-json/licence/v1/licences";
+const REFERER = "https://www.tsask.ca/";
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 const REQUEST_TIMEOUT_MS = 30_000;
-const DEFAULT_LIMIT = 5000;
-const PAGE_SIZE = 50;
-const SK_DEFAULT_CITY = "saskatoon";
+const DEFAULT_LIMIT = 25_000;
+const PAGE_SIZE = 500;
+const REQUEST_DELAY_MS = 400;
 
-const TRADE_TO_CATEGORY: Array<{ pattern: RegExp; key: string }> = [
-  { pattern: /electric/i, key: "electricidad" },
-  { pattern: /gas|propane|hvac|boiler|fuel/i, key: "hvac" },
-  { pattern: /plumb|drain|sewer|water/i, key: "fontaneria" },
-  { pattern: /elevator|lift/i, key: "carpinteria" },
-];
-
-const SK_CITY_MAP: Record<string, string> = {
-  saskatoon: "saskatoon",
-  regina: "saskatoon",
-  "prince albert": "saskatoon",
-  "moose jaw": "saskatoon",
+const TECH_TO_CATEGORY: Record<string, string> = {
+  electrical: "electricidad",
+  gas: "hvac",
+  "elevating-devices": "carpinteria", // closest taxonomy slot for lift/elevator install
+  "boilers-and-pressure-vessels": "hvac",
 };
 
-function pickCategory(trade: string): string {
-  for (const t of TRADE_TO_CATEGORY) if (t.pattern.test(trade)) return t.key;
-  return "hvac";
+const SK_CITY_WHITELIST = new Set<string>([
+  "saskatoon",
+  "regina",
+]);
+
+function mapCity(raw: string | null | undefined): string {
+  if (!raw) return "saskatoon";
+  const k = raw.toLowerCase().trim();
+  return SK_CITY_WHITELIST.has(k) ? k : "saskatoon";
 }
 
-function mapCity(raw: string | undefined): string {
-  const key = (raw ?? "").trim().toLowerCase();
-  return SK_CITY_MAP[key] ?? SK_DEFAULT_CITY;
+function pickCategory(tech: string | null | undefined): string {
+  if (!tech) return "hvac";
+  return TECH_TO_CATEGORY[tech] || "hvac";
 }
 
-interface TsaskRow {
-  Id?: string;
-  CompanyName?: string;
-  LicenceNumber?: string;
-  Trade?: string;
-  City?: string;
-  Status?: string;
-  [k: string]: unknown;
+interface TsaskLicence {
+  id: number;
+  category?: string;
+  technology?: string;
+  name?: string | null;
+  last_name?: string | null;
+  licence_number?: string | null;
+  expiry_date?: string | null;
+  expiry_date_formatted?: string | null;
+  expiry_date_timestamp?: number | null;
+  subtype?: string | null;
+  restriction?: string | null;
+  city?: string | null;
+  province?: string | null;
 }
 
-async function fetchPage(skip: number): Promise<TsaskRow[]> {
-  const url = `${BASE}/SearchService.svc/SearchContractors`;
+interface TsaskMeta {
+  total: number;
+  total_pages: number;
+  current_page: number;
+  per_page: number;
+}
+
+interface TsaskResponse {
+  results?: TsaskLicence[];
+  meta?: TsaskMeta;
+}
+
+async function fetchPage(page: number): Promise<TsaskResponse | null> {
+  const url = `${ENDPOINT}?per_page=${PAGE_SIZE}&page=${page}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(url, {
-      method: "POST",
+    const res = await fetch(url, {
       headers: {
         "User-Agent": USER_AGENT,
-        "Content-Type": "application/json",
-        Accept: "application/json,text/plain,*/*",
+        Accept: "application/json",
+        Origin: "https://www.tsask.ca",
+        Referer: REFERER,
       },
-      body: JSON.stringify({ skip, take: PAGE_SIZE, keyword: "" }),
       signal: controller.signal,
     });
-    if (!response.ok) return [];
-    const json = (await response.json()) as unknown;
-    if (Array.isArray(json)) return json as TsaskRow[];
-    if (json && typeof json === "object") {
-      const o = json as Record<string, unknown>;
-      for (const k of ["d", "data", "Results", "results", "items"]) {
-        const v = o[k];
-        if (Array.isArray(v)) return v as TsaskRow[];
-      }
+    if (!res.ok) {
+      console.warn(`[tsask] ${res.status} on page=${page}`);
+      return null;
     }
-    return [];
-  } catch {
-    return [];
+    return (await res.json()) as TsaskResponse;
+  } catch (err) {
+    console.warn(
+      `[tsask] network error on page=${page}: ${(err as Error).message}`,
+    );
+    return null;
   } finally {
     clearTimeout(timer);
   }
 }
 
+function buildDisplayName(r: TsaskLicence): string {
+  // The endpoint returns either company names in `name` (with
+  // `last_name` null) or person rows where both fields are populated.
+  const name = (r.name || "").trim();
+  const last = (r.last_name || "").trim();
+  if (name && last) return `${name} ${last}`;
+  return name || last;
+}
+
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
-  for (let skip = 0; skip < limit; skip += PAGE_SIZE) {
-    const rows = await fetchPage(skip);
-    if (rows.length === 0) break;
-    for (const r of rows) {
-      const name = (r.CompanyName ?? "").toString().trim();
-      const lic = (r.LicenceNumber ?? r.Id ?? "").toString().trim();
-      if (!name || !lic || seen.has(lic)) continue;
-      seen.add(lic);
-      const trade = (r.Trade ?? "").toString();
+  let page = 1;
+  let totalPages: number | undefined;
+  let total: number | undefined;
+  while (out.length < limit) {
+    const data = await fetchPage(page);
+    if (!data || !data.results || data.results.length === 0) break;
+    if (totalPages === undefined && data.meta) {
+      totalPages = data.meta.total_pages;
+      total = data.meta.total;
+      console.log(`[tsask] total=${total} pages=${totalPages}`);
+    }
+    for (const r of data.results) {
+      const displayName = buildDisplayName(r);
+      const licenceNumber = (r.licence_number || "").trim();
+      // Filter placeholder/draft rows that carry neither identifier.
+      if (!displayName || !licenceNumber) continue;
+      const key = `tsask:${licenceNumber}:${r.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       out.push(
         normalise({
           source: "tsask" as ScrapeSource,
-          sourceId: `tsask:${lic}`,
-          name,
-          categoryKey: pickCategory(trade) as ScrapedProfessional["categoryKey"],
-          citySlug: mapCity(r.City as string | undefined),
-          licenseNumber: lic,
+          sourceId: key,
+          name: displayName,
+          categoryKey: pickCategory(r.technology) as never,
+          citySlug: mapCity(r.city),
+          licenseNumber: licenceNumber,
           metadata: {
             country: "CA",
             province: "SK",
             authority: "TSASK",
             verified_by_authority: true,
-            trade,
-            status: r.Status,
+            category_label: r.category,
+            technology: r.technology,
+            subtype: r.subtype,
+            restriction: r.restriction || undefined,
+            expiry_date: r.expiry_date_formatted || r.expiry_date || undefined,
+            raw_city: r.city,
+            raw_province: r.province,
           },
         }),
       );
       if (out.length >= limit) return out;
     }
-    if (rows.length < PAGE_SIZE) break;
-    await delay(1000);
+    if (data.results.length < PAGE_SIZE) break;
+    if (totalPages !== undefined && page >= totalPages) break;
+    page += 1;
+    await delay(REQUEST_DELAY_MS);
   }
   return out;
 }
@@ -148,7 +199,8 @@ export async function runTsask(): Promise<{
   updated: number;
   skipped: number;
 }> {
-  if (!tsaskSource.enabled()) return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
+  if (!tsaskSource.enabled())
+    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   const limit = Number(process.env.PROLIO_TSASK_LIMIT ?? DEFAULT_LIMIT);
   const cap = Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_LIMIT;
   const records = await fetchAll(cap);
