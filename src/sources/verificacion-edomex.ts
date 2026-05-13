@@ -9,18 +9,26 @@ import { withScrapeRun } from "../telemetry.js";
  *
  *   http://citaverificacion.edomex.gob.mx/
  *
- * Portal del Edomex (Tomcat antiguo). Publica el listado oficial de
- * ~80 verificentros con nombre, dirección, municipio y teléfono.
+ * **Estado actual (verificado 2026-05)**: `citaverificacion.edomex.gob.mx`
+ * NO es un directorio público de verificentros. Es el sistema interno
+ * **SAECHVV** (Tomcat 1.1 / Apache-Coyote) usado por operadores y
+ * ciudadanos para sacar **citas** — la raíz redirige a un frameset
+ * con `/Verificentros/frames/frmLogin.jsp` (formulario de login).
+ * No expone listado público de centros vía HTML ni JSON.
  *
- * Implementación: HTML scraping del listado.
+ * Dominios alternativos (`sma.edomex.gob.mx`, `verificacion.edomex.gob.mx`)
+ * no resuelven DNS desde fuera de México o están retirados.
+ *
+ * Mientras no aparezca una URL pública con el padrón, el source es un
+ * stub honesto: skip + warning, sin error. Si se descubre una URL con
+ * tabla HTML, asignarla a `PROLIO_VERIFICACION_EDOMEX_URL` y el regex
+ * actual debería procesarla.
  *
  * Off by default. `PROLIO_RUN_VERIFICACION_EDOMEX=true`.
  * Cap with `PROLIO_VERIFICACION_EDOMEX_LIMIT` (default 200).
  */
 
-const BASE_URL =
-  process.env.PROLIO_VERIFICACION_EDOMEX_URL ||
-  "http://citaverificacion.edomex.gob.mx/verificentros.html";
+const BASE_URL = process.env.PROLIO_VERIFICACION_EDOMEX_URL || "";
 const DEFAULT_LIMIT = 200;
 const POLITE_UA = "ScrapeInfo/1.0 (+https://github.com/fparareda/scrape_info)";
 const CATEGORY: CategoryKey = "itv";
@@ -52,6 +60,12 @@ function stripHtml(s: string): string {
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
+  if (!BASE_URL) {
+    console.warn(
+      "[verificacion-edomex] PROLIO_VERIFICACION_EDOMEX_URL not set — Edomex no expone padrón público; skipping",
+    );
+    return out;
+  }
   let response: Response;
   try {
     response = await fetch(BASE_URL, {

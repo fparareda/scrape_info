@@ -44,7 +44,12 @@ import { splitCsvLine, frPostalCodeToCitySlug } from "./_bulk-utils.js";
 
 const DATASET_API =
   "https://www.data.gouv.fr/api/1/datasets/annuaire-sante-extractions-des-donnees-en-libre-acces-des-professionnels-intervenant-dans-le-systeme-de-sante-rpps/";
-const DEFAULT_LIMIT = 5000;
+// 2026-05-13: bumped 5000→50000 (the file has ~1.8M activity rows;
+// 50k per run = ~3% sample but caps at a reasonable wall-clock per
+// run while staying well under GH free runner memory + the 4h job
+// timeout). Increase further if pipe-delimited streaming proves
+// stable.
+const DEFAULT_LIMIT = 50000;
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 

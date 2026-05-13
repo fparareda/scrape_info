@@ -3,48 +3,63 @@
  *
  * Alinity (alinityapp.com) is a SaaS used by many Canadian colleges
  * (medical, psychology, physiotherapy, law society) to expose a public
- * member register. Every tenant exposes the same endpoints under
- *   https://<tenant>.alinityapp.com/Client/PublicDirectory/
- * The HTML page is a thin shell; the actual data is loaded via XHR
- * against a JSON action that returns paginated rows. Tenants vary in
- * exact path and parameter names so we try a small set of well-known
- * shapes and use the first that responds with JSON. Callers can
- * override paths via env vars.
+ * member register. Every tenant exposes the same shell page at
+ *   https://<tenant>.alinityapp.com/client/publicdirectory
+ * The page is rendered server-side and contains:
+ *   - `<input id="querySID" value="<N>">` — opaque query ID required to
+ *     call the search endpoint.
+ *   - A `_plugin.initializeForm({...})` JSON literal describing the
+ *     filter form fields. Tenants typically expose:
+ *       TextOptionA = first name
+ *       TextOptionB = last name (the field we search on)
+ *       (other tenant-specific filters)
  *
- * Endpoints attempted (in order):
- *   1. POST  Client/PublicDirectory/Search
- *   2. POST  client/publicdirectory/Search
- *   3. POST  Client/PublicDirectorySearch/Index
- *   4. GET   Client/PublicDirectory/Search?page=N&pageSize=M
+ * Search endpoint:
+ *   POST https://<tenant>.alinityapp.com/client/PublicDirectory/Registrants
+ *   Content-Type: application/x-www-form-urlencoded
+ *   body:
+ *     querySID=<N>
+ *     queryParameters={"Parameter":[{"ID":"TextOptionB","Value":"sm","ValueLabel":"sm"}]}
+ *   reply:
+ *     { EnableCaptcha: false, SearchCriteria: [...], Records: [
+ *         { rg, rn, fn, ln, mcn, reg, hc, c, ... }, ...
+ *     ] }
  *
- * Where verified by the calling source, the caller may pass `path`
- * explicitly to short-circuit detection.
+ * The server applies a substring match. Many tenants reject 1-character
+ * queries (return Records:[]). Some tenants (e.g. cap, AB psychologists)
+ * cap each response at 25 rows with no pagination, so we recursively
+ * drill down — when a 2-letter prefix saturates we try its 3-letter
+ * children, etc. Other tenants return everything (we observed 1196 rows
+ * on cpspei for prefix "a"). Recursion is bounded by MAX_PREFIX_LEN.
  *
- * Rate limit: 200 ms between page requests (Alinity is shared infra;
- * we don't want to be the noisy neighbour). 5s timeout.
- *
- * Failure mode: yields nothing and logs once. The runner records the
- * empty result; the workflow keeps going (no source-internal throw).
+ * Rate limit: 250 ms between requests. 30s timeout. Failures on a
+ * specific prefix are logged once and skipped — they don't abort the
+ * whole iteration.
  */
 
 const USER_AGENT =
-  "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Prolio-Bot/1.0 (+contact: ferranp.work@gmail.com)";
 const REQUEST_TIMEOUT_MS = 30_000;
-const PAGE_DELAY_MS = 200;
-const DEFAULT_PAGE_SIZE = 100;
+const REQUEST_DELAY_MS = 250;
+const MAX_PREFIX_LEN = 4;
+const SATURATED_THRESHOLD = 25; // most tenants either return >25 or cap at 25
 
 export interface AlinityRecord {
-  /** Full name as displayed in the directory (e.g. "Dr. Jane Doe MD"). */
-  name: string;
-  /** Practice/registered city if exposed. */
-  city?: string;
-  /** Two-letter province code if exposed (e.g. "AB"). */
-  province?: string;
-  /** Registrant / licence / registration number. Stable per tenant. */
+  /** Tenant-stable GUID identifying the registrant. */
+  registrantGuid?: string;
+  /** Registration / licence number. */
   registrationNumber?: string;
-  /** Current registration status (e.g. "Active", "Practising"). */
+  /** Full display name "First Last". */
+  name: string;
+  /** First name (`fn`). */
+  firstName?: string;
+  /** Last name (`ln`). */
+  lastName?: string;
+  /** Practice city (`mcn` / `oc`). */
+  city?: string;
+  /** Practice register / status (`reg`). */
   status?: string;
-  /** ISO date of registration if exposed. */
+  /** Registration date — not exposed by Alinity public directory. Always undefined. */
   registrationDate?: string;
   /** Raw JSON record so callers can extract niche fields. */
   raw: Record<string, unknown>;
@@ -53,137 +68,88 @@ export interface AlinityRecord {
 export interface FetchAlinityOpts {
   /** Total hard cap. */
   limit?: number;
-  /** Rows per page (most tenants accept 25..200). */
-  pageSize?: number;
-  /** Override path; e.g. `client/publicdirectory/Search`. */
-  path?: string;
-  /** Extra JSON body fields to send on POST. */
-  extraBody?: Record<string, unknown>;
+  /** Override the discovered querySID. */
+  querySID?: string;
+  /** Field ID to filter on (default `TextOptionB` = last name). */
+  searchFieldId?: string;
+  /** Max prefix length to drill to (default 4). */
+  maxPrefixLen?: number;
+  /** Alphabet used to enumerate prefixes (default a..z). */
+  alphabet?: string;
 }
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function pickString(obj: Record<string, unknown>, keys: string[]): string | undefined {
-  for (const k of keys) {
-    const v = obj[k];
-    if (typeof v === "string" && v.trim().length > 0) return v.trim();
-  }
-  // Case-insensitive secondary pass.
-  const lower = new Map<string, unknown>();
-  for (const [k, v] of Object.entries(obj)) lower.set(k.toLowerCase(), v);
-  for (const k of keys) {
-    const v = lower.get(k.toLowerCase());
-    if (typeof v === "string" && v.trim().length > 0) return v.trim();
-  }
-  return undefined;
+interface AlinityRawRow {
+  rg?: string;
+  rn?: string;
+  fn?: string;
+  ln?: string;
+  rl?: string; // "Last, First (rn)" in some tenants
+  mcn?: string;
+  oc?: string;
+  reg?: string;
+  hc?: string;
+  c?: string;
+  [k: string]: unknown;
 }
 
-function toAlinityRecord(row: Record<string, unknown>): AlinityRecord | null {
-  const name =
-    pickString(row, [
-      "FullName",
-      "Name",
-      "DisplayName",
-      "RegistrantName",
-      "MemberName",
-      "FullLegalName",
-    ]) ?? buildFromParts(row);
+interface AlinitySearchResponse {
+  EnableCaptcha?: boolean;
+  SearchCriteria?: string[];
+  Records?: AlinityRawRow[];
+}
+
+function toAlinityRecord(row: AlinityRawRow): AlinityRecord | null {
+  let first = typeof row.fn === "string" ? row.fn.trim() : undefined;
+  let last = typeof row.ln === "string" ? row.ln.trim() : undefined;
+  // Some tenants (e.g. cpspei) only expose `rl` as "Last, First (rn)".
+  if (!first && !last && typeof row.rl === "string") {
+    const m = row.rl.match(/^([^,]+),\s*([^()]+?)(?:\s*\(([^)]+)\))?\s*$/);
+    if (m) {
+      last = m[1].trim();
+      first = m[2].trim();
+      if (!row.rn && m[3]) row.rn = m[3].trim();
+    } else {
+      last = row.rl.trim();
+    }
+  }
+  const name = [first, last].filter(Boolean).join(" ").trim();
   if (!name) return null;
   return {
+    registrantGuid: typeof row.rg === "string" ? row.rg : undefined,
+    registrationNumber: typeof row.rn === "string" ? row.rn : undefined,
     name,
-    city: pickString(row, ["City", "PracticeCity", "WorkCity", "Town"]),
-    province: pickString(row, [
-      "Province",
-      "ProvinceCode",
-      "State",
-      "ProvinceShort",
-    ]),
-    registrationNumber: pickString(row, [
-      "RegistrationNumber",
-      "RegistrantNumber",
-      "LicenseNumber",
-      "LicenceNumber",
-      "MemberNumber",
-      "Number",
-    ]),
-    status: pickString(row, [
-      "RegistrationStatus",
-      "Status",
-      "MembershipStatus",
-      "LicenceStatus",
-      "LicenseStatus",
-    ]),
-    registrationDate: pickString(row, [
-      "RegistrationDate",
-      "InitialRegistrationDate",
-      "RegisteredOn",
-    ]),
+    firstName: first,
+    lastName: last,
+    city: typeof row.mcn === "string" ? row.mcn : typeof row.oc === "string" ? row.oc : undefined,
+    status: typeof row.reg === "string" ? row.reg : undefined,
     raw: row,
   };
 }
 
-function buildFromParts(row: Record<string, unknown>): string | undefined {
-  const first = pickString(row, ["FirstName", "GivenName", "First"]);
-  const last = pickString(row, ["LastName", "Surname", "Last", "FamilyName"]);
-  if (first && last) return `${first} ${last}`;
-  if (last) return last;
-  if (first) return first;
-  return undefined;
-}
-
-interface AlinityResponse {
-  rows: Array<Record<string, unknown>>;
-  total?: number;
-}
-
-function extractRowsFromPayload(payload: unknown): AlinityResponse | null {
-  if (!payload || typeof payload !== "object") return null;
-  const obj = payload as Record<string, unknown>;
-  // Common shapes: { data: [], recordsTotal }, { rows: [] }, { Items: [] },
-  // { Result: { Items: [] } }, [ ... ]
-  if (Array.isArray(payload)) {
-    return { rows: payload as Array<Record<string, unknown>> };
-  }
-  const candidates = ["data", "rows", "Items", "items", "Records", "records", "Results", "results"];
-  for (const k of candidates) {
-    const v = obj[k];
-    if (Array.isArray(v)) {
-      const total = readTotal(obj);
-      return { rows: v as Array<Record<string, unknown>>, total };
-    }
-  }
-  // Nested wrappers.
-  const inner = obj.Result ?? obj.result ?? obj.Data ?? obj.data;
-  if (inner && typeof inner === "object") {
-    return extractRowsFromPayload(inner);
-  }
-  return null;
-}
-
-function readTotal(obj: Record<string, unknown>): number | undefined {
-  for (const k of ["recordsTotal", "RecordsTotal", "Total", "total", "Count", "count"]) {
-    const v = obj[k];
-    if (typeof v === "number") return v;
-    if (typeof v === "string" && /^\d+$/.test(v)) return Number(v);
-  }
-  return undefined;
-}
-
-async function tryFetch(
-  url: string,
-  init: RequestInit,
-): Promise<AlinityResponse | null> {
+async function fetchPublicDirectoryShell(
+  tenant: string,
+): Promise<{ querySID: string } | null> {
+  const url = `https://${tenant}.alinityapp.com/client/publicdirectory`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(url, { ...init, signal: controller.signal });
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "text/html,application/xhtml+xml",
+      },
+      redirect: "follow",
+      signal: controller.signal,
+    });
     if (!response.ok) return null;
-    const contentType = response.headers.get("content-type") || "";
-    if (!contentType.includes("json")) return null;
-    const json = await response.json();
-    return extractRowsFromPayload(json);
+    const html = await response.text();
+    const m = html.match(/id="querySID"[^>]*value="(\d+)"/);
+    if (!m) return null;
+    return { querySID: m[1] };
   } catch {
     return null;
   } finally {
@@ -191,65 +157,114 @@ async function tryFetch(
   }
 }
 
-const CANDIDATE_PATHS = [
-  "Client/PublicDirectory/Search",
-  "client/publicdirectory/Search",
-  "Client/PublicDirectorySearch/Index",
-] as const;
+async function searchPrefix(
+  tenant: string,
+  querySID: string,
+  fieldId: string,
+  prefix: string,
+): Promise<AlinityRawRow[] | null> {
+  const url = `https://${tenant}.alinityapp.com/client/PublicDirectory/Registrants`;
+  const queryParameters = JSON.stringify({
+    Parameter: [{ ID: fieldId, Value: prefix, ValueLabel: prefix }],
+  });
+  const body =
+    `querySID=${encodeURIComponent(querySID)}` +
+    `&queryParameters=${encodeURIComponent(queryParameters)}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/json,text/plain,*/*",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body,
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const ct = response.headers.get("content-type") || "";
+    if (!ct.includes("json")) return null;
+    const json = (await response.json()) as AlinitySearchResponse;
+    return json.Records ?? [];
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export async function* fetchAlinityDirectory(
   tenant: string,
   opts: FetchAlinityOpts = {},
 ): AsyncIterableIterator<AlinityRecord> {
-  const limit = opts.limit ?? 5000;
-  const pageSize = opts.pageSize ?? DEFAULT_PAGE_SIZE;
-  const base = `https://${tenant}.alinityapp.com/`;
-  const headers = {
-    "User-Agent": USER_AGENT,
-    Accept: "application/json,text/plain,*/*",
-    "Content-Type": "application/json",
-    "X-Requested-With": "XMLHttpRequest",
-  };
+  const limit = opts.limit ?? 50_000;
+  const maxPrefixLen = opts.maxPrefixLen ?? MAX_PREFIX_LEN;
+  const alphabet = opts.alphabet ?? "abcdefghijklmnopqrstuvwxyz";
+  const fieldId = opts.searchFieldId ?? "TextOptionB";
 
-  let yielded = 0;
-  const paths = opts.path ? [opts.path] : [...CANDIDATE_PATHS];
-
-  for (let page = 1; page <= Math.ceil(limit / pageSize) + 5; page += 1) {
-    if (yielded >= limit) return;
-    let payload: AlinityResponse | null = null;
-    for (const path of paths) {
-      const url = `${base}${path}`;
-      const body = JSON.stringify({
-        page,
-        pageSize,
-        start: (page - 1) * pageSize,
-        length: pageSize,
-        draw: page,
-        ...(opts.extraBody ?? {}),
-      });
-      payload = await tryFetch(url, { method: "POST", headers, body });
-      if (payload) break;
-      // GET fallback
-      const getUrl = `${url}?page=${page}&pageSize=${pageSize}`;
-      payload = await tryFetch(getUrl, { method: "GET", headers });
-      if (payload) break;
-    }
-    if (!payload || payload.rows.length === 0) {
-      if (page === 1) {
-        console.warn(
-          `[alinity] tenant=${tenant} no JSON endpoint responded — directory may require browser/auth`,
-        );
-      }
+  let querySID = opts.querySID;
+  if (!querySID) {
+    const shell = await fetchPublicDirectoryShell(tenant);
+    if (!shell) {
+      console.warn(
+        `[alinity] tenant=${tenant} could not load directory shell (DNS or 4xx) — skipping`,
+      );
       return;
     }
-    for (const row of payload.rows) {
+    querySID = shell.querySID;
+  }
+
+  // Seed queue with all 2-letter prefixes (single-letter rejected by many tenants).
+  const queue: string[] = [];
+  for (const a of alphabet) {
+    for (const b of alphabet) queue.push(a + b);
+  }
+
+  const seen = new Set<string>();
+  let yielded = 0;
+  let firstHitObserved = false;
+
+  while (queue.length > 0 && yielded < limit) {
+    const prefix = queue.shift() as string;
+    const rows = await searchPrefix(tenant, querySID, fieldId, prefix);
+    await delay(REQUEST_DELAY_MS);
+    if (rows === null) {
+      // transient failure - log only once
+      if (!firstHitObserved) {
+        console.warn(
+          `[alinity] tenant=${tenant} prefix="${prefix}" non-JSON or HTTP error — continuing`,
+        );
+      }
+      continue;
+    }
+    if (rows.length > 0) firstHitObserved = true;
+
+    // If saturated and we can drill further, expand prefix.
+    if (rows.length >= SATURATED_THRESHOLD && prefix.length < maxPrefixLen) {
+      for (const c of alphabet) queue.push(prefix + c);
+    }
+
+    for (const row of rows) {
       if (yielded >= limit) return;
       const rec = toAlinityRecord(row);
       if (!rec) continue;
+      const key = rec.registrantGuid ?? rec.registrationNumber ?? `${rec.name}|${rec.city ?? ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       yielded += 1;
       yield rec;
     }
-    if (payload.rows.length < pageSize) return;
-    await delay(PAGE_DELAY_MS);
+  }
+
+  if (!firstHitObserved) {
+    console.warn(
+      `[alinity] tenant=${tenant} yielded 0 rows across ${alphabet.length ** 2} prefixes — schema may have changed`,
+    );
   }
 }
+
+// Back-compat alias for callers that still use the old field name.
+export type { AlinityRecord as _Reexport };

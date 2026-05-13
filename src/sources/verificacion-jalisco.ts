@@ -9,15 +9,25 @@ import { withScrapeRun } from "../telemetry.js";
  *
  *   https://verificacionresponsable.jalisco.gob.mx/conoce-mas/centros-de-verificacion
  *
- * 21 centros oficiales. HTML estático corto (un solo listado).
+ * **Estado actual (verificado 2026-05)**: la página es una SPA Angular
+ * (Vuexy) que renderiza el contenido en el cliente. El HTML servido
+ * por el servidor no contiene los 21 centros — solo un `<app-root>`
+ * vacío y bundles JS (main, vendor, polyfills). El JS llama a
+ * `https://api.verificacion.jalisco.gob.mx/...` pero las rutas
+ * `/centros`, `/centros-verificacion`, `/api/centros`,
+ * `/publico/centros`, etc. devuelven 404. La API requiere login de
+ * verificador (`/sesion/ingresar-verificador`) y no expone padrón
+ * público.
+ *
+ * Mientras no aparezca un endpoint público, el source es un stub
+ * honesto: skip + warning. Si se descubre, fijar
+ * `PROLIO_VERIFICACION_JALISCO_URL` con el endpoint JSON.
  *
  * Off by default. `PROLIO_RUN_VERIFICACION_JALISCO=true`.
  * Cap with `PROLIO_VERIFICACION_JALISCO_LIMIT` (default 100).
  */
 
-const BASE_URL =
-  process.env.PROLIO_VERIFICACION_JALISCO_URL ||
-  "https://verificacionresponsable.jalisco.gob.mx/conoce-mas/centros-de-verificacion";
+const BASE_URL = process.env.PROLIO_VERIFICACION_JALISCO_URL || "";
 const DEFAULT_LIMIT = 100;
 const POLITE_UA = "ScrapeInfo/1.0 (+https://github.com/fparareda/scrape_info)";
 const CATEGORY: CategoryKey = "itv";
@@ -50,6 +60,12 @@ function stripHtml(s: string): string {
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
+  if (!BASE_URL) {
+    console.warn(
+      "[verificacion-jalisco] PROLIO_VERIFICACION_JALISCO_URL not set — Jalisco SPA, no public JSON endpoint; skipping",
+    );
+    return out;
+  }
   let response: Response;
   try {
     response = await fetch(BASE_URL, {

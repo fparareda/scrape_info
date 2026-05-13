@@ -7,11 +7,19 @@ import { withScrapeRun } from "../telemetry.js";
 /**
  * Colegio de Notarios de la Ciudad de México.
  *
- *   https://colegiodenotorios.org.mx/
- *   Sección "Ubica tu notaría" — listado finito de ~250 notarías
- *   con teléfono, dirección y correo de cada notaria.
+ *   https://colegiodenotarios.org.mx/directorio
+ *   Sección "Ubica tu notaría" — listado oficial de ~250 notarías CDMX.
  *
- * Patrón HTML listado simple (server-rendered).
+ * Patrón (auditado 2026-05-13):
+ *   El directorio es server-rendered pero requiere un POST con un
+ *   filtro (alcaldía). Iteramos sobre las 14 alcaldías; cada respuesta
+ *   trae bloques con la forma:
+ *
+ *     "Notario \n  Nombre Apellido - Notaría No. NN"
+ *     "Notaria \n  Nombre Apellido - Notaría No. NN"
+ *
+ *   Sin teléfono ni email visibles en la lista (sólo se ven al hacer
+ *   click en cada ficha individual — TODO para v2).
  *
  * Off by default. `PROLIO_RUN_COLEGIO_NOTARIOS_CDMX=true`.
  * Cap with `PROLIO_COLEGIO_NOTARIOS_CDMX_LIMIT` (default 500).
@@ -19,95 +27,164 @@ import { withScrapeRun } from "../telemetry.js";
 
 const BASE_URL =
   process.env.PROLIO_COLEGIO_NOTARIOS_CDMX_URL ||
-  "https://colegiodenotorios.org.mx/notarios/";
+  "https://colegiodenotarios.org.mx/directorio";
 const DEFAULT_LIMIT = 500;
 const CHROME_UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36";
 const CATEGORY: CategoryKey = "notario";
 const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_DELAY_MS = 1_000;
 
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
-}
-function stripHtml(s: string): string {
-  return decodeEntities(s.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+const ALCALDIAS = [
+  "Álvaro Obregón",
+  "Azcapotzalco",
+  "Benito Juárez",
+  "Coyoacán",
+  "Cuajimalpa de Morelos",
+  "Cuauhtémoc",
+  "Gustavo A. Madero",
+  "Iztacalco",
+  "Iztapalapa",
+  "Magdalena Contreras",
+  "Miguel Hidalgo",
+  "Tlalpan",
+  "Xochimilco",
+];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
-  const out: ScrapedProfessional[] = [];
+async function postSearch(alcaldia: string): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  let html = "";
   try {
+    const body = new URLSearchParams();
+    body.append("Buscar", "1");
+    body.append("Filtro[0]", "");
+    body.append("Filtro[1]", "");
+    body.append("Filtro[3]", alcaldia);
     const res = await fetch(BASE_URL, {
+      method: "POST",
       headers: {
         "User-Agent": CHROME_UA,
         Accept: "text/html,*/*",
         "Accept-Language": "es-MX,es;q=0.9",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
+      body: body.toString(),
       signal: controller.signal,
       redirect: "follow",
     });
     clearTimeout(timer);
     if (!res.ok) {
-      console.warn(`[colegio-notarios-cdmx] ${res.status} on ${BASE_URL}`);
-      return out;
+      console.warn(
+        `[colegio-notarios-cdmx] ${res.status} on POST ${BASE_URL} (alcaldia=${alcaldia})`,
+      );
+      return null;
     }
-    html = await res.text();
+    return await res.text();
   } catch (err) {
     clearTimeout(timer);
-    console.warn(`[colegio-notarios-cdmx] network: ${(err as Error).message}`);
-    return out;
+    console.warn(
+      `[colegio-notarios-cdmx] network ${alcaldia}: ${(err as Error).message}`,
+    );
+    return null;
   }
+}
 
-  // Split on "Notaría N°" boundaries
-  const chunks = html.split(/Notar[ií]a\s*(?:N[°º]\.?|N[uú]m\.?|N[uú]mero)?\s*(\d+)/i);
+interface Row {
+  name: string;
+  num: string;
+  rol: "Notario" | "Notaria";
+  address?: string;
+  phone?: string;
+  email?: string;
+}
+
+function stripHtml(s: string): string {
+  return s
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Parse one alcaldía page. Each notario is inside:
+ *   <div class="nombre_dir">
+ *     Notario|Notaria
+ *     <Name> - Notaría No. NN
+ *   </div>
+ *   ...Dirección: ... Teléfono(s): <a href="tel:N">N</a>...
+ */
+function parseRows(html: string, alcaldia: string): Row[] {
+  const out: Row[] = [];
+  const HEADER_RE = /<div\s+class="nombre_dir"[^>]*>\s*(Notario|Notaria)\s*([\s\S]{4,200}?)\s*-\s*Notar[ií]a\s*No\.?\s*(\d{1,4})\s*<\/div>([\s\S]{0,2000})/gi;
+  let m: RegExpExecArray | null;
+  while ((m = HEADER_RE.exec(html)) !== null) {
+    const rolRaw = m[1].toLowerCase();
+    const rol: "Notario" | "Notaria" =
+      rolRaw === "notaria" ? "Notaria" : "Notario";
+    const name = stripHtml(m[2]);
+    const num = m[3];
+    if (name.length < 4) continue;
+    const tail = m[4];
+    const dirMatch = tail.match(
+      /Dirección:\s*<\/[a-z]+>\s*<\/em>([\s\S]{0,400}?)(?:<br|Tel[eé]fono|Correo|$)/i,
+    );
+    const telMatch = tail.match(/href="tel:[^"]*"[^>]*>\s*([^<]{6,30})/i);
+    const address = dirMatch
+      ? stripHtml(dirMatch[1]).replace(/\s{2,}/g, " ").trim()
+      : undefined;
+    const phone = telMatch ? telMatch[1].replace(/\s+/g, " ").trim() : undefined;
+    out.push({ name, num, rol, address, phone });
+  }
+  return out;
+}
+
+async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+  const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
-  for (let i = 1; i < chunks.length; i += 2) {
+  for (const alcaldia of ALCALDIAS) {
     if (out.length >= limit) break;
-    const num = chunks[i];
-    const body = chunks[i + 1] ?? "";
-    const text = stripHtml(body).slice(0, 600);
-    if (text.length < 8) continue;
-
-    const nameMatch = text.match(/(?:Titular|Lic\.|Dr\.)\s*([A-Za-zÁÉÍÓÚÑáéíóúñ.\s]{5,80})/);
-    const name = nameMatch ? nameMatch[1].trim() : `Notaría ${num} CDMX`;
-    const telMatch = text.match(/(?:Tel(?:éfono)?\.?)\s*:?\s*([\d\s().\-+]{7,20})/i);
-    const emailMatch = text.match(/([\w.\-+]+@[\w.\-]+\.[a-z]{2,6})/i);
-    const addrMatch = text.match(/(?:Dirección|Domicilio)\s*:?\s*([^|]+?)(?:Tel|Correo|$)/i);
-
-    const sid = `colegio-notarios-cdmx:${num}`;
-    if (seen.has(sid)) continue;
-    seen.add(sid);
-
-    out.push(
-      normalise({
-        source: "colegio-notarios-cdmx" as ScrapeSource,
-        sourceId: sid,
-        name,
-        categoryKey: CATEGORY,
-        citySlug: "cdmx",
-        phone: telMatch ? telMatch[1].trim() : undefined,
-        email: emailMatch ? emailMatch[1].toLowerCase() : undefined,
-        address: addrMatch ? addrMatch[1].trim().slice(0, 200) : undefined,
-        licenseNumber: num,
-        metadata: {
-          country: "MX",
-          authority: "Colegio-Notarios-CDMX",
-          verified_by_authority: true,
-          notaria_num: num,
-        },
-      }),
+    await sleep(REQUEST_DELAY_MS);
+    const html = await postSearch(alcaldia);
+    if (!html) continue;
+    const rows = parseRows(html, alcaldia);
+    let added = 0;
+    for (const r of rows) {
+      if (out.length >= limit) break;
+      const sid = `colegio-notarios-cdmx:${r.num}`;
+      if (seen.has(sid)) continue;
+      seen.add(sid);
+      out.push(
+        normalise({
+          source: "colegio-notarios-cdmx" as ScrapeSource,
+          sourceId: sid,
+          name: r.name,
+          categoryKey: CATEGORY,
+          citySlug: "cdmx",
+          licenseNumber: r.num,
+          phone: r.phone,
+          address: r.address,
+          metadata: {
+            country: "MX",
+            authority: "Colegio-Notarios-CDMX",
+            verified_by_authority: true,
+            notaria_num: r.num,
+            alcaldia,
+            rol: r.rol,
+          },
+        }),
+      );
+      added += 1;
+    }
+    console.log(
+      `[colegio-notarios-cdmx] alcaldia="${alcaldia}" parsed=${rows.length} added=${added} total=${out.length}`,
     );
   }
-  console.log(`[colegio-notarios-cdmx] parsed=${out.length}`);
   return out;
 }
 

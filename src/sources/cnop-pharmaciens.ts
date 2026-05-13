@@ -1,21 +1,22 @@
 import type { ScrapeSource, ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
-import { parseCsv, frPostalCodeToCitySlug } from "./_bulk-utils.js";
+import { splitCsvLine, frPostalCodeToCitySlug } from "./_bulk-utils.js";
 
 /**
- * CNOP — Conseil National de l'Ordre des Pharmaciens. Two open
- * datasets cover this domain on data.gouv.fr:
+ * CNOP — Conseil National de l'Ordre des Pharmaciens. The dataset
+ * "les-pharmacies" referenced in earlier docs no longer exists on
+ * data.gouv.fr (verified 2026-05). The next-best canonical source for
+ * the national list of officines is FINESS itself, filtered to
+ * `categetab=620` ("Pharmacie d'Officine"). ~21k officines.
  *
- *   1. "Les pharmacies" — ~21k officines (établissements pharmaceutiques)
- *      with name, address, license. Best for Prolio because it carries
- *      a physical address.
- *      Dataset: https://www.data.gouv.fr/datasets/les-pharmacies
- *   2. "Sites de vente en ligne" — ~2k e-pharmacies.
- *   3. Pharmacien individuels (~74k) live in the ANS extract covered
- *      by `annuaire-sante-ans` already; no point duplicating here.
+ *   Source: same CSV as `finess` source —
+ *     https://www.data.gouv.fr/datasets/finess-extraction-du-fichier-des-etablissements
+ *     Resource: etalab-cs1100502-stock-<date>.csv
+ *   License: Lov2.
  *
- * License: Lov2.
+ * Pharmacien individuels (~74k) live in the ANS extract covered by
+ * `annuaire-sante-ans`; no overlap.
  *
  * Category: `medicina` (officine ≈ medical retail / pharmacie).
  *
@@ -23,11 +24,12 @@ import { parseCsv, frPostalCodeToCitySlug } from "./_bulk-utils.js";
  * Cap with `PROLIO_CNOP_PHARMACIENS_LIMIT` (default 10000 covers full).
  */
 
-const DATASET_API =
-  "https://www.data.gouv.fr/api/1/datasets/les-pharmacies/";
+const FINESS_DATASET_API =
+  "https://www.data.gouv.fr/api/1/datasets/finess-extraction-du-fichier-des-etablissements/";
+const PHARMACY_CATEGETAB = "620"; // Pharmacie d'Officine in FINESS nomenclature
 const DEFAULT_LIMIT = 10000;
 const USER_AGENT =
-  "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
+  "ScrapeInfo/1.0 (+https://github.com/fparareda/scrape_info)";
 
 interface DatasetResource {
   title?: string;
@@ -38,18 +40,19 @@ interface DatasetMeta {
   resources?: DatasetResource[];
 }
 
-async function findLatestCsvUrl(): Promise<string | null> {
+async function findFinessCsvUrl(): Promise<string | null> {
   try {
-    const response = await fetch(DATASET_API, {
+    const response = await fetch(FINESS_DATASET_API, {
       headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) return null;
     const meta = (await response.json()) as DatasetMeta;
-    const csv = (meta.resources ?? []).find(
-      (r) => r.format?.toLowerCase() === "csv",
-    );
-    return csv?.url ?? null;
+    const resources = meta.resources ?? [];
+    const target =
+      resources.find((r) => /cs1100502/i.test(r.url ?? "")) ||
+      resources.find((r) => /cs1100507/i.test(r.url ?? ""));
+    return target?.url ?? null;
   } catch (error) {
     console.error(
       `[cnop-pharmaciens] metadata failed: ${(error as Error).message}`,
@@ -58,18 +61,24 @@ async function findLatestCsvUrl(): Promise<string | null> {
   }
 }
 
+function parseLigneAcheminement(s: string): { cp: string; ville: string } {
+  const m = s.trim().match(/^(\d{5})\s+(.+?)(?:\s+CEDEX(?:\s+\d+)?)?$/i);
+  if (!m) return { cp: "", ville: s.trim() };
+  return { cp: m[1], ville: m[2].trim() };
+}
+
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const overrideUrl = process.env.PROLIO_CNOP_PHARMACIENS_CSV;
-  const url = overrideUrl || (await findLatestCsvUrl());
+  const url = overrideUrl || (await findFinessCsvUrl());
   if (!url) {
-    console.error("[cnop-pharmaciens] no CSV URL available");
+    console.error("[cnop-pharmaciens] no FINESS CSV URL available");
     return [];
   }
   let response: Response;
   try {
     response = await fetch(url, {
       headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(180_000),
+      signal: AbortSignal.timeout(300_000),
     });
   } catch (error) {
     console.error(
@@ -82,36 +91,45 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     return [];
   }
   const text = await response.text();
-  const rows = parseCsv(text);
+  const lines = text.split(/\r?\n/);
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
 
-  for (const row of rows) {
+  for (let i = 0; i < lines.length; i += 1) {
     if (out.length >= limit) break;
+    const line = lines[i];
+    if (!line) continue;
+    const cells = splitCsvLine(line, ";");
+    if (cells[0] !== "structureet") continue;
+    if (cells.length < 22) continue;
 
-    const finess =
-      row["finess"] ||
-      row["numero_finess"] ||
-      row["finess_geographique"] ||
-      row["numero_pharmacie"] ||
-      row["siret"];
-    const name =
-      row["raison_sociale"] ||
-      row["nom"] ||
-      row["denomination"] ||
-      row["nom_pharmacie"] ||
-      "";
-    if (!finess || !name) continue;
-    if (seen.has(finess)) continue;
+    const categetab = (cells[18] ?? "").trim();
+    const libcategetab = (cells[19] ?? "").trim();
+    // FINESS code 620 = Pharmacie d'Officine. Belt-and-braces: also
+    // accept entries whose libellé clearly identifies an officine in
+    // case the numeric code is missing on edge rows.
+    const isOfficine =
+      categetab === PHARMACY_CATEGETAB ||
+      /officine/i.test(libcategetab) ||
+      /pharmacie/i.test(libcategetab);
+    if (!isOfficine) continue;
+
+    const finess = (cells[1] ?? "").trim();
+    if (!finess || seen.has(finess)) continue;
     seen.add(finess);
 
-    const cp = row["code_postal"] || row["cp"] || "";
+    const { cp, ville } = parseLigneAcheminement(cells[15] ?? "");
     const citySlug = frPostalCodeToCitySlug(cp);
     if (!citySlug) continue;
 
-    const street = row["adresse"] || row["voie"] || "";
-    const city = row["commune"] || row["ville"] || "";
-    const address = [street, cp, city].filter(Boolean).join(", ");
+    const name = (cells[4] || cells[3] || "").trim();
+    if (!name) continue;
+
+    const street = [cells[7], cells[8], cells[9]]
+      .map((s) => (s ?? "").trim())
+      .filter(Boolean)
+      .join(" ");
+    const address = [street, cp, ville].filter(Boolean).join(", ");
 
     out.push(
       normalise({
@@ -120,18 +138,20 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         name,
         categoryKey: "medicina",
         citySlug,
-        phone: row["telephone"] || undefined,
-        email: row["email"] || undefined,
-        website: row["site_internet"] || row["url"] || undefined,
+        phone: (cells[16] ?? "").trim() || undefined,
         address: address || undefined,
         licenseNumber: finess,
         metadata: {
           country: "FR",
-          authority: "CNOP — Ordre National des Pharmaciens (officines)",
+          authority:
+            "FINESS — Pharmacie d'Officine (categetab 620, surfaced via CNOP source)",
           verified_by_authority: true,
           profession: "pharmacie-officine",
           finess,
-          siret: row["siret"],
+          finess_juridique: cells[2] || undefined,
+          siret: cells[22] || undefined,
+          categetab,
+          libcategetab,
         },
       }),
     );

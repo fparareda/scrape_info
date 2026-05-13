@@ -242,13 +242,16 @@ function cleanName(raw: string): string {
 }
 
 /**
- * Hermosillo (CACH) — /asociados/ renders a flat list with the
- * pattern "Name — R6-NNNN" repeated for ~118 members. We grab any
- * "R6-NNNN" token and use the preceding inline text as the name.
+ * Hermosillo (CACH) — /asociados/ renders one `<li>` per member with
+ * the structure `<p>FirstName Surname</p>...<div>R6-NNNN</div>` (all
+ * inline on a single HTML line). We pair each R6 folio with the
+ * nearest preceding `<p>...</p>` text.
+ *
+ * Audited 2026-05-13: 118 R6 folios on the page.
  */
 function extractMembersHermosillo(html: string): MemberRow[] {
   const out: MemberRow[] = [];
-  const FOLIO_RE = /([A-ZÁÉÍÓÚÑa-záéíóúñ.\s'-]{6,80}?)\s*[–\-—:]?\s*\b(R6-\d{4})\b/g;
+  const FOLIO_RE = /<p[^>]*>\s*([^<]{4,80})<\/p>\s*<\/div>\s*<div[^>]*>\s*(R6-\d{4})\s*<\/div>/g;
   let m: RegExpExecArray | null;
   const seen = new Set<string>();
   while ((m = FOLIO_RE.exec(html)) !== null) {
@@ -259,24 +262,43 @@ function extractMembersHermosillo(html: string): MemberRow[] {
     if (name.length < 4 || /^(?:Asociados?|Activos?|Folio)$/i.test(name)) continue;
     out.push({ name, licenseNumber: folio });
   }
+  // Fallback: looser pattern if the precise structure changes
+  if (out.length === 0) {
+    const LOOSE = /<p[^>]*>([^<]{4,80})<\/p>[^<]*(?:<[^>]+>[^<]*)*?(R6-\d{4})/g;
+    let m2: RegExpExecArray | null;
+    while ((m2 = LOOSE.exec(html)) !== null) {
+      const folio = m2[2];
+      if (seen.has(folio)) continue;
+      seen.add(folio);
+      const name = cleanName(stripTags(m2[1]));
+      if (name.length < 4) continue;
+      out.push({ name, licenseNumber: folio });
+    }
+  }
   return out;
 }
 
 /**
- * Reynosa (CAR) — /dro-vigentes/ renders an ordered list "Surnames
- * Given Name DRO-SOP/NN". Pattern: surname-first then DRO-SOP token.
+ * Reynosa (CAR) — /dro-vigentes/ renders `<li>Surname Name <strong>DRO-SOP/NN</strong>...</li>`.
+ * We split on `<li>` and within each chunk pair the inline text up to
+ * the first `<strong>` with the DRO-SOP folio.
+ *
+ * Audited 2026-05-13: 38 DRO-SOP folios on the page.
  */
 function extractMembersReynosa(html: string): MemberRow[] {
   const out: MemberRow[] = [];
-  const ROW_RE = /([A-ZÁÉÍÓÚÑa-záéíóúñ.,\s'-]{8,80}?)\s*(DRO-SOP\/\d{1,3})\b/g;
-  let m: RegExpExecArray | null;
   const seen = new Set<string>();
-  while ((m = ROW_RE.exec(html)) !== null) {
-    const folio = m[2];
+  const liChunks = html.split(/<li[^>]*>/i);
+  for (const chunk of liChunks) {
+    const folioMatch = chunk.match(/<strong[^>]*>\s*(DRO-SOP\/\d{1,3})/i);
+    if (!folioMatch) continue;
+    const folio = folioMatch[1];
     if (seen.has(folio)) continue;
-    seen.add(folio);
-    const name = cleanName(stripTags(m[1]).replace(/,$/g, ""));
+    // The name precedes the first <strong>; strip tags then trim.
+    const beforeStrong = chunk.slice(0, folioMatch.index);
+    const name = cleanName(stripTags(beforeStrong).replace(/,\s*$/g, ""));
     if (name.length < 4) continue;
+    seen.add(folio);
     out.push({ name, licenseNumber: folio, role: "DRO" });
   }
   return out;

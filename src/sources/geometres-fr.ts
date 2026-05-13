@@ -4,12 +4,22 @@ import { getSink } from "../sink.js";
 import { parseCsv, frPostalCodeToCitySlug } from "./_bulk-utils.js";
 
 /**
- * OGE — Ordre des Géomètres-Experts. Tableau public de l'Ordre,
- * publié sur data.gouv.fr. ~1.9k géomètres-experts personnes physiques
- * en exercice en France.
+ * OGE — Ordre des Géomètres-Experts. Tableau public de l'Ordre.
  *
  *   Dataset: https://www.data.gouv.fr/datasets/tableau-de-lordre-des-geometres-experts-section-des-personnes-physiques
  *   License: Lov2
+ *
+ * STATUS (verified 2026-05): the data.gouv.fr dataset page exists but
+ * exposes zero resources — OGE removed the CSV in 2023 and never
+ * republished. The only remaining public surface is the JS-rendered
+ * annuaire on annuaire.geometre-expert.fr, which requires headless
+ * scraping (out of scope here).
+ *
+ * Behaviour: the source stays wired so the runner manifest matches the
+ * DB source_kind enum, but `fetchAll` logs and returns []. To re-enable,
+ * set `PROLIO_GEOMETRES_FR_CSV` to a URL of a hand-uploaded CSV with
+ * columns `nom,prenom,code_postal,adresse,commune,telephone,email,
+ * numero_inscription` and turn `PROLIO_RUN_GEOMETRES_FR=true`.
  *
  * Category: `arquitecto` is the closest Prolio category (architecture
  * + topographie are routinely commissioned together). Metadata flags
@@ -46,6 +56,12 @@ async function findLatestCsvUrl(): Promise<string | null> {
     const csv = (meta.resources ?? []).find(
       (r) => r.format?.toLowerCase() === "csv",
     );
+    if (!csv?.url) {
+      console.warn(
+        "[geometres-fr] data.gouv.fr dataset has no published CSV (OGE removed it in 2023). " +
+          "Set PROLIO_GEOMETRES_FR_CSV to override.",
+      );
+    }
     return csv?.url ?? null;
   } catch (error) {
     console.error(`[geometres-fr] metadata failed: ${(error as Error).message}`);

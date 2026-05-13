@@ -28,6 +28,15 @@ const CATEGORY: CategoryKey = "mecanica";
 const AB_CITY_MAP: Record<string, string> = {
   calgary: "calgary",
   edmonton: "edmonton",
+  "red deer": "red-deer",
+  lethbridge: "lethbridge",
+  "medicine hat": "medicine-hat",
+  "grande prairie": "grande-prairie",
+  "fort mcmurray": "fort-mcmurray",
+  airdrie: "airdrie",
+  leduc: "leduc",
+  "st. albert": "st-albert",
+  "fort saskatchewan": "fort-saskatchewan",
 };
 
 function mapCity(raw: string | undefined): string {

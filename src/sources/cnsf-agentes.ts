@@ -23,9 +23,15 @@ import { mxStateToCity } from "./_mx-states.js";
  * Cap with `PROLIO_CNSF_AGENTES_LIMIT` (default 10000).
  */
 
+/**
+ * Real CSV URL discovered 2026-05-13 via the CKAN API at
+ *   /api/3/action/package_show?id=agentes_intermediarios
+ * The dataset publishes 8 resources; the largest by far is "Busca a
+ * tu agente" (~74k rows), which is the canonical agent registry.
+ */
 const DEFAULT_URL =
   process.env.PROLIO_CNSF_AGENTES_CSV ||
-  "https://www.datos.gob.mx/dataset/agentes_intermediarios/resource/latest.csv";
+  "https://repodatos.atdt.gob.mx/api_update/csnf/agentes_intermediarios/Busca_tu_agente_ok.csv";
 const DEFAULT_LIMIT = 10_000;
 const POLITE_UA = "ScrapeInfo/1.0 (+https://github.com/fparareda/scrape_info)";
 const CATEGORY: CategoryKey = "fiscal";
@@ -36,7 +42,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   try {
     response = await fetch(DEFAULT_URL, {
       headers: { "User-Agent": POLITE_UA, Accept: "text/csv,*/*" },
-      signal: AbortSignal.timeout(120_000),
+      signal: AbortSignal.timeout(180_000),
     });
   } catch (error) {
     console.error(`[cnsf-agentes] network error: ${(error as Error).message}`);
@@ -50,27 +56,41 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const rows = parseCsv(text);
   const today = new Date();
 
+  // Schema (2026-05-13 snapshot of Busca_tu_agente_ok.csv):
+  //   nombre, apellido_paterno, apellido_materno, no_cedula,
+  //   tipo_cedula, tipo_agente, descripcion, fecha_vigencia
+  // There is no entidad column → all routed to cdmx (CNSF is federal).
   for (const row of rows) {
     if (out.length >= limit) break;
-    const clave = row["clave"] || row["folio"] || row["cedula"];
-    const nombre = row["nombre"] || row["nombre_completo"] || row["razon_social"];
+    const clave =
+      row["no_cedula"] || row["clave"] || row["folio"] || row["cedula"];
+    const nombrePartes = [
+      row["nombre"] || row["nombre_completo"] || row["razon_social"],
+      row["apellido_paterno"] || row["apellido1"],
+      row["apellido_materno"] || row["apellido2"],
+    ]
+      .filter(Boolean)
+      .map((v) => String(v).trim());
+    const nombre = nombrePartes.join(" ").trim();
     if (!clave || !nombre) continue;
 
     // Drop expired
-    const fin = row["vigencia_fin"] || row["vigencia"];
+    const fin =
+      row["fecha_vigencia"] || row["vigencia_fin"] || row["vigencia"];
     if (fin) {
       const d = new Date(fin);
       if (Number.isFinite(d.getTime()) && d < today) continue;
     }
 
-    const entidad = row["entidad"] || row["estado"] || row["entidad_federativa"];
+    const entidad =
+      row["entidad"] || row["estado"] || row["entidad_federativa"];
     const citySlug = mxStateToCity(entidad) ?? "cdmx";
 
     out.push(
       normalise({
         source: "cnsf-agentes" as ScrapeSource,
         sourceId: `cnsf-agentes:${String(clave).trim()}`,
-        name: String(nombre).trim(),
+        name: nombre,
         categoryKey: CATEGORY,
         citySlug,
         licenseNumber: String(clave).trim(),
@@ -81,14 +101,15 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           country: "MX",
           authority: "CNSF",
           verified_by_authority: true,
-          tipo: row["tipo"],
+          tipo: row["tipo_agente"] || row["tipo_cedula"] || row["tipo"],
+          descripcion: row["descripcion"],
           entidad,
           vigencia_fin: fin,
         },
       }),
     );
   }
-  console.log(`[cnsf-agentes] parsed=${out.length}`);
+  console.log(`[cnsf-agentes] parsed=${out.length} of ${rows.length} csv rows`);
   return out;
 }
 

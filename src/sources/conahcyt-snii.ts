@@ -27,19 +27,32 @@ import { mxStateToCity } from "./_mx-states.js";
  * Cap with `PROLIO_CONAHCYT_SNII_LIMIT` (default 10000).
  */
 
+/**
+ * Real CSV URL discovered 2026-05-13 via datos.gob.mx CKAN search.
+ * Dataset id: `sistema_nacional_investigadoras_investigadores_snii_s191`.
+ * Two semesters are published each year; we default to the latest
+ * (s2). Override with PROLIO_CONAHCYT_SNII_CSV.
+ *
+ * Note: the legacy sisnai.conahcyt.mx host no longer resolves
+ * (CONAHCYT was renamed SECIHTI in 2025); the active distribution
+ * lives at repodatos.atdt.gob.mx.
+ */
 const DEFAULT_URL =
   process.env.PROLIO_CONAHCYT_SNII_CSV ||
-  "https://sisnai.conahcyt.mx/acceso-abierto/bases-de-datos-abiertos/snii-vigentes.csv";
+  "https://repodatos.atdt.gob.mx/api_update/secretaria_ciencia_tecnologia/sistema_nacional_investigadoras_investigadores_snii_s191/s191_snii_2s_2025.csv";
 const DEFAULT_LIMIT = 10_000;
 const POLITE_UA = "ScrapeInfo/1.0 (+https://github.com/fparareda/scrape_info)";
 
-function mapAreaToCategory(area: string | undefined): CategoryKey | undefined {
-  if (!area) return undefined;
-  const a = area.toLowerCase();
-  if (a.includes("medicina") || a.includes("salud")) return "medicina";
-  if (a.includes("psicolog")) return "psicologia";
+function mapAreaToCategory(
+  area: string | undefined,
+  disciplina: string | undefined,
+): CategoryKey | undefined {
+  const join = `${area ?? ""} ${disciplina ?? ""}`.toLowerCase();
+  if (!join.trim()) return undefined;
+  if (join.includes("medicina") || join.includes("salud")) return "medicina";
+  if (join.includes("psicolog")) return "psicologia";
   // "Humanidades y ciencias de la conducta" can include psicología
-  if (a.includes("conducta")) return "psicologia";
+  if (join.includes("conducta")) return "psicologia";
   return undefined;
 }
 
@@ -62,24 +75,33 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const text = await response.text();
   const rows = parseCsv(text);
 
+  // Schema (2026-05-13 snapshot of s191_snii_2s_2025.csv):
+  //   cvu, nombre, apellido1, apellido2, nivel, categoria,
+  //   inicio_vigencia, fin_vigencia, area_conocimiento, disciplina,
+  //   subdisciplina, especialidad, institucion_acreditacion_comision,
+  //   dependencia_acreditacion_comision, entidad_acreditacion_comision,
+  //   posdoc_iixm, rec_apoyo_recibido, apoyo_umas, comentario
   for (const row of rows) {
     if (out.length >= limit) break;
     const cvu =
-      row["cvu"] ||
-      row["clave"] ||
-      row["id"] ||
-      row["folio"];
-    const nombre =
-      row["nombre"] ||
-      row["nombre_completo"] ||
-      `${row["nombres"] ?? ""} ${row["apellido_paterno"] ?? ""} ${row["apellido_materno"] ?? ""}`.trim();
+      row["cvu"] || row["clave"] || row["id"] || row["folio"];
+    const parts = [
+      row["nombre"] || row["nombres"],
+      row["apellido1"] || row["apellido_paterno"],
+      row["apellido2"] || row["apellido_materno"],
+    ]
+      .filter(Boolean)
+      .map((v) => String(v).trim());
+    const nombre = (row["nombre_completo"] || parts.join(" ")).trim();
     if (!cvu || !nombre) continue;
 
-    const area = row["area"] || row["area_conocimiento"] || row["disciplina"];
-    const category = mapAreaToCategory(area);
+    const area = row["area_conocimiento"] || row["area"];
+    const disciplina = row["disciplina"] || row["subdisciplina"];
+    const category = mapAreaToCategory(area, disciplina);
     if (!category) continue;
 
     const entidad =
+      row["entidad_acreditacion_comision"] ||
       row["entidad"] ||
       row["estado"] ||
       row["entidad_federativa"] ||
@@ -96,17 +118,22 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         licenseNumber: String(cvu).trim(),
         metadata: {
           country: "MX",
-          authority: "CONAHCYT",
+          authority: "SECIHTI",
           verified_by_authority: true,
           area,
-          institucion: row["institucion"],
+          disciplina,
+          institucion:
+            row["institucion_acreditacion_comision"] || row["institucion"],
           nivel: row["nivel"] || row["nivel_snii"],
+          categoria: row["categoria"],
           entidad,
         },
       }),
     );
   }
-  console.log(`[conahcyt-snii] parsed=${out.length}`);
+  console.log(
+    `[conahcyt-snii] parsed=${out.length} of ${rows.length} csv rows`,
+  );
   return out;
 }
 
