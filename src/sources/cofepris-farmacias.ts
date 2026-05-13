@@ -127,62 +127,119 @@ async function downloadPdf(url: string): Promise<Uint8Array | null> {
   }
 }
 
-async function extractPdfText(pdfBytes: Uint8Array): Promise<string[]> {
+/**
+ * Extract candidate rows from a COFEPRIS pharmacy PDF.
+ *
+ * Each state's PDF uses a different column layout, but every row contains
+ * the same three signals on (or very close to) one rendered line:
+ *   - A "giro" keyword: FARMACIA / BOTICA / DROGUER[ÍI]A
+ *   - A license number (digit-heavy, several formats — see `LICENSE_TOKEN`)
+ *   - An issue date in dd/mm/yyyy or dd-mm-yyyy
+ *
+ * The previous implementation expected `<licencia> <rest>` at the start of
+ * the line and lost ~95% of rows because the licencia is usually in the
+ * middle column. We now scan every Y-position, accept any line that carries
+ * all three signals, and also merge tightly-stacked Y-neighbour fragments
+ * (some states render one logical row across 2-3 stacked Y-coordinates).
+ */
+async function extractPdfRows(
+  pdfBytes: Uint8Array,
+): Promise<Array<{ licencia: string; line: string }>> {
   const doc = await getDocument({ data: pdfBytes, useSystemFonts: true })
     .promise;
-  const lines: string[] = [];
+  const rowsOut: Array<{ licencia: string; line: string }> = [];
+  const seen = new Set<string>();
   for (let i = 1; i <= doc.numPages; i += 1) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    // Group items by approximate Y position to recover row layout.
-    const rows = new Map<number, Array<{ x: number; str: string }>>();
+    const yMap = new Map<number, Array<{ x: number; str: string }>>();
     for (const item of content.items) {
       if (!("str" in item) || !item.str) continue;
       const tx = (item as { transform: number[] }).transform;
       const y = Math.round(tx[5]);
       const x = tx[4];
-      const arr = rows.get(y) ?? [];
+      const arr = yMap.get(y) ?? [];
       arr.push({ x, str: item.str });
-      rows.set(y, arr);
+      yMap.set(y, arr);
     }
-    const ys = [...rows.keys()].sort((a, b) => b - a);
+    const ys = [...yMap.keys()].sort((a, b) => b - a);
+    const lineByY = new Map<number, string>();
     for (const y of ys) {
-      const cells = rows.get(y)!.sort((a, b) => a.x - b.x);
-      const line = cells.map((c) => c.str).join(" ").trim();
-      if (line) lines.push(line);
+      const cells = yMap.get(y)!.sort((a, b) => a.x - b.x);
+      lineByY.set(
+        y,
+        cells.map((c) => c.str).join(" ").replace(/\s+/g, " ").trim(),
+      );
+    }
+    const handled = new Set<number>();
+    // 1) Single-line anchors (most rows match here).
+    for (const y of ys) {
+      const line = lineByY.get(y)!;
+      const lic = anchorLicense(line);
+      if (!lic) continue;
+      handled.add(y);
+      if (seen.has(lic)) continue;
+      seen.add(lic);
+      rowsOut.push({ licencia: lic, line });
+    }
+    // 2) Merge adjacent Y-pairs (gap ≤ 6) for layouts that split one
+    //    logical row across two text rows.
+    for (let k = 0; k < ys.length; k += 1) {
+      const y = ys[k];
+      if (handled.has(y)) continue;
+      const baseLine = lineByY.get(y)!;
+      if (!baseLine) continue;
+      for (let dk = 1; dk <= 2 && k + dk < ys.length; dk += 1) {
+        const yNext = ys[k + dk];
+        if (handled.has(yNext)) continue;
+        const gap = Math.abs(y - yNext);
+        if (gap === 0 || gap > 6) break;
+        const merged = `${lineByY.get(yNext)!} ${baseLine}`
+          .replace(/\s+/g, " ")
+          .trim();
+        const lic = anchorLicense(merged);
+        if (!lic) continue;
+        handled.add(y);
+        handled.add(yNext);
+        if (seen.has(lic)) break;
+        seen.add(lic);
+        rowsOut.push({ licencia: lic, line: merged });
+        break;
+      }
     }
   }
-  return lines;
+  return rowsOut;
 }
 
 /**
- * Heuristic line classifier. COFEPRIS PDFs vary by state, but rows always
- * lead with the licencia number (alphanumeric, often `LIC-FAR-`, `13AT-`,
- * `19LS-`, plain digits, or `<state-code> <year> <seq>`). We accept any
- * leading token of length ≥ 5 that is dominated by alphanumerics/hyphens.
- *
- * Returns null when the line is a header, footer, or page anchor.
+ * License number candidates seen across the 27 COFEPRIS state PDFs:
+ *   - `30 121 09 0002`   (Veracruz / Jalisco, with spaces)
+ *   - `14-002-09-0306`   (Jalisco IMSS rows, hyphens)
+ *   - `28041090170`      (Tamaulipas, packed 11 digits)
+ *   - `09002090086`      (COFEPRIS nacional, packed 11 digits)
+ *   - `,01121008`        (legacy Veracruz, comma-prefixed 8 digits)
+ */
+const LICENSE_TOKEN =
+  /(?:\d{2}[\s-]\d{3}[\s-]\d{2}[\s-]\d{3,4}|\b\d{10,12}\b|,\d{8,12})/;
+const DATE_RE = /\b\d{2}[\/-]\d{2}[\/-]\d{4}\b/;
+const GIRO_RE = /\b(FARMACIA|BOTICA|DROGUER[ÍI]A|Farmacia|Botica|Droguer[íi]a)\b/;
+/**
+ * Header / column-name patterns. Lines containing these are NEVER pharmacy
+ * rows even if they happen to include digits+keyword combinations.
  */
 const HEADER_RE =
-  /(licencia|num(ero|\.)\s*sanitar|razon\s*social|domicilio|municipio|cofepris|p[áa]gina|de\s*\d+|fecha\s*de|tipo\s*de|denominaci[óo]n)/i;
-const LICENCIA_RE = /^([A-Z0-9][A-Z0-9./-]{3,30})\s+(.+)$/i;
+  /(L[ÍI]NEAS DE COMERC|RAZ[ÓO]N SOCIAL|ESTABLECIMIENTO\s+\(?FARMACIA|GIRO\s+\(FARMACIA|GIRO\s+LINEAS|CODIGO FECHA|FECHA\s+EXPEDICI|NO\.\s+LICENCIA|No\.\s+LICENCIA|BASE DE DATOS|SUBDIRECCI[ÓO]N|COMISI[ÓO]N (FEDERAL|ESTATAL)|DIRECCI[ÓO]N DE EVAL)/i;
 
-interface ParsedRow {
-  licencia: string;
-  rest: string;
-}
-
-function parseRow(line: string): ParsedRow | null {
-  if (line.length < 15) return null;
-  if (HEADER_RE.test(line) && !/^\d/.test(line)) return null;
-  const m = LICENCIA_RE.exec(line);
-  if (!m) return null;
-  const licencia = m[1].trim();
-  // Reject obvious non-licencias (words like "FARMACIA", state names).
-  if (/^(FARMACIA|DROGUER|BOTICA|FARMACIAS)$/i.test(licencia)) return null;
-  // Must contain at least one digit (real licencias always do).
-  if (!/\d/.test(licencia)) return null;
-  return { licencia, rest: m[2].trim() };
+function anchorLicense(line: string): string | null {
+  if (line.length < 25) return null;
+  if (HEADER_RE.test(line)) return null;
+  if (!GIRO_RE.test(line)) return null;
+  const licMatch = line.match(LICENSE_TOKEN);
+  if (!licMatch) return null;
+  if (!DATE_RE.test(line)) return null;
+  const licencia = licMatch[0].replace(/[\s,-]/g, "");
+  if (licencia.length < 8) return null;
+  return licencia;
 }
 
 /** Detect tipo from row text. */
@@ -193,31 +250,62 @@ function detectTipo(text: string): string {
   return "farmacia";
 }
 
-/** Try to split `rest` into {razonSocial, domicilio, municipio}. Best
- *  effort — we don't trust column boundaries since PDFs differ. We split
- *  on the last comma group as a domicilio/municipio guess. */
-function splitRest(rest: string): {
-  name: string;
-  address?: string;
-  municipio?: string;
-} {
-  // Strip the tipo tail if present.
-  let body = rest.replace(/\s+(FARMACIA|DROGUER[ÍI]A|BOTICA)\s*$/i, "").trim();
-  // Try to find a municipio at the end: last token sequence after a
-  // double-space gap or final comma block.
-  const commaParts = body.split(/\s*,\s*/);
-  if (commaParts.length >= 3) {
-    const municipio = commaParts.pop()!.trim();
-    const address = commaParts.pop()!.trim();
-    const name = commaParts.join(", ").trim();
-    return { name: name || body, address, municipio };
+/**
+ * Pull the establishment name from an anchor line. PDFs differ wildly so we
+ * use a best-effort: strip the trailing fragments (license, date, postal
+ * code, entidad keyword, comercialization clauses) and take the leading
+ * substring up to the first GIRO keyword.
+ *
+ * Returns { name, address?, municipio? } — address/municipio are
+ * heuristic and may be undefined.
+ */
+function splitAnchorLine(
+  line: string,
+  estado: string,
+): { name: string; address?: string; municipio?: string } {
+  // Drop the license + date region and everything after — that's metadata.
+  let body = line;
+  const licIdx = body.search(LICENSE_TOKEN);
+  if (licIdx > 10) body = body.slice(0, licIdx).trim();
+
+  // Drop the state name if it appears at the tail (e.g. "VERACRUZ").
+  const estadoUpper = estado.toUpperCase();
+  body = body
+    .replace(new RegExp(`\\s+${estadoUpper}\\s*$`, "i"), "")
+    .replace(/\s+(Jalisco|Veracruz|Tamaulipas|Ciudad de M[ée]xico|M[ée]xico)\s*$/i, "")
+    .trim();
+
+  // Strip trailing 5-digit postal code segment.
+  body = body.replace(/\s+\d{5}\s*$/, "").trim();
+
+  // The name is the segment BEFORE the first giro keyword.
+  const giroIdx = body.search(GIRO_RE);
+  let name = body;
+  let after = "";
+  if (giroIdx > 0) {
+    name = body.slice(0, giroIdx).trim().replace(/[,;]$/, "");
+    after = body.slice(giroIdx).replace(GIRO_RE, "").trim();
   }
-  if (commaParts.length === 2) {
-    const municipio = commaParts.pop()!.trim();
-    const name = commaParts[0].trim();
-    return { name, municipio };
+  // If name accidentally captured a leading consecutive number (COFEPRIS
+  // nacional rows start with "1 Farmatodo..."), strip it.
+  name = name.replace(/^\s*\d{1,5}\s+/, "").trim();
+  // Reject if name is now empty — fall back to the line itself trimmed.
+  if (!name || name.length < 3) name = body.replace(GIRO_RE, "").trim();
+
+  // Crude address/municipio guess from `after`: take the first comma chunk
+  // as address, last as municipio if there are multiple.
+  let address: string | undefined;
+  let municipio: string | undefined;
+  if (after) {
+    const parts = after.split(/\s{2,}|,\s+/).map((p) => p.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      address = parts[0];
+      municipio = parts[parts.length - 1];
+    } else if (parts.length === 1) {
+      address = parts[0];
+    }
   }
-  return { name: body };
+  return { name, address, municipio };
 }
 
 async function fetchPdfRecords(
@@ -227,9 +315,9 @@ async function fetchPdfRecords(
   if (remaining <= 0) return [];
   const bytes = await downloadPdf(src.url);
   if (!bytes) return [];
-  let lines: string[];
+  let rows: Array<{ licencia: string; line: string }>;
   try {
-    lines = await extractPdfText(bytes);
+    rows = await extractPdfRows(bytes);
   } catch (error) {
     console.error(
       `[cofepris-farmacias] ${src.estado} pdf parse: ${(error as Error).message}`,
@@ -237,19 +325,13 @@ async function fetchPdfRecords(
     return [];
   }
   const out: ScrapedProfessional[] = [];
-  const seen = new Set<string>();
   const citySlug = mxStateToCity(src.estadoSlug) ?? "cdmx";
 
-  for (const line of lines) {
+  for (const row of rows) {
     if (out.length >= remaining) break;
-    const row = parseRow(line);
-    if (!row) continue;
-    if (seen.has(row.licencia)) continue;
-    seen.add(row.licencia);
-
-    const parts = splitRest(row.rest);
+    const parts = splitAnchorLine(row.line, src.estado);
     if (!parts.name || parts.name.length < 3) continue;
-    const tipo = detectTipo(line);
+    const tipo = detectTipo(row.line);
 
     out.push(
       normalise({
@@ -273,7 +355,7 @@ async function fetchPdfRecords(
     );
   }
   console.log(
-    `[cofepris-farmacias] ${src.estado}: kept=${out.length} of ${lines.length} pdf lines`,
+    `[cofepris-farmacias] ${src.estado}: kept=${out.length} of ${rows.length} rows`,
   );
   return out;
 }

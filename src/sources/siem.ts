@@ -67,11 +67,42 @@ const DEFAULT_CSV_URL =
  */
 const SCIAN_TO_CATEGORY: Record<string, CategoryKey> = {
   // Sector 23 — Construcción
+  "236111": "ingenieria", // construccion vivienda unifamiliar
+  "236112": "ingenieria",
+  "236211": "ingenieria", // edificacion no residencial
+  "236212": "ingenieria",
+  "237111": "ingenieria", // obras urbanizacion / acueductos
+  "237112": "ingenieria",
+  "237121": "ingenieria",
+  "237131": "ingenieria",
+  "237132": "ingenieria",
+  "237211": "ingenieria",
+  "237212": "ingenieria", // div. terrenos / urbanizacion
+  "237213": "ingenieria",
+  "237311": "ingenieria",
+  "237312": "ingenieria",
+  "237991": "ingenieria",
+  "237992": "ingenieria",
+  "237993": "ingenieria",
+  "237999": "ingenieria", // otras construcciones ingenieria civil
+  "238110": "ingenieria", // cimentaciones
+  "238121": "ingenieria",
+  "238122": "ingenieria",
+  "238130": "ingenieria",
+  "238190": "ingenieria",
   "238210": "electricidad",
   "238221": "fontaneria",
   "238222": "fontaneria",
   "238223": "fontaneria",
+  "238290": "hvac", // instal. equipos no electricos (aire acond / refrig)
+  "238310": "carpinteria",
+  "238320": "carpinteria",
+  "238330": "carpinteria",
+  "238340": "carpinteria",
   "238350": "carpinteria",
+  "238390": "carpinteria",
+  "238910": "ingenieria", // preparacion de terrenos
+  "238990": "ingenieria", // otros trabajos especializados construccion
 
   // Sector 54 — Servicios profesionales
   "541110": "extranjeria",
@@ -81,7 +112,19 @@ const SCIAN_TO_CATEGORY: Record<string, CategoryKey> = {
   "541219": "fiscal",
   "541310": "arquitecto",
   "541320": "arquitecto",
+  "541330": "ingenieria", // servicios de ingenieria
+  "541340": "ingenieria", // dibujo, plano arquitectonico
+  "541350": "ingenieria", // inspeccion edificios
+  "541360": "ingenieria", // levantamiento geofisico
+  "541370": "ingenieria",
+  "541380": "ingenieria",
+  "541410": "arquitecto", // diseno interior
+  "541420": "arquitecto", // diseno industrial
+  "541430": "arquitecto", // diseno grafico (debatible, mantener)
   "541940": "veterinario",
+  "541941": "veterinario", // servicios vet para mascotas
+  "541942": "veterinario",
+  "541943": "veterinario", // servicios vet ganaderia
 
   // Sector 56 — Servicios de apoyo a los negocios
   "561621": "cerrajero",
@@ -98,9 +141,17 @@ const SCIAN_TO_CATEGORY: Record<string, CategoryKey> = {
   "621119": "medicina",
   "621211": "dentista",
   "621212": "dentista",
+  "621311": "medicina", // quiropractico
+  "621312": "medicina", // optometrista
   "621331": "psicologia",
+  "621341": "psicologia", // counseling
+  "621391": "medicina", // nutricion
   "621398": "fisioterapia",
   "621399": "fisioterapia",
+  "621492": "medicina", // centros planificacion familiar
+  "621511": "medicina", // laboratorios medicos / analisis clinicos
+  "621512": "medicina", // gabinete imagen
+  "621610": "medicina", // servicios atencion domiciliaria
 
   // Sector 81 — Otros servicios (mecánica)
   "811111": "mecanica",
@@ -112,6 +163,14 @@ const SCIAN_TO_CATEGORY: Record<string, CategoryKey> = {
   "811119": "mecanica",
   "811121": "mecanica",
   "811122": "mecanica",
+  "811191": "mecanica", // afinacion
+  "811192": "mecanica", // lavado y lubricado autos
+  "811199": "mecanica",
+  "811211": "mecanica", // reparacion eq electronico
+  "811311": "mecanica", // reparacion maquinaria industrial
+  "811312": "mecanica",
+  "811314": "mecanica",
+  "811420": "carpinteria", // tapiceria/reparacion muebles
 
   // Sector 48-49 — Transporte (centros de verificación vehicular)
   "488410": "itv",
@@ -125,21 +184,27 @@ const SCIAN_TO_CATEGORY: Record<string, CategoryKey> = {
  * phrases checked first to avoid "médico" eating "veterinario".
  */
 const GIRO_KEYWORD_TO_CATEGORY: Array<[RegExp, CategoryKey]> = [
-  [/\bnotar[ií]a/i, "notario"],
-  [/\bveterinari/i, "veterinario"],
-  [/\barquitect/i, "arquitecto"],
-  [/\bcontador|contabilidad|fiscal\b/i, "fiscal"],
-  [/\babogad|bufete|jur[ií]dic|legal\b/i, "extranjeria"],
-  [/\bcerrajer/i, "cerrajero"],
-  [/\belectricista|instalaci[oó]n el[eé]ctrica/i, "electricidad"],
-  [/\bplomer[ií]a|fontaner|hidr[aá]ulica/i, "fontaneria"],
-  [/\bcarpinter/i, "carpinteria"],
-  [/\bmec[aá]nic|hojalater|alineac/i, "mecanica"],
-  [/\bverificaci[oó]n vehicular/i, "itv"],
-  [/\bdentista|dental|odontolog/i, "dentista"],
+  // Most specific first.
+  [/\bnotar[ií]a|servicios? de notar/i, "notario"],
+  [/\bverificaci[oó]n vehicular|centro de verificaci/i, "itv"],
+  [/\bveterinari|cl[ií]nica veterinaria|servicios? veterinario/i, "veterinario"],
+  [/\bdentista|dental|odontolog|consultorio dental|cl[ií]nica dental/i, "dentista"],
   [/\bpsic[oó]log/i, "psicologia"],
-  [/\bfisioterap/i, "fisioterapia"],
-  [/\bm[eé]dic|consultorio m[eé]dico|cl[ií]nica/i, "medicina"],
+  [/\bfisioterap|terapia f[ií]sica|rehabilitaci[oó]n f[ií]sica/i, "fisioterapia"],
+  [/\bcerrajer/i, "cerrajero"],
+  [/\baire acondicionado|refrigeraci[oó]n|climatizaci[oó]n|hvac\b/i, "hvac"],
+  [/\belectricista|instalaci[oó]n el[eé]ctrica|servicios? el[eé]ctrico/i, "electricidad"],
+  [/\bplomer[ií]a|fontaner|hidr[aá]ulica/i, "fontaneria"],
+  [/\bcarpinter|ebaniste|tapicer/i, "carpinteria"],
+  [/\btaller mec[aá]nic|mec[aá]nica automotriz|hojalater|alineac|balanceo|llanter/i, "mecanica"],
+  [/\barquitect|dise[nñ]o (de )?interior/i, "arquitecto"],
+  [/\bservicios? de ingenier[ií]a|despacho de ingenier[ií]a|ingenier[ií]a civil|construcci[oó]n|obra civil|obra pesada|urbanizaci[oó]n|edificaci[oó]n|constructor/i, "ingenieria"],
+  [/\bcontador|contabilidad|despacho contable|servicios? contable|auditor[ií]a/i, "fiscal"],
+  [/\bservicios? fiscal|asesor[ií]a fiscal|tr[aá]mites? fiscal/i, "fiscal"],
+  [/\babogad|bufete|jur[ií]dic|despacho legal|servicios? legales|tr[aá]mites? legales/i, "extranjeria"],
+  [/\blaboratorio (m[eé]dico|cl[ií]nico|de an[aá]lisis)|an[aá]lisis cl[ií]nico/i, "medicina"],
+  [/\bconsultorio m[eé]dico|servicios? m[eé]dico|cl[ií]nica m[eé]dica|m[eé]dico (general|especialista)/i, "medicina"],
+  [/\bm[eé]dic/i, "medicina"],
 ];
 
 let MX_CITY_SLUGS_CACHE: Set<string> | undefined;

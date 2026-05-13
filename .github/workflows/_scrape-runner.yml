@@ -204,6 +204,11 @@ jobs:
       PROLIO_RUN_CNBV_ENTIDADES:        ${{ inputs.source == 'cnbv-entidades' && 'true' || 'false' }}
       PROLIO_RUN_PADRON_GANADERO_NACIONAL: ${{ inputs.source == 'padron-ganadero-nacional' && 'true' || 'false' }}
 
+      # 2026-05-13 wave 3: MX construction + autos + real estate
+      PROLIO_RUN_AMDA_DISTRIBUIDORES:   ${{ inputs.source == 'amda-distribuidores' && 'true' || 'false' }}
+      PROLIO_RUN_CMIC_CONSTRUCTORAS:    ${{ inputs.source == 'cmic-constructoras' && 'true' || 'false' }}
+      PROLIO_RUN_RE_FRANCHISES_MX:      ${{ inputs.source == 're-franchises-mx' && 'true' || 'false' }}
+
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC
       # was excluded because it Disallows the lawyer lookup paths).

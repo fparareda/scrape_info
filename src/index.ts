@@ -152,6 +152,9 @@ import { siemSource, runSiem } from "./sources/siem.js";
 import { cofeprisFarmaciasSource, runCofeprisFarmacias } from "./sources/cofepris-farmacias.js";
 import { cnbvEntidadesSource, runCnbvEntidades } from "./sources/cnbv-entidades.js";
 import { padronGanaderoNacionalSource, runPadronGanaderoNacional } from "./sources/padron-ganadero-nacional.js";
+import { amdaDistribuidoresSource, runAmdaDistribuidores } from "./sources/amda-distribuidores.js";
+import { cmicConstructorasSource, runCmicConstructoras } from "./sources/cmic-constructoras.js";
+import { reFranchisesMxSource, runReFranchisesMx } from "./sources/re-franchises-mx.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -285,6 +288,9 @@ async function main(): Promise<void> {
   const cofeprisFarmaciasOn = cofeprisFarmaciasSource.enabled();
   const cnbvEntidadesOn = cnbvEntidadesSource.enabled();
   const padronGanaderoNacionalOn = padronGanaderoNacionalSource.enabled();
+  const amdaDistribuidoresOn = amdaDistribuidoresSource.enabled();
+  const cmicConstructorasOn = cmicConstructorasSource.enabled();
+  const reFranchisesMxOn = reFranchisesMxSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -383,6 +389,9 @@ async function main(): Promise<void> {
     !cofeprisFarmaciasOn &&
     !cnbvEntidadesOn &&
     !padronGanaderoNacionalOn &&
+    !amdaDistribuidoresOn &&
+    !cmicConstructorasOn &&
+    !reFranchisesMxOn &&
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
@@ -1015,6 +1024,9 @@ async function main(): Promise<void> {
     [cofeprisFarmaciasOn, "cofepris-farmacias", runCofeprisFarmacias],
     [cnbvEntidadesOn, "cnbv-entidades", runCnbvEntidades],
     [padronGanaderoNacionalOn, "padron-ganadero-nacional", runPadronGanaderoNacional],
+    [amdaDistribuidoresOn, "amda-distribuidores", runAmdaDistribuidores],
+    [cmicConstructorasOn, "cmic-constructoras", runCmicConstructoras],
+    [reFranchisesMxOn, "re-franchises-mx", runReFranchisesMx],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],

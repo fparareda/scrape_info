@@ -1,0 +1,12 @@
+name: Scrape · cmic constructoras
+on:
+  schedule:
+    - cron: "0 14 11 * *" # Day 11 of each month, 14:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cmic-constructoras
+      timeout_minutes: 30
