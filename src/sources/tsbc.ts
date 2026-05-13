@@ -6,136 +6,207 @@ import { delay } from "./_bulk-utils.js";
 /**
  * TSBC — Technical Safety BC.
  *
- * Licenses contractors in BC for electrical, gas, boiler, refrigeration,
- * elevator and amusement-device categories. The "Find a Licensed
- * Contractor" tool at
+ * Licenses contractors in BC for electrical / gas / amusement-device /
+ * elevating-device categories. Public lookup at
  *   https://www.technicalsafetybc.ca/regulatory-resources/find-a-licensed-contractor
- * issues XHR to an Azure-backed JSON endpoint. We probe a small set of
- * known endpoints and degrade gracefully if none respond.
+ * is backed by a clean JSON endpoint at
+ *   https://www.technicalsafetybc.ca/api/findalicensedcontractor/query
  *
- * Off by default; `PROLIO_RUN_TSBC=true`.
+ * Pre-flight 2026-05-13 (live):
+ *   ?technology=Electrical          → num_results=6,388
+ *   ?technology=Gas                 → num_results=4,100
+ *   ?technology=Amusement%20Devices → num_results=189
+ *   ?technology=Elevating%20Devices → num_results=57
+ *   Total reachable: ~10,734 BC-licensed contractors.
+ *
+ * Page size is 1000. Pagination via `?page=N`. `technology` is
+ * required — empty filter returns 0. Boiler / Refrigeration /
+ * Pressure not surfaced as standalone categories (folded into Gas /
+ * Elevating).
+ *
+ * Records include company_name, license_number, license_class,
+ * license_status, city/province/postal_code, business_phone, email,
+ * license_issue_date/license_expiry_date. Some contractors are based
+ * outside BC (Alberta, Ontario) but TSBC-licensed — preserved with
+ * declared province in metadata.
+ *
+ * Off by default; `PROLIO_RUN_TSBC=true`. Cap with `PROLIO_TSBC_LIMIT`
+ * (default 12000 — covers full sweep with headroom).
  */
 
+const ENDPOINT =
+  "https://www.technicalsafetybc.ca/api/findalicensedcontractor/query";
+const REFERER =
+  "https://www.technicalsafetybc.ca/regulatory-resources/find-a-licensed-contractor";
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 const REQUEST_TIMEOUT_MS = 30_000;
-const DEFAULT_LIMIT = 5000;
-const PAGE_SIZE = 100;
-const BASE = "https://www.technicalsafetybc.ca";
+const DEFAULT_LIMIT = 12_000;
+const PAGE_SIZE = 1000;
+const REQUEST_DELAY_MS = 500;
 
-const TRADE_TO_CATEGORY: Array<{ pattern: RegExp; key: string }> = [
-  { pattern: /electric/i, key: "electricidad" },
-  { pattern: /gas|propane|hvac|boiler|fuel|refriger/i, key: "hvac" },
-  { pattern: /plumb|drain|sewer|water/i, key: "fontaneria" },
-  { pattern: /elevator|lift/i, key: "carpinteria" },
-];
+// Verified live 2026-05-13. Order = priority (most populated first).
+const TECHNOLOGIES = [
+  "Electrical",
+  "Gas",
+  "Amusement Devices",
+  "Elevating Devices",
+] as const;
 
-const BC_CITIES = new Set<string>([
-  "vancouver","surrey","burnaby","richmond","victoria","abbotsford",
-  "coquitlam","kelowna",
+const TECH_TO_CATEGORY: Record<string, string> = {
+  Electrical: "electricidad",
+  Gas: "hvac",
+  "Amusement Devices": "mecanica",
+  "Elevating Devices": "carpinteria",
+};
+
+const BC_CITY_WHITELIST = new Set<string>([
+  "vancouver",
+  "surrey",
+  "burnaby",
+  "richmond",
+  "victoria",
+  "abbotsford",
+  "coquitlam",
+  "kelowna",
 ]);
-
-function pickCategory(trade: string): string {
-  for (const t of TRADE_TO_CATEGORY) if (t.pattern.test(trade)) return t.key;
-  return "hvac";
-}
 
 function mapCity(raw: string | undefined): string {
   if (!raw) return "vancouver";
   const k = raw.toLowerCase().trim();
-  return BC_CITIES.has(k) ? k : "vancouver";
+  return BC_CITY_WHITELIST.has(k) ? k : "vancouver";
 }
 
-const CANDIDATE_ENDPOINTS = [
-  `${BASE}/api/contractor-search?page={p}&pageSize=${PAGE_SIZE}`,
-  `${BASE}/api/contractors/search?skip={s}&take=${PAGE_SIZE}`,
-  `${BASE}/regulatory-resources/find-a-licensed-contractor/_jcr_content.contractors.json?page={p}`,
-];
-
-interface TsbcRow {
-  CompanyName?: string;
-  BusinessName?: string;
-  LicenceNumber?: string;
-  LicenseNumber?: string;
-  City?: string;
-  Trade?: string;
-  Discipline?: string;
-  Status?: string;
-  [k: string]: unknown;
+interface TsbcContractor {
+  id: string;
+  company_name: string;
+  license_number: string;
+  license_class?: string;
+  license_status?: string;
+  license_issue_date?: string;
+  license_expiry_date?: string;
+  technology: string;
+  city?: string;
+  province?: string;
+  country?: string;
+  postal_code?: string;
+  business_phone?: string;
+  home_phone?: string;
+  other_phone?: string;
+  email?: string;
+  website?: string;
+  qualifications?: string;
+  enforcement_actions?: unknown[];
+  account_id?: string;
 }
 
-async function fetchOnePage(page: number): Promise<TsbcRow[]> {
-  const skip = (page - 1) * PAGE_SIZE;
-  for (const tmpl of CANDIDATE_ENDPOINTS) {
-    const url = tmpl.replace("{p}", String(page)).replace("{s}", String(skip));
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    try {
-      const response = await fetch(url, {
-        headers: { "User-Agent": USER_AGENT, Accept: "application/json,*/*" },
-        signal: controller.signal,
-      });
-      if (!response.ok) continue;
-      const ct = response.headers.get("content-type") || "";
-      if (!ct.includes("json")) continue;
-      const json = (await response.json()) as unknown;
-      if (Array.isArray(json)) return json as TsbcRow[];
-      if (json && typeof json === "object") {
-        const o = json as Record<string, unknown>;
-        for (const k of ["data", "results", "items", "Contractors"]) {
-          const v = o[k];
-          if (Array.isArray(v)) return v as TsbcRow[];
-        }
-      }
-    } catch {
-      /* try next */
-    } finally {
-      clearTimeout(timer);
+interface TsbcResponse {
+  msg?: string;
+  num_results?: number;
+  results?: TsbcContractor[];
+}
+
+async function fetchPage(
+  technology: string,
+  page: number,
+): Promise<TsbcResponse | null> {
+  const url =
+    `${ENDPOINT}?technology=${encodeURIComponent(technology)}` +
+    `&company_name=&license_number=&page=${page}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/json",
+        Referer: REFERER,
+      },
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.warn(`[tsbc] ${res.status} on ${technology} page=${page}`);
+      return null;
     }
+    return (await res.json()) as TsbcResponse;
+  } catch (err) {
+    console.warn(
+      `[tsbc] network error on ${technology} page=${page}: ${(err as Error).message}`,
+    );
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
-  return [];
+}
+
+function bestPhone(c: TsbcContractor): string | undefined {
+  return c.business_phone || c.home_phone || c.other_phone || undefined;
 }
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
-  for (let page = 1; out.length < limit; page += 1) {
-    const rows = await fetchOnePage(page);
-    if (rows.length === 0) break;
-    for (const r of rows) {
-      const name = (r.CompanyName ?? r.BusinessName ?? "").toString().trim();
-      const lic = (r.LicenceNumber ?? r.LicenseNumber ?? "").toString().trim();
-      if (!name || !lic || seen.has(lic)) continue;
-      seen.add(lic);
-      const trade = (r.Trade ?? r.Discipline ?? "").toString();
-      out.push(
-        normalise({
-          source: "tssa" as ScrapeSource, // reuse existing source name; metadata.authority distinguishes
-          sourceId: `tsbc:${lic}`,
-          name,
-          categoryKey: pickCategory(trade) as ScrapedProfessional["categoryKey"],
-          citySlug: mapCity(r.City as string | undefined),
-          licenseNumber: lic,
-          metadata: {
-            country: "CA",
-            province: "BC",
-            authority: "TSBC",
-            verified_by_authority: true,
-            trade,
-            status: r.Status,
-          },
-        }),
-      );
-      if (out.length >= limit) return out;
+  for (const tech of TECHNOLOGIES) {
+    if (out.length >= limit) break;
+    let page = 1;
+    let total: number | undefined;
+    while (out.length < limit) {
+      const data = await fetchPage(tech, page);
+      if (!data || !data.results || data.results.length === 0) break;
+      if (total === undefined && typeof data.num_results === "number") {
+        total = data.num_results;
+        console.log(`[tsbc] ${tech}: total=${total}`);
+      }
+      for (const c of data.results) {
+        const key = `tsbc:${c.license_number || c.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const category = TECH_TO_CATEGORY[c.technology] || "hvac";
+        out.push(
+          normalise({
+            source: "tsbc" as ScrapeSource,
+            sourceId: key,
+            name: c.company_name,
+            categoryKey: category as never,
+            citySlug: mapCity(c.city),
+            licenseNumber: c.license_number || undefined,
+            phone: bestPhone(c),
+            email: c.email || undefined,
+            website: c.website || undefined,
+            metadata: {
+              country: "CA",
+              province: "BC",
+              authority: "TSBC",
+              verified_by_authority: true,
+              technology: c.technology,
+              license_class: c.license_class,
+              license_status: c.license_status,
+              license_issue_date: c.license_issue_date,
+              license_expiry_date: c.license_expiry_date,
+              raw_city: c.city,
+              raw_province: c.province,
+              postal_code: c.postal_code,
+              qualifications: c.qualifications,
+              enforcement_count: Array.isArray(c.enforcement_actions)
+                ? c.enforcement_actions.length
+                : 0,
+            },
+          }),
+        );
+        if (out.length >= limit) break;
+      }
+      const fetchedFromThisPage = data.results.length;
+      if (fetchedFromThisPage < PAGE_SIZE) break;
+      if (total !== undefined && page * PAGE_SIZE >= total) break;
+      page += 1;
+      await delay(REQUEST_DELAY_MS);
     }
-    if (rows.length < PAGE_SIZE) break;
-    await delay(1000);
   }
   return out;
 }
 
 export const tsbcSource: ScraperSource = {
-  name: "tssa" as ScrapeSource,
+  name: "tsbc" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_TSBC === "true";
   },
@@ -150,7 +221,8 @@ export async function runTsbc(): Promise<{
   updated: number;
   skipped: number;
 }> {
-  if (!tsbcSource.enabled()) return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
+  if (!tsbcSource.enabled())
+    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   const limit = Number(process.env.PROLIO_TSBC_LIMIT ?? DEFAULT_LIMIT);
   const cap = Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_LIMIT;
   const records = await fetchAll(cap);
