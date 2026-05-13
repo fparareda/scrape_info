@@ -77,6 +77,7 @@ export type ScrapeSource =
   | "oaa"
   | "louisiana-lslbc"
   | "nyc-dob"
+  | "cgcod-es"
   | "cgn-notariado";
 
 /**
