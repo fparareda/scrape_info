@@ -126,6 +126,10 @@ import {
   runCgnNotariado,
 } from "./sources/cgn-notariado.js";
 import {
+  cgcodEsEnabled,
+  runCgcodEs,
+} from "./sources/cgcod-es.js";
+import {
   overtureEnabled,
   runOvertureEnrichment,
 } from "./sources/overture.js";
@@ -219,6 +223,7 @@ async function main(): Promise<void> {
   const louisianaLslbcOn = louisianaLslbcSource.enabled();
   const nycDobOn = nycDobSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
+  const cgcodEsOn = cgcodEsEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
@@ -284,6 +289,7 @@ async function main(): Promise<void> {
     !louisianaLslbcOn &&
     !nycDobOn &&
     !cgnNotariadoOn &&
+    !cgcodEsOn &&
     !overtureOn &&
     !competitorNaOn &&
     !competitorEsMegaOn
@@ -342,6 +348,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_SENASICA_MX_VET=true, " +
         "PROLIO_RUN_DENUE_MX=true, " +
         "PROLIO_RUN_LOUISIANA_LSLBC=true, " +
+        "PROLIO_RUN_CGCOD_ES=true, " +
         "PROLIO_RUN_CGN_NOTARIADO=true, " +
         "PROLIO_RUN_OAQ=true, " +
         "PROLIO_RUN_OAA=true, " +
@@ -864,6 +871,7 @@ async function main(): Promise<void> {
     [louisianaLslbcOn, "louisiana-lslbc", runLouisianaLslbc],
     [nycDobOn, "nyc-dob", runNycDob],
     [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
+    [cgcodEsOn, "cgcod-es", runCgcodEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
