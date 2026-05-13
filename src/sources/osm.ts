@@ -105,6 +105,9 @@ const OSM_TAGS: Record<CategoryKey, Array<[string, string]>> = {
   itv: [
     ["amenity", "vehicle_inspection"],
   ],
+  ingenieria: [
+    ["office", "engineer"],
+  ],
 };
 
 interface OverpassElement {

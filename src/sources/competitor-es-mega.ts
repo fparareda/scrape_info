@@ -86,6 +86,7 @@ const HABITISSIMO_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
   arquitecto: undefined,
   cerrajero: "cerrajeros",
   hvac: "aire-acondicionado",
+  ingenieria: undefined,
 };
 
 const CRONOSHARE_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
@@ -105,6 +106,7 @@ const CRONOSHARE_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
   arquitecto: undefined,
   cerrajero: "cerrajeros",
   hvac: "aire-acondicionado",
+  ingenieria: undefined,
 };
 
 const PAGINAS_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
@@ -124,6 +126,7 @@ const PAGINAS_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
   arquitecto: undefined,
   cerrajero: "cerrajeros",
   hvac: "aire-acondicionado",
+  ingenieria: undefined,
 };
 
 const DEFAULT_LIMIT = 1500;

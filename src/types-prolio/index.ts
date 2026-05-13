@@ -18,7 +18,8 @@ export type CategoryKey =
   | "hvac"
   | "cerrajero"
   | "mecanica"
-  | "itv";
+  | "itv"
+  | "ingenieria";
 
 export type ClaimStatus = "unclaimed" | "claimed" | "verified";
 export type Tier = "free" | "featured";

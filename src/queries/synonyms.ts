@@ -93,4 +93,9 @@ export const CATEGORY_SYNONYMS: Record<CategoryKey, Record<QueryLocale, string[]
     en: [],
     fr: [],
   },
+  ingenieria: {
+    es: ["ingeniero", "ingeniera", "ingeniería"],
+    en: ["engineer", "engineering"],
+    fr: ["ingénieur", "ingénierie"],
+  },
 };

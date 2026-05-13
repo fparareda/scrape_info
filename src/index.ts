@@ -113,8 +113,38 @@ import { cnbAvocatsSource, runCnbAvocats } from "./sources/cnb-avocats.js";
 import { architectesFrSource, runArchitectesFr } from "./sources/architectes-fr.js";
 import { oecFrSource, runOecFr } from "./sources/oec-fr.js";
 import { ordreVetFrSource, runOrdreVetFr } from "./sources/ordre-vet-fr.js";
-import { annuaireSanteAmeliSource, runAnnuaireSanteAmeli } from "./sources/annuaire-sante-ameli.js";
-import { rppsFrSource, runRppsFr } from "./sources/rpps-fr.js";
+// FR consolidation 2026-05: rpps-fr + annuaire-sante-ameli → annuaire-sante-ans.
+// CA wave 2026-05: 11 new provincial regulators + Alinity/Thentia infra.
+// FR wave 2026-05: 8 new data.gouv bulk sources.
+// MX wave 2026-05: 10 new federal + state directories.
+import { annuaireSanteAnsSource, runAnnuaireSanteAns } from "./sources/annuaire-sante-ans.js";
+import { sireneInseeSource, runSireneInsee } from "./sources/sirene-insee.js";
+import { ademeRgeSource, runAdemeRge } from "./sources/ademe-rge.js";
+import { finessSource, runFiness } from "./sources/finess.js";
+import { prixControleTechniqueSource, runPrixControleTechnique } from "./sources/prix-controle-technique.js";
+import { autoEcolesFrSource, runAutoEcolesFr } from "./sources/auto-ecoles-fr.js";
+import { geometresFrSource, runGeometresFr } from "./sources/geometres-fr.js";
+import { cnopPharmaciensSource, runCnopPharmaciens } from "./sources/cnop-pharmaciens.js";
+import { tsaskSource, runTsask } from "./sources/tsask.js";
+import { tsbcSource, runTsbc } from "./sources/tsbc.js";
+import { cpsaSource, runCpsa } from "./sources/cpsa.js";
+import { cpsmSource, runCpsm } from "./sources/cpsm.js";
+import { cpsnlSource, runCpsnl } from "./sources/cpsnl.js";
+import { cpspeiSource, runCpspei } from "./sources/cpspei.js";
+import { capPsychologistsSource, runCapPsychologists } from "./sources/cap-psychologists.js";
+import { cpmPhysioSource, runCpmPhysio } from "./sources/cpm-physio.js";
+import { lssSaskatchewanSource, runLssSaskatchewan } from "./sources/lss-saskatchewan.js";
+import { amvicDealersSource, runAmvicDealers } from "./sources/amvic-dealers.js";
+import { apegaSource, runApega } from "./sources/apega.js";
+import { notariadoMxSource, runNotariadoMx } from "./sources/notariado-mx.js";
+import { sedemaVerificentrosCdmxSource, runSedemaVerificentrosCdmx } from "./sources/sedema-verificentros-cdmx.js";
+import { verificacionEdomexSource, runVerificacionEdomex } from "./sources/verificacion-edomex.js";
+import { verificacionJaliscoSource, runVerificacionJalisco } from "./sources/verificacion-jalisco.js";
+import { cnsfAgentesSource, runCnsfAgentes } from "./sources/cnsf-agentes.js";
+import { colegioNotariosCdmxSource, runColegioNotariosCdmx } from "./sources/colegio-notarios-cdmx.js";
+import { fcarmArquitectosSource, runFcarmArquitectos } from "./sources/fcarm-arquitectos.js";
+import { fedmvzColegiosVetSource, runFedmvzColegiosVet } from "./sources/fedmvz-colegios-vet.js";
+import { conahcytSniiSource, runConahcytSnii } from "./sources/conahcyt-snii.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -210,8 +240,37 @@ async function main(): Promise<void> {
   const architectesFrOn = architectesFrSource.enabled();
   const oecFrOn = oecFrSource.enabled();
   const ordreVetFrOn = ordreVetFrSource.enabled();
-  const annuaireSanteAmeliOn = annuaireSanteAmeliSource.enabled();
-  const rppsFrOn = rppsFrSource.enabled();
+  // 2026-05 wave: FR consolidation
+  const annuaireSanteAnsOn = annuaireSanteAnsSource.enabled();
+  const sireneInseeOn = sireneInseeSource.enabled();
+  const ademeRgeOn = ademeRgeSource.enabled();
+  const finessOn = finessSource.enabled();
+  const prixControleTechniqueOn = prixControleTechniqueSource.enabled();
+  const autoEcolesFrOn = autoEcolesFrSource.enabled();
+  const geometresFrOn = geometresFrSource.enabled();
+  const cnopPharmaciensOn = cnopPharmaciensSource.enabled();
+  // 2026-05 wave: CA
+  const tsaskOn = tsaskSource.enabled();
+  const tsbcOn = tsbcSource.enabled();
+  const cpsaOn = cpsaSource.enabled();
+  const cpsmOn = cpsmSource.enabled();
+  const cpsnlOn = cpsnlSource.enabled();
+  const cpspeiOn = cpspeiSource.enabled();
+  const capPsychologistsOn = capPsychologistsSource.enabled();
+  const cpmPhysioOn = cpmPhysioSource.enabled();
+  const lssSaskatchewanOn = lssSaskatchewanSource.enabled();
+  const amvicDealersOn = amvicDealersSource.enabled();
+  const apegaOn = apegaSource.enabled();
+  // 2026-05 wave: MX
+  const notariadoMxOn = notariadoMxSource.enabled();
+  const sedemaVerificentrosCdmxOn = sedemaVerificentrosCdmxSource.enabled();
+  const verificacionEdomexOn = verificacionEdomexSource.enabled();
+  const verificacionJaliscoOn = verificacionJaliscoSource.enabled();
+  const cnsfAgentesOn = cnsfAgentesSource.enabled();
+  const colegioNotariosCdmxOn = colegioNotariosCdmxSource.enabled();
+  const fcarmArquitectosOn = fcarmArquitectosSource.enabled();
+  const fedmvzColegiosVetOn = fedmvzColegiosVetSource.enabled();
+  const conahcytSniiOn = conahcytSniiSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -275,8 +334,34 @@ async function main(): Promise<void> {
     !architectesFrOn &&
     !oecFrOn &&
     !ordreVetFrOn &&
-    !annuaireSanteAmeliOn &&
-    !rppsFrOn &&
+    !annuaireSanteAnsOn &&
+    !sireneInseeOn &&
+    !ademeRgeOn &&
+    !finessOn &&
+    !prixControleTechniqueOn &&
+    !autoEcolesFrOn &&
+    !geometresFrOn &&
+    !cnopPharmaciensOn &&
+    !tsaskOn &&
+    !tsbcOn &&
+    !cpsaOn &&
+    !cpsmOn &&
+    !cpsnlOn &&
+    !cpspeiOn &&
+    !capPsychologistsOn &&
+    !cpmPhysioOn &&
+    !lssSaskatchewanOn &&
+    !amvicDealersOn &&
+    !apegaOn &&
+    !notariadoMxOn &&
+    !sedemaVerificentrosCdmxOn &&
+    !verificacionEdomexOn &&
+    !verificacionJaliscoOn &&
+    !cnsfAgentesOn &&
+    !colegioNotariosCdmxOn &&
+    !fcarmArquitectosOn &&
+    !fedmvzColegiosVetOn &&
+    !conahcytSniiOn &&
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
@@ -337,7 +422,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CNB_AVOCATS=true, " +
         "PROLIO_RUN_ARCHITECTES_FR=true, " +
         "PROLIO_RUN_OEC_FR=true, " +
-        "PROLIO_RUN_ANNUAIRE_SANTE_AMELI=true, " +
+        "PROLIO_RUN_ANNUAIRE_SANTE_ANS=true, " +
         "PROLIO_RUN_DOCTORALIA_MX=true, " +
         "PROLIO_RUN_SENASICA_MX_VET=true, " +
         "PROLIO_RUN_DENUE_MX=true, " +
@@ -347,7 +432,25 @@ async function main(): Promise<void> {
         "PROLIO_RUN_OAA=true, " +
         "PROLIO_RUN_NYC_DOB=true, " +
         "PROLIO_RUN_ORDRE_VET_FR=true, " +
-        "PROLIO_RUN_RPPS_FR=true, " +
+        "PROLIO_RUN_SIRENE_INSEE=true, " +
+        "PROLIO_RUN_ADEME_RGE=true, " +
+        "PROLIO_RUN_FINESS=true, " +
+        "PROLIO_RUN_PRIX_CONTROLE_TECHNIQUE=true, " +
+        "PROLIO_RUN_AUTO_ECOLES_FR=true, " +
+        "PROLIO_RUN_GEOMETRES_FR=true, " +
+        "PROLIO_RUN_CNOP_PHARMACIENS=true, " +
+        "PROLIO_RUN_TSASK=true, PROLIO_RUN_TSBC=true, " +
+        "PROLIO_RUN_CPSA=true, PROLIO_RUN_CPSM=true, " +
+        "PROLIO_RUN_CPSNL=true, PROLIO_RUN_CPSPEI=true, " +
+        "PROLIO_RUN_CAP_PSYCHOLOGISTS=true, PROLIO_RUN_CPM_PHYSIO=true, " +
+        "PROLIO_RUN_LSS_SASKATCHEWAN=true, PROLIO_RUN_AMVIC_DEALERS=true, " +
+        "PROLIO_RUN_APEGA=true, " +
+        "PROLIO_RUN_NOTARIADO_MX=true, " +
+        "PROLIO_RUN_SEDEMA_VERIFICENTROS_CDMX=true, " +
+        "PROLIO_RUN_VERIFICACION_EDOMEX=true, PROLIO_RUN_VERIFICACION_JALISCO=true, " +
+        "PROLIO_RUN_CNSF_AGENTES=true, PROLIO_RUN_COLEGIO_NOTARIOS_CDMX=true, " +
+        "PROLIO_RUN_FCARM_ARQUITECTOS=true, PROLIO_RUN_FEDMVZ_COLEGIOS_VET=true, " +
+        "PROLIO_RUN_CONAHCYT_SNII=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
         "PROLIO_SCRAPE_OVERTURE=true",
@@ -856,8 +959,34 @@ async function main(): Promise<void> {
     [architectesFrOn, "architectes-fr", runArchitectesFr],
     [oecFrOn, "oec-fr", runOecFr],
     [ordreVetFrOn, "ordre-vet-fr", runOrdreVetFr],
-    [annuaireSanteAmeliOn, "annuaire-sante-ameli", runAnnuaireSanteAmeli],
-    [rppsFrOn, "rpps-fr", runRppsFr],
+    [annuaireSanteAnsOn, "annuaire-sante-ans", runAnnuaireSanteAns],
+    [sireneInseeOn, "sirene-insee", runSireneInsee],
+    [ademeRgeOn, "ademe-rge", runAdemeRge],
+    [finessOn, "finess", runFiness],
+    [prixControleTechniqueOn, "prix-controle-technique", runPrixControleTechnique],
+    [autoEcolesFrOn, "auto-ecoles-fr", runAutoEcolesFr],
+    [geometresFrOn, "geometres-fr", runGeometresFr],
+    [cnopPharmaciensOn, "cnop-pharmaciens", runCnopPharmaciens],
+    [tsaskOn, "tsask", runTsask],
+    [tsbcOn, "tsbc", runTsbc],
+    [cpsaOn, "cpsa", runCpsa],
+    [cpsmOn, "cpsm", runCpsm],
+    [cpsnlOn, "cpsnl", runCpsnl],
+    [cpspeiOn, "cpspei", runCpspei],
+    [capPsychologistsOn, "cap-psychologists", runCapPsychologists],
+    [cpmPhysioOn, "cpm-physio", runCpmPhysio],
+    [lssSaskatchewanOn, "lss-saskatchewan", runLssSaskatchewan],
+    [amvicDealersOn, "amvic-dealers", runAmvicDealers],
+    [apegaOn, "apega", runApega],
+    [notariadoMxOn, "notariado-mx", runNotariadoMx],
+    [sedemaVerificentrosCdmxOn, "sedema-verificentros-cdmx", runSedemaVerificentrosCdmx],
+    [verificacionEdomexOn, "verificacion-edomex", runVerificacionEdomex],
+    [verificacionJaliscoOn, "verificacion-jalisco", runVerificacionJalisco],
+    [cnsfAgentesOn, "cnsf-agentes", runCnsfAgentes],
+    [colegioNotariosCdmxOn, "colegio-notarios-cdmx", runColegioNotariosCdmx],
+    [fcarmArquitectosOn, "fcarm-arquitectos", runFcarmArquitectos],
+    [fedmvzColegiosVetOn, "fedmvz-colegios-vet", runFedmvzColegiosVet],
+    [conahcytSniiOn, "conahcyt-snii", runConahcytSnii],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],

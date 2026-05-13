@@ -1,0 +1,12 @@
+name: Scrape · Géomètres-Experts (France)
+on:
+  schedule:
+    - cron: "0 8 * * 5"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: geometres-fr
+      timeout_minutes: 60

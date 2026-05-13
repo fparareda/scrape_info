@@ -1,73 +1,45 @@
 import type { CategoryKey } from "../prolio-types.js";
-import type { ScrapedProfessional, ScraperSource } from "../types.js";
+import type { ScrapeSource, ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
 import { splitCsvLine, frPostalCodeToCitySlug } from "./_bulk-utils.js";
 
 /**
- * RPPS — Répertoire Partagé des Professionnels de Santé.
+ * Annuaire Santé (ANS) — consolidated French national healthcare
+ * professional registry. SUPERSEDES the older `rpps-fr` and
+ * `annuaire-sante-ameli` scrapers, which targeted the same
+ * underlying ANS extraction publique with two different lenses:
  *
- * Canonical national French registry of every healthcare professional
- * (medical, dental, paramedical) maintained by ASIP Santé / Agence du
- * Numérique en Santé. Published as a daily extraction on data.gouv.fr
- * under Lov2 license (commercial reuse OK).
+ *   - rpps-fr targeted the personne-activite pipe-delimited extract
+ *     (one row per pro × workplace).
+ *   - annuaire-sante-ameli targeted the CNAM Ameli libéral CSV.
  *
- *   Dataset: https://www.data.gouv.fr/fr/datasets/repertoire-partage-des-professionnels-de-sante-rpps/
- *   API:     https://www.data.gouv.fr/api/1/datasets/annuaire-sante-extractions-des-donnees-en-libre-acces-des-professionnels-intervenant-dans-le-systeme-de-sante-rpps/
+ * The ANS publication on data.gouv.fr ("Annuaire santé — extractions
+ * des données en libre accès") is the canonical multi-table feed
+ * covering ~1.8M PS (medical, dental, paramedical) across libéral +
+ * salarié + hospital settings. We pull the single personne-activite
+ * extraction as our minimum-viable record because it carries the
+ * names + addresses + profession code needed for upsert; the
+ * companion `dipl-autexerc` (diplomas) and `savoirfaire` (specialties)
+ * tables are joinable by RPPS id but not required.
  *
- * Relation to `annuaire-sante-ameli`: Ameli is the CNAM extract limited
- * to *libéral* (private-practice) professionals with a Sécurité Sociale
- * agreement — i.e. those that bill the public insurance system. RPPS is
- * the underlying national registry covering libéral + salarié + hospital
- * + every regulated healthcare role (incl. those who never see a CNAM
- * patient). Treat as a complementary higher-quality superset; the sink
- * dedups via (source, source_id) so both can run side-by-side.
+ * Sources:
+ *   Dataset: https://www.data.gouv.fr/datasets/annuaire-sante-extractions-des-donnees-en-libre-acces-des-professionnels-intervenant-dans-le-systeme-de-sante-rpps
+ *   ANS portal: https://annuaire.sante.fr/web/site-pro/extractions-publiques
+ *   License: Lov2 (Licence Ouverte 2.0 — commercial reuse OK)
  *
- * Bulk file: `ps-libreacces-personne-activite.txt` — pipe-delimited
- * (`|`), Windows-1252, ~800 MB / ~2 M activity rows (one per
- * professional × workplace; the same RPPS id can appear several times
- * if a doctor practices in multiple sites). Verified column layout
- * 2026-05-07 from snapshot 20260505-082255:
+ * Category mapping (covers ~80% of file by row count):
+ *   medicina      ← Médecin
+ *   dentista      ← Chirurgien-Dentiste
+ *   fisioterapia  ← Masseur-Kinésithérapeute
+ *   psicologia    ← Psychologue / Psychomotricien
  *
- *    1  Type d'identifiant PP                (8 = ADELI legacy, ...)
- *    2  Identifiant PP                       (the "RPPS" or ADELI number)
- *    3  Identification nationale PP          (national PP identifier)
- *    8  Nom d'exercice
- *    9  Prénom d'exercice
- *   10  Code profession
- *   11  Libellé profession                   (used for category routing)
- *   17  Libellé savoir-faire                 (specialty)
- *   25  Raison sociale site                  (firm name)
- *   33  Libellé Voie                         (street name only)
- *   36  Code postal (coord. structure)
- *   38  Libellé commune (coord. structure)
- *   41  Téléphone (coord. structure)
- *   44  Adresse e-mail (coord. structure)
+ * Off by default. `PROLIO_RUN_ANNUAIRE_SANTE_ANS=true` to enable.
+ * Cap with `PROLIO_ANNUAIRE_SANTE_ANS_LIMIT` (default 5000).
  *
- * Profession values seen in real data: "Médecin", "Chirurgien-Dentiste",
- * "Sage-Femme", "Infirmier", "Pharmacien", "Masseur-Kinésithérapeute",
- * "Pédicure-Podologue", "Orthophoniste", "Orthoptiste", "Psychomotricien".
- * We map only the three with a Prolio category today:
- *
- *   - medicina      ← "Médecin"
- *   - dentista      ← "Chirurgien-Dentiste"
- *   - fisioterapia  ← "Masseur-Kinésithérapeute"
- *
- * Implementation notes:
- *   • The file is too large (~800 MB) to load with `await
- *     response.text()` on a free GH runner without OOM risk. We stream
- *     `response.body`, decode chunks, and break out of the loop once
- *     `out.length` reaches `limit` — short-circuiting the download.
- *   • parseCsv()'s separator auto-detect doesn't recognise pipe; we
- *     parse line-by-line with `splitCsvLine(line, "|")`.
- *   • Same FR postal-code → city-slug bucketing as Annuaire Santé Ameli;
- *     rural CPs without a seeded metro are dropped silently (see
- *     `frPostalCodeToCitySlug` in _bulk-utils).
- *
- * Off by default. `PROLIO_RUN_RPPS_FR=true` to enable. Cap with
- * `PROLIO_RPPS_FR_LIMIT` (default 5000 — same first-run discipline as
- * sibling FR sources; bumped to 100k in the GH Actions runner once the
- * URL is verified).
+ * Reuses the same streaming + pipe-delimited parser as rpps-fr (the
+ * file is ~800 MB on a free GH runner so loading via response.text()
+ * is OOM-risky).
  */
 
 const DATASET_API =
@@ -93,6 +65,8 @@ function professionToCategory(profession: string): CategoryKey | undefined {
   if (p.includes("dentiste")) return "dentista";
   if (p.includes("kinésithéra") || p.includes("kinesithera"))
     return "fisioterapia";
+  if (p.includes("psycholog") || p.includes("psychomot"))
+    return "psicologia";
   return undefined;
 }
 
@@ -103,47 +77,35 @@ async function findLatestPersonneActiviteUrl(): Promise<string | null> {
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) {
-      console.error(`[rpps-fr] metadata ${response.status}`);
+      console.error(`[annuaire-sante-ans] metadata ${response.status}`);
       return null;
     }
     const meta = (await response.json()) as DatasetMeta;
-    // Three files in the dataset; we want the personne-activite extract
-    // (one row per pro × workplace, with names + addresses). The other
-    // two are dipl-autexerc (diplomas) and savoirfaire (specialties),
-    // which are joinable but not needed for our minimum viable record.
     const target = (meta.resources ?? []).find((r) =>
       /personne[-_ ]?activite/i.test(r.title ?? r.url ?? ""),
     );
     return target?.url ?? null;
   } catch (error) {
     console.error(
-      `[rpps-fr] metadata failed: ${(error as Error).message}`,
+      `[annuaire-sante-ans] metadata failed: ${(error as Error).message}`,
     );
     return null;
   }
 }
 
-/**
- * Stream-parse the pipe-delimited RPPS file. Yields one record at a
- * time so the caller can stop early once `limit` is hit without
- * downloading the remaining ~700 MB.
- */
 async function* streamRows(
   url: string,
 ): AsyncGenerator<Record<string, string>, void, unknown> {
   const response = await fetch(url, {
     headers: { "User-Agent": USER_AGENT },
-    // 800 MB at typical GH Actions throughput (~10 MB/s) takes ~80 s,
-    // but the per-source workflow is given 240 min. Cap fetch at 30
-    // min as a safety net against stalled connections.
     signal: AbortSignal.timeout(30 * 60_000),
   });
   if (!response.ok) {
-    console.error(`[rpps-fr] ${response.status} on ${url}`);
+    console.error(`[annuaire-sante-ans] ${response.status} on ${url}`);
     return;
   }
   if (!response.body) {
-    console.error("[rpps-fr] response.body is null");
+    console.error("[annuaire-sante-ans] response.body is null");
     return;
   }
 
@@ -174,7 +136,6 @@ async function* streamRows(
     return row;
   };
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
@@ -188,25 +149,23 @@ async function* streamRows(
       nl = buffer.indexOf("\n");
     }
   }
-  // Flush trailing line (file may not end with \n).
   buffer += decoder.decode();
   if (buffer.trim().length > 0) {
     const row = handleLine(buffer.replace(/\r$/, ""));
     if (row) yield row;
   }
-  // Best-effort cancel of any remaining bytes if we already broke out.
   try {
     await reader.cancel();
   } catch {
-    // ignore — connection may already be closed
+    // ignore
   }
 }
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
-  const overrideUrl = process.env.PROLIO_RPPS_FR_CSV;
+  const overrideUrl = process.env.PROLIO_ANNUAIRE_SANTE_ANS_CSV;
   const url = overrideUrl || (await findLatestPersonneActiviteUrl());
   if (!url) {
-    console.error("[rpps-fr] no CSV URL available");
+    console.error("[annuaire-sante-ans] no CSV URL available");
     return [];
   }
 
@@ -231,10 +190,6 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       const citySlug = frPostalCodeToCitySlug(cp);
       if (!citySlug) continue;
 
-      // Stable id: use the national PP id (RPPS / ADELI number) +
-      // postal code so multi-site practitioners produce one record per
-      // site. The national id alone collapses sites; sink dedup is
-      // (source, source_id), and we want each workplace addressable.
       const ppId =
         row["identification_nationale_pp"] || row["identifiant_pp"];
       const idKey = ppId
@@ -243,7 +198,8 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       if (seen.has(idKey)) continue;
       seen.add(idKey);
 
-      const civility = row["libelle_civilite_d_exercice"] || row["libelle_civilite"] || "";
+      const civility =
+        row["libelle_civilite_d_exercice"] || row["libelle_civilite"] || "";
       const name = [firstName, lastName].filter(Boolean).join(" ").trim();
       const street = row["libelle_voie_coord_structure"] ?? "";
       const city = row["libelle_commune_coord_structure"] ?? "";
@@ -253,8 +209,8 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
 
       out.push(
         normalise({
-          source: "rpps-fr",
-          sourceId: `rpps:${idKey}`,
+          source: "annuaire-sante-ans" as ScrapeSource,
+          sourceId: `ans:${idKey}`,
           name,
           categoryKey: category,
           citySlug,
@@ -263,7 +219,8 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           address: address || undefined,
           metadata: {
             country: "FR",
-            authority: "ANS / RPPS (Répertoire Partagé des Professionnels de Santé)",
+            authority:
+              "ANS (Agence du Numérique en Santé) — Annuaire Santé / RPPS",
             verified_by_authority: true,
             rpps_id: ppId || undefined,
             civilite: civility || undefined,
@@ -276,35 +233,37 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     }
   } catch (error) {
     console.error(
-      `[rpps-fr] stream failed after ${scanned} rows: ${(error as Error).message}`,
+      `[annuaire-sante-ans] stream failed after ${scanned} rows: ${(error as Error).message}`,
     );
   }
 
   console.log(
-    `[rpps-fr] scanned=${scanned} parsed=${out.length} (filtered to medicina/dentista/fisioterapia)`,
+    `[annuaire-sante-ans] scanned=${scanned} parsed=${out.length} (medicina/dentista/fisioterapia/psicologia)`,
   );
   return out;
 }
 
-export const rppsFrSource: ScraperSource = {
-  name: "rpps-fr",
+export const annuaireSanteAnsSource: ScraperSource = {
+  name: "annuaire-sante-ans" as ScrapeSource,
   enabled() {
-    return process.env.PROLIO_RUN_RPPS_FR === "true";
+    return process.env.PROLIO_RUN_ANNUAIRE_SANTE_ANS === "true";
   },
   async fetch() {
     return [];
   },
 };
 
-export async function runRppsFr(): Promise<{
+export async function runAnnuaireSanteAns(): Promise<{
   fetched: number;
   inserted: number;
   updated: number;
   skipped: number;
 }> {
-  if (!rppsFrSource.enabled())
+  if (!annuaireSanteAnsSource.enabled())
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-  const rawLimit = Number(process.env.PROLIO_RPPS_FR_LIMIT ?? DEFAULT_LIMIT);
+  const rawLimit = Number(
+    process.env.PROLIO_ANNUAIRE_SANTE_ANS_LIMIT ?? DEFAULT_LIMIT,
+  );
   const limit =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
   const records = await fetchAll(limit);
@@ -313,7 +272,7 @@ export async function runRppsFr(): Promise<{
   const sink = getSink();
   const { inserted, updated, skipped } = await sink.upsert(records);
   console.log(
-    `[rpps-fr] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
+    `[annuaire-sante-ans] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
   );
   return { fetched: records.length, inserted, updated, skipped };
 }

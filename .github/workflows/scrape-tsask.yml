@@ -1,0 +1,12 @@
+name: Scrape · TSASK (SK trades)
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: tsask
+      timeout_minutes: 90

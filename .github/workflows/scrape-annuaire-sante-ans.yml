@@ -1,0 +1,15 @@
+name: Scrape · Annuaire Santé ANS (France)
+on:
+  schedule:
+    # Weekly Sunday 11:00 UTC. Consolidates the legacy rpps-fr +
+    # annuaire-sante-ameli runs. ~800 MB pipe-delimited stream with
+    # early-break on PROLIO_ANNUAIRE_SANTE_ANS_LIMIT.
+    - cron: "0 11 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: annuaire-sante-ans
+      timeout_minutes: 240

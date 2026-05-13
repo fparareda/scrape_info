@@ -69,15 +69,44 @@ export type ScrapeSource =
   | "architectes-fr"
   | "oec-fr"
   | "ordre-vet-fr"
-  | "annuaire-sante-ameli"
-  | "rpps-fr"
   | "doctoralia-mx"
   | "senasica-mx-vet"
   | "denue-mx"
   | "oaa"
   | "louisiana-lslbc"
   | "nyc-dob"
-  | "cgn-notariado";
+  | "cgn-notariado"
+  // 2026-05 wave: CA Alinity-hosted + Thentia + provincial regulators
+  | "tsask"
+  | "tsbc"
+  | "cpsa"
+  | "cpsm"
+  | "cpsnl"
+  | "cpspei"
+  | "cap-psychologists"
+  | "cpm-physio"
+  | "lss-saskatchewan"
+  | "amvic-dealers"
+  | "apega"
+  // 2026-05 wave: FR consolidation + data.gouv bulk sources
+  | "annuaire-sante-ans"
+  | "sirene-insee"
+  | "ademe-rge"
+  | "finess"
+  | "prix-controle-technique"
+  | "auto-ecoles-fr"
+  | "geometres-fr"
+  | "cnop-pharmaciens"
+  // 2026-05 wave: MX federal + state directories
+  | "notariado-mx"
+  | "sedema-verificentros-cdmx"
+  | "verificacion-edomex"
+  | "verificacion-jalisco"
+  | "cnsf-agentes"
+  | "colegio-notarios-cdmx"
+  | "fcarm-arquitectos"
+  | "fedmvz-colegios-vet"
+  | "conahcyt-snii";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
