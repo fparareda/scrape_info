@@ -1,0 +1,12 @@
+name: Scrape · cnbv entidades
+on:
+  schedule:
+    - cron: "0 5 7 * *" # Day 7 of each month at 05:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cnbv-entidades
+      timeout_minutes: 60

@@ -52,37 +52,37 @@ interface Padron {
   defaultCategory: CategoryKey;
 }
 
+// 2026-05-13: CRE extinguida por decreto DOF 18-mar-2025. La sucesora
+// CNE (Comisión Nacional de Energía) sólo republicó el padrón de Gas
+// LP al 18-mar-2025 en `cne.gob.mx/da/CNE/DATOS%20ABIERTOS%20...`.
+// Los otros 3 padrones (gas natural, petrolíferos, electricidad) no
+// tienen URL publicada todavía — quedan con default vacío y env
+// override para activarlos cuando CNE los republique.
 const PADRONES: Padron[] = [
   {
     tipo: "gas-lp",
     label: "gas-lp",
     url:
       process.env.PROLIO_CRE_GAS_LP_URL ||
-      "https://www.cre.gob.mx/da/permisosgaslp.csv",
+      "https://www.cne.gob.mx/da/CNE/DATOS%20ABIERTOS%20(GAS%20LICUADO%20DE%20PETR%C3%93LEO)/permisosgaslp.csv",
     defaultCategory: "fontaneria",
   },
   {
     tipo: "gas-natural",
     label: "gas-natural",
-    url:
-      process.env.PROLIO_CRE_GAS_NATURAL_URL ||
-      "https://www.cre.gob.mx/da/permisosgasnatural.csv",
+    url: process.env.PROLIO_CRE_GAS_NATURAL_URL || "",
     defaultCategory: "hvac",
   },
   {
     tipo: "petroliferos",
     label: "petroliferos",
-    url:
-      process.env.PROLIO_CRE_PETROLIFEROS_URL ||
-      "https://www.cre.gob.mx/da/permisospetroliferos.csv",
+    url: process.env.PROLIO_CRE_PETROLIFEROS_URL || "",
     defaultCategory: "mecanica",
   },
   {
     tipo: "electricidad",
     label: "electricidad",
-    url:
-      process.env.PROLIO_CRE_ELECTRICIDAD_URL ||
-      "https://www.cre.gob.mx/da/permisoselectricidad.csv",
+    url: process.env.PROLIO_CRE_ELECTRICIDAD_URL || "",
     defaultCategory: "electricidad",
   },
 ];
@@ -130,6 +130,13 @@ async function fetchPadron(
   remaining: number,
 ): Promise<ScrapedProfessional[]> {
   if (remaining <= 0) return [];
+  if (!padron.url) {
+    console.warn(
+      `[cre-permisionarios] ${padron.label} skipped — no URL configured ` +
+        `(set PROLIO_CRE_${padron.tipo.toUpperCase().replace(/-/g, "_")}_URL to activate)`,
+    );
+    return [];
+  }
   let response: Response;
   try {
     response = await fetch(padron.url, {
@@ -159,6 +166,9 @@ async function fetchPadron(
 
     const numeroPermiso =
       pick(row, [
+        // CNE actual headers
+        "numero_de_permiso",
+        // Legacy / variants
         "numero_permiso",
         "num_permiso",
         "num_de_permiso",
@@ -173,6 +183,10 @@ async function fetchPadron(
 
     const razonSocial =
       pick(row, [
+        // CNE actual header
+        "razon_social_del_permisionario",
+        "denominacion_del_permiso",
+        // Legacy / variants
         "razon_social",
         "permisionario",
         "nombre",
@@ -195,14 +209,28 @@ async function fetchPadron(
 
     // Drop expired by date if present.
     const fechaTermino =
-      pick(row, ["fecha_termino", "fecha_vencimiento", "vigencia_fin"]) || "";
+      pick(row, [
+        // CNE actual header
+        "fecha_de_vencimiento_de_vigencia",
+        // Legacy
+        "fecha_termino",
+        "fecha_vencimiento",
+        "vigencia_fin",
+      ]) || "";
     if (fechaTermino) {
-      const d = new Date(fechaTermino);
+      // CNE serves dates as DD/MM/YYYY which `new Date()` mis-parses;
+      // accept that format explicitly before falling back.
+      let d = new Date(fechaTermino);
+      const dmy = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(fechaTermino);
+      if (dmy) d = new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
       if (Number.isFinite(d.getTime()) && d < today) continue;
     }
 
     const modalidad =
       pick(row, [
+        // CNE actual header
+        "tipo_de_permiso",
+        // Legacy
         "modalidad",
         "modalidad_permiso",
         "tipo_permiso",

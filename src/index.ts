@@ -148,6 +148,10 @@ import { conahcytSniiSource, runConahcytSnii } from "./sources/conahcyt-snii.js"
 import { satEfosEdosSource, runSatEfosEdos } from "./sources/sat-efos-edos.js";
 import { profecoSancionadosSource, runProfecoSancionados } from "./sources/profeco-sancionados.js";
 import { crePermisionariosSource, runCrePermisionarios } from "./sources/cre-permisionarios.js";
+import { siemSource, runSiem } from "./sources/siem.js";
+import { cofeprisFarmaciasSource, runCofeprisFarmacias } from "./sources/cofepris-farmacias.js";
+import { cnbvEntidadesSource, runCnbvEntidades } from "./sources/cnbv-entidades.js";
+import { padronGanaderoNacionalSource, runPadronGanaderoNacional } from "./sources/padron-ganadero-nacional.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -277,6 +281,10 @@ async function main(): Promise<void> {
   const satEfosEdosOn = satEfosEdosSource.enabled();
   const profecoSancionadosOn = profecoSancionadosSource.enabled();
   const crePermisionariosOn = crePermisionariosSource.enabled();
+  const siemOn = siemSource.enabled();
+  const cofeprisFarmaciasOn = cofeprisFarmaciasSource.enabled();
+  const cnbvEntidadesOn = cnbvEntidadesSource.enabled();
+  const padronGanaderoNacionalOn = padronGanaderoNacionalSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -371,6 +379,10 @@ async function main(): Promise<void> {
     !satEfosEdosOn &&
     !profecoSancionadosOn &&
     !crePermisionariosOn &&
+    !siemOn &&
+    !cofeprisFarmaciasOn &&
+    !cnbvEntidadesOn &&
+    !padronGanaderoNacionalOn &&
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
@@ -999,6 +1011,10 @@ async function main(): Promise<void> {
     [satEfosEdosOn, "sat-efos-edos", runSatEfosEdos],
     [profecoSancionadosOn, "profeco-sancionados", runProfecoSancionados],
     [crePermisionariosOn, "cre-permisionarios", runCrePermisionarios],
+    [siemOn, "siem", runSiem],
+    [cofeprisFarmaciasOn, "cofepris-farmacias", runCofeprisFarmacias],
+    [cnbvEntidadesOn, "cnbv-entidades", runCnbvEntidades],
+    [padronGanaderoNacionalOn, "padron-ganadero-nacional", runPadronGanaderoNacional],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],

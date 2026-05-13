@@ -197,6 +197,13 @@ jobs:
       PROLIO_RUN_PROFECO_SANCIONADOS:   ${{ inputs.source == 'profeco-sancionados' && 'true' || 'false' }}
       PROLIO_RUN_CRE_PERMISIONARIOS:    ${{ inputs.source == 'cre-permisionarios' && 'true' || 'false' }}
 
+      # 2026-05-13 wave 2: MX business directories (SIEM + COFEPRIS +
+      # CNBV + Padrón Ganadero)
+      PROLIO_RUN_SIEM:                  ${{ inputs.source == 'siem' && 'true' || 'false' }}
+      PROLIO_RUN_COFEPRIS_FARMACIAS:    ${{ inputs.source == 'cofepris-farmacias' && 'true' || 'false' }}
+      PROLIO_RUN_CNBV_ENTIDADES:        ${{ inputs.source == 'cnbv-entidades' && 'true' || 'false' }}
+      PROLIO_RUN_PADRON_GANADERO_NACIONAL: ${{ inputs.source == 'padron-ganadero-nacional' && 'true' || 'false' }}
+
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC
       # was excluded because it Disallows the lawyer lookup paths).
