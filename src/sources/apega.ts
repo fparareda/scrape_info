@@ -29,7 +29,10 @@ const ODATA_BASE = "https://ods.apega.ca/odata/v1/Register/members";
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 const REQUEST_TIMEOUT_MS = 30_000;
-const DEFAULT_LIMIT = 5000;
+// 2026-05-13: bumped 5000→80000 after live probe verified ~71,477
+// total members. Full sweep ≈ 142 pages × 400 ms = ~1 min fetch +
+// upsert. APEGA is the highest-leverage CA source.
+const DEFAULT_LIMIT = 80000;
 const PAGE_SIZE = 500;
 const REQUEST_DELAY_MS = 400;
 const CATEGORY: CategoryKey = "ingenieria";

@@ -83,37 +83,37 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   for (const row of rows) {
     if (out.length >= limit) break;
 
+    // The Securité Routière CSV uses `raf_numero` (numéro d'agrément
+    // RAF) as the identifier and prefixes establishment fields with
+    // `aue_` (auto-école unité).
     const agrement =
+      row["raf_numero"] ||
       row["num_agrement"] ||
       row["numero_agrement"] ||
-      row["n_agrement"] ||
-      row["agrement"];
+      "";
     const name =
-      row["denomination"] ||
-      row["nom"] ||
+      row["aue_raisonsociale"] ||
       row["raison_sociale"] ||
-      row["enseigne"] ||
+      row["denomination"] ||
       "";
     if (!agrement || !name || seen.has(agrement)) continue;
 
     const cp =
+      row["aue_codepostal"] ||
       row["code_postal"] ||
       row["cp"] ||
-      row["adresse_cp"] ||
       "";
     const citySlug = frPostalCodeToCitySlug(cp);
     if (!citySlug) continue;
 
     seen.add(agrement);
 
-    const street = row["adresse"] || row["adr1"] || "";
-    const city = row["commune"] || row["ville"] || "";
+    const street = row["aue_adresse"] || row["adresse"] || "";
+    const city = row["aue_commune"] || row["commune"] || "";
     const address = [street, cp, city].filter(Boolean).join(", ");
-    const taux =
-      row["taux_reussite"] ||
-      row["taux"] ||
-      row["taux_de_reussite_a"] ||
-      undefined;
+    // Headline metric: 1st-time pass rate for catégorie B (voiture).
+    const taux = row["b_taux_1pra"] || row["taux_reussite"] || undefined;
+    const website = row["aue_siteinternet"] || undefined;
 
     out.push(
       normalise({
@@ -123,6 +123,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         categoryKey: "mecanica",
         citySlug,
         phone: row["telephone"] || undefined,
+        website,
         address: address || undefined,
         licenseNumber: agrement,
         metadata: {
@@ -131,7 +132,8 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           verified_by_authority: true,
           profession: "auto-ecole",
           agrement,
-          taux_reussite: taux,
+          taux_reussite_b_1ere: taux,
+          departement: row["dpt_id"] || undefined,
         },
       }),
     );

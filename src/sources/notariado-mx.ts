@@ -15,12 +15,23 @@ import { mxStateToCity } from "./_mx-states.js";
  * página índice con sub-páginas por estado, cada sub-página lista
  * los notarios con nombre + dirección + teléfono. ~4-5k notarios.
  *
- * Pre-flight (2026-05-12):
- *   El sitio puede devolver 403 con User-Agent no realista
- *   (Cloudflare ligero, NO Turnstile en este path). Usamos UA Chrome.
+ * Pre-flight (2026-05-13):
+ *   El sitio devuelve 403 incluso con User-Agent Chrome realista +
+ *   headers Accept/Accept-Language/Referer. Cloudflare bot management
+ *   activo. Probado:
+ *     - curl con UA Chrome 147 + Accept-Language es-MX: 403
+ *     - curl con --compressed + Referer google.com: 403
+ *     - WebFetch (servidor de Anthropic): 403
+ *   Bypass posible sólo con navegador headless (Playwright/Puppeteer)
+ *   o residential proxy. NO implementado aquí.
  *
  * Off by default. `PROLIO_RUN_NOTARIADO_MX=true` enables.
  * Cap with `PROLIO_NOTARIADO_MX_LIMIT` (default 5000).
+ *
+ * Estado actual: stub honesto. Devuelve 0 rows hasta que se incorpore
+ * un fetcher capaz de pasar el desafío Cloudflare. El extractor está
+ * preparado y debería funcionar si en el futuro se sirve el HTML
+ * desde un proxy/browser headless.
  */
 
 const BASE_URL =
@@ -28,7 +39,7 @@ const BASE_URL =
   "https://www.notariadomexicano.org.mx/directorio-de-notarios/";
 
 const CHROME_UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36";
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const REQUEST_DELAY_MS = 1_500;
@@ -46,8 +57,15 @@ async function politeFetch(url: string): Promise<string | null> {
     const res = await fetch(url, {
       headers: {
         "User-Agent": CHROME_UA,
-        Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.1",
-        "Accept-Language": "es-MX,es;q=0.9",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-MX,es;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        Referer: "https://www.google.com/",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
       },
       signal: controller.signal,
       redirect: "follow",

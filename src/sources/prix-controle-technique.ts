@@ -30,17 +30,15 @@ const USER_AGENT =
 interface OdsRecord {
   recordid?: string;
   fields?: {
-    id_ute?: string;
-    nom_centre?: string;
-    raison_sociale?: string;
-    adresse?: string;
-    cp?: string;
-    code_postal?: string;
-    ville?: string;
-    commune?: string;
-    telephone?: string;
-    reseau?: string;
-    code_reseau?: string;
+    cct_siret?: string;
+    cct_denomination?: string;
+    cct_adresse?: string;
+    cct_code_postal?: string;
+    cct_commune?: string;
+    cct_tel?: string;
+    cct_url?: string;
+    code_departement?: string;
+    nom_region?: string;
     [k: string]: unknown;
   };
 }
@@ -79,19 +77,32 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     for (const rec of records) {
       if (out.length >= limit) break;
       const f = rec.fields ?? {};
-      const id = f.id_ute || rec.recordid || "";
+      // OpenDataSoft v1: the real columns of this dataset are prefixed
+      // `cct_` (centre de contrôle technique). Anchor on SIRET first,
+      // fall back to recordid (a deterministic OpenDataSoft hash).
+      const id =
+        (f.cct_siret as string) || rec.recordid || "";
       if (!id || seen.has(id)) continue;
       seen.add(id);
 
-      const cp = (f.cp || f.code_postal || "") as string;
+      const cp = ((f.cct_code_postal as string) || "").trim();
       const citySlug = frPostalCodeToCitySlug(cp);
       if (!citySlug) continue;
 
-      const name = (f.nom_centre || f.raison_sociale || "") as string;
+      const name = ((f.cct_denomination as string) || "").trim();
       if (!name) continue;
 
-      const city = (f.ville || f.commune || "") as string;
-      const address = [f.adresse as string, cp, city].filter(Boolean).join(", ");
+      // `cct_commune` is a slash-joined repetition (one per vehicle
+      // category) — keep the first entry only.
+      const rawCity = (f.cct_commune as string) || "";
+      const city = rawCity.split("/")[0]?.trim() || "";
+      const address = [
+        (f.cct_adresse as string) || "",
+        cp,
+        city,
+      ]
+        .filter(Boolean)
+        .join(", ");
 
       out.push(
         normalise({
@@ -100,17 +111,18 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           name,
           categoryKey: "itv",
           citySlug,
-          phone: (f.telephone as string) || undefined,
+          phone: (f.cct_tel as string) || undefined,
+          website: (f.cct_url as string) || undefined,
           address: address || undefined,
-          licenseNumber: id,
+          licenseNumber: (f.cct_siret as string) || id,
           metadata: {
             country: "FR",
             authority:
               "Ministère de l'Économie — Annuaire des centres de contrôle technique",
             verified_by_authority: true,
-            id_ute: id,
-            reseau: f.reseau,
-            code_reseau: f.code_reseau,
+            siret: f.cct_siret,
+            code_departement: f.code_departement,
+            region: f.nom_region,
           },
         }),
       );

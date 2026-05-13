@@ -1,15 +1,74 @@
 name: Scrape · SIRENE INSEE (France)
+
+# Sirene runs ONE prolio category per run (~10k cap per category due
+# to the API's page*per_page ≤ 10,000 limit). The cron rotates the
+# category by day-of-month modulo the 14-category list. Manual runs
+# can override via `category` input.
+#
+# Categories rotated (14 in cycle):
+#   fontaneria · hvac · electricidad · mecanica · itv · carpinteria ·
+#   cerrajero · fiscal · arquitecto · extranjeria · ingenieria ·
+#   medicina · dentista · fisioterapia · psicologia · veterinario
+#
+# At full coverage this lands ~140k FR entreprises spread across the
+# Prolio category enum (a few cells like notario fold into others).
+
 on:
   schedule:
-    # Monthly first Sunday 06:00 UTC. Heavy bulk (~2 GB) — relies on
-    # PROLIO_SIRENE_INSEE_CSV pointing at a pre-filtered slice produced
-    # by scripts/download-sirene.mjs offline.
-    - cron: "0 6 1-7 * 0"
+    # Daily 06:00 UTC. With 14 categories, each cycles every two weeks.
+    - cron: "0 6 * * *"
   workflow_dispatch:
+    inputs:
+      category:
+        description: "Prolio category (default: rotate by day-of-month)"
+        type: choice
+        options:
+          - rotate
+          - fontaneria
+          - hvac
+          - electricidad
+          - mecanica
+          - itv
+          - carpinteria
+          - cerrajero
+          - fiscal
+          - arquitecto
+          - extranjeria
+          - ingenieria
+          - medicina
+          - dentista
+          - fisioterapia
+          - psicologia
+          - veterinario
+        required: false
+        default: rotate
+
 jobs:
+  pick:
+    runs-on: ubuntu-latest
+    outputs:
+      category: ${{ steps.compute.outputs.category }}
+    steps:
+      - id: compute
+        run: |
+          cats=(fontaneria hvac electricidad mecanica itv carpinteria cerrajero fiscal arquitecto extranjeria ingenieria medicina dentista fisioterapia psicologia veterinario)
+          requested="${{ inputs.category }}"
+          if [ -z "$requested" ] || [ "$requested" = "rotate" ]; then
+            # day-of-year modulo length → deterministic rotation
+            doy=$(date -u +%j)
+            idx=$(( 10#$doy % ${#cats[@]} ))
+            picked="${cats[$idx]}"
+          else
+            picked="$requested"
+          fi
+          echo "category=$picked" >> "$GITHUB_OUTPUT"
+          echo "Picked category: $picked"
+
   run:
+    needs: pick
     uses: ./.github/workflows/_scrape-runner.yml
     secrets: inherit
     with:
       source: sirene-insee
-      timeout_minutes: 300
+      timeout_minutes: 60
+      category: ${{ needs.pick.outputs.category }}

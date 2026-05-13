@@ -50,6 +50,11 @@ on:
         type: string
         required: false
         default: ""
+      category:
+        description: "Optional prolio category override (currently only `sirene-insee` honours this — wired to PROLIO_SIRENE_CATEGORY)"
+        type: string
+        required: false
+        default: ""
 
 jobs:
   scrape:
@@ -163,6 +168,7 @@ jobs:
 
       # 2026-05 wave: FR data.gouv bulk + open data
       PROLIO_RUN_SIRENE_INSEE:          ${{ inputs.source == 'sirene-insee' && 'true' || 'false' }}
+      PROLIO_SIRENE_CATEGORY:           ${{ inputs.category }}
       PROLIO_RUN_ADEME_RGE:             ${{ inputs.source == 'ademe-rge' && 'true' || 'false' }}
       PROLIO_RUN_FINESS:                ${{ inputs.source == 'finess' && 'true' || 'false' }}
       PROLIO_RUN_PRIX_CONTROLE_TECHNIQUE: ${{ inputs.source == 'prix-controle-technique' && 'true' || 'false' }}

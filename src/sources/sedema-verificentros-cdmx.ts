@@ -10,24 +10,37 @@ import { parseCsv } from "./_bulk-utils.js";
  *
  *   http://www.data.sedema.cdmx.gob.mx/programa-de-verificacion-vehicular-bases-de-datos/
  *
- * ~70 verificentros oficiales con dirección, número, contacto. La
- * página publica un dataset descargable (CSV/XLSX) — preferimos CSV.
- * El URL exacto del CSV cambia con cada actualización; configurable
- * via PROLIO_SEDEMA_VERIFICENTROS_CSV.
+ * ~70 verificentros oficiales con dirección, número, contacto.
+ *
+ * **Estado actual (verificado 2026-05)**: SEDEMA NO publica ya un CSV
+ * estructurado del padrón de verificentros vigente. El portal
+ * `data.sedema.cdmx.gob.mx` solo expone los archivos `.txt.gz` de
+ * **transacciones de verificación** mensuales (PVVO_MM_YYYY.txt.gz)
+ * que son logs de verificaciones, no un directorio. La búsqueda en
+ * datos.cdmx.gob.mx (CKAN) tampoco devuelve un dataset de verificentros
+ * vigente (solo datasets de verificación automotriz de 2018).
+ *
+ * Mientras no haya CSV oficial, el source solo opera si el operador
+ * provee una URL vía PROLIO_SEDEMA_VERIFICENTROS_CSV. Sin esa env-var,
+ * sale temprano con un warning honesto (sin error).
  *
  * Off by default. `PROLIO_RUN_SEDEMA_VERIFICENTROS_CDMX=true`.
  * Cap with `PROLIO_SEDEMA_VERIFICENTROS_CDMX_LIMIT` (default 200).
  */
 
-const DEFAULT_URL =
-  process.env.PROLIO_SEDEMA_VERIFICENTROS_CSV ||
-  "http://www.data.sedema.cdmx.gob.mx/programa-de-verificacion-vehicular-bases-de-datos/files/verificentros.csv";
+const DEFAULT_URL = process.env.PROLIO_SEDEMA_VERIFICENTROS_CSV || "";
 const DEFAULT_LIMIT = 200;
 const POLITE_UA = "ScrapeInfo/1.0 (+https://github.com/fparareda/scrape_info)";
 const CATEGORY: CategoryKey = "itv";
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
+  if (!DEFAULT_URL) {
+    console.warn(
+      "[sedema-verificentros-cdmx] PROLIO_SEDEMA_VERIFICENTROS_CSV not set — SEDEMA no publica CSV vigente; skipping",
+    );
+    return out;
+  }
   let response: Response;
   try {
     response = await fetch(DEFAULT_URL, {
