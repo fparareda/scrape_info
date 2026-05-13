@@ -115,7 +115,11 @@ export type ScrapeSource =
   | "siem"
   | "cofepris-farmacias"
   | "cnbv-entidades"
-  | "padron-ganadero-nacional";
+  | "padron-ganadero-nacional"
+  // 2026-05-13 wave 3: MX construction + autos + real estate
+  | "amda-distribuidores"
+  | "cmic-constructoras"
+  | "re-franchises-mx";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

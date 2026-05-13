@@ -1,0 +1,12 @@
+name: Scrape · AMDA distribuidores (MX)
+on:
+  schedule:
+    - cron: "0 10 10 * *" # day 10 of each month, 10:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: amda-distribuidores
+      timeout_minutes: 30
