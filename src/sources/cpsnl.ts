@@ -25,7 +25,7 @@ function mapCity(raw: string | undefined): string {
 }
 
 export const cpsnlSource: ScraperSource = {
-  name: "cpsbc" as ScrapeSource,
+  name: "cpsnl" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_CPSNL === "true";
   },
@@ -54,7 +54,7 @@ export async function runCpsnl(): Promise<{
     seen.add(key);
     records.push(
       normalise({
-        source: "cpsbc" as ScrapeSource,
+        source: "cpsnl" as ScrapeSource,
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

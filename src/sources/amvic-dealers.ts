@@ -45,7 +45,7 @@ function mapCity(raw: string | undefined): string {
 }
 
 export const amvicDealersSource: ScraperSource = {
-  name: "tssa" as ScrapeSource,
+  name: "amvic-dealers" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_AMVIC_DEALERS === "true";
   },
@@ -74,7 +74,7 @@ export async function runAmvicDealers(): Promise<{
     seen.add(key);
     records.push(
       normalise({
-        source: "tssa" as ScrapeSource,
+        source: "amvic-dealers" as ScrapeSource,
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

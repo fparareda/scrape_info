@@ -25,7 +25,7 @@ function mapCity(raw: string | undefined): string {
 }
 
 export const lssSaskatchewanSource: ScraperSource = {
-  name: "cpsbc" as ScrapeSource,
+  name: "lss-saskatchewan" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_LSS_SASKATCHEWAN === "true";
   },
@@ -54,7 +54,7 @@ export async function runLssSaskatchewan(): Promise<{
     seen.add(key);
     records.push(
       normalise({
-        source: "cpsbc" as ScrapeSource,
+        source: "lss-saskatchewan" as ScrapeSource,
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,
