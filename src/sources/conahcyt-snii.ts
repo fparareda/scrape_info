@@ -62,7 +62,9 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   try {
     response = await fetch(DEFAULT_URL, {
       headers: { "User-Agent": POLITE_UA, Accept: "text/csv,*/*" },
-      signal: AbortSignal.timeout(120_000),
+      // CSV ~ 44k rows + per-row enrichment. atdt.gob.mx is slow.
+      // Bumped 120s → 10 min after live run timed out 2026-05-13.
+      signal: AbortSignal.timeout(600_000),
     });
   } catch (error) {
     console.error(`[conahcyt-snii] network error: ${(error as Error).message}`);

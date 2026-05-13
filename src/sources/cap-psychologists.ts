@@ -25,7 +25,7 @@ function mapCity(raw: string | undefined): string {
 }
 
 export const capPsychologistsSource: ScraperSource = {
-  name: "cpsbc" as ScrapeSource,
+  name: "cap-psychologists" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_CAP_PSYCHOLOGISTS === "true";
   },
@@ -54,7 +54,7 @@ export async function runCapPsychologists(): Promise<{
     seen.add(key);
     records.push(
       normalise({
-        source: "cpsbc" as ScrapeSource,
+        source: "cap-psychologists" as ScrapeSource,
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

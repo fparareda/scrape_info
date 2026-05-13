@@ -25,7 +25,7 @@ function mapCity(raw: string | undefined): string {
 }
 
 export const cpspeiSource: ScraperSource = {
-  name: "cpsbc" as ScrapeSource,
+  name: "cpspei" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_CPSPEI === "true";
   },
@@ -54,7 +54,7 @@ export async function runCpspei(): Promise<{
     seen.add(key);
     records.push(
       normalise({
-        source: "cpsbc" as ScrapeSource,
+        source: "cpspei" as ScrapeSource,
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

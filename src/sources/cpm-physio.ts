@@ -25,7 +25,7 @@ function mapCity(raw: string | undefined): string {
 }
 
 export const cpmPhysioSource: ScraperSource = {
-  name: "cpsbc" as ScrapeSource,
+  name: "cpm-physio" as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_CPM_PHYSIO === "true";
   },
@@ -54,7 +54,7 @@ export async function runCpmPhysio(): Promise<{
     seen.add(key);
     records.push(
       normalise({
-        source: "cpsbc" as ScrapeSource,
+        source: "cpm-physio" as ScrapeSource,
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,
