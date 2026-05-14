@@ -134,7 +134,10 @@ export type ScrapeSource =
   | "colegios-notarios-mx"
   // 2026-05-14 wave: MX small clean directories
   | "dro-cdmx"
-  | "profepa-verificentros-edomex";
+  | "profepa-verificentros-edomex"
+  // 2026-05-14: US federal healthcare complement to NPI
+  | "cms-pecos"
+  | "oig-leie";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

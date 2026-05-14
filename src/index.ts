@@ -166,6 +166,8 @@ import { rasicTalleresCatSource, runRasicTalleresCat } from "./sources/rasic-tal
 import { cgpeProcuradoresSource, runCgpeProcuradores } from "./sources/cgpe-procuradores.js";
 import { droCdmxSource, runDroCdmx } from "./sources/dro-cdmx.js";
 import { profepaVerificentrosEdomexSource, runProfepaVerificentrosEdomex } from "./sources/profepa-verificentros-edomex.js";
+import { cmsPecosSource, runCmsPecos } from "./sources/cms-pecos.js";
+import { oigLeieSource, runOigLeie } from "./sources/oig-leie.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -313,6 +315,8 @@ async function main(): Promise<void> {
   const cgpeProcuradoresOn = cgpeProcuradoresSource.enabled();
   const droCdmxOn = droCdmxSource.enabled();
   const profepaVerificentrosEdomexOn = profepaVerificentrosEdomexSource.enabled();
+  const cmsPecosOn = cmsPecosSource.enabled();
+  const oigLeieOn = oigLeieSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -425,6 +429,8 @@ async function main(): Promise<void> {
     !cgpeProcuradoresOn &&
     !droCdmxOn &&
     !profepaVerificentrosEdomexOn &&
+    !cmsPecosOn &&
+    !oigLeieOn &&
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
@@ -1072,6 +1078,8 @@ async function main(): Promise<void> {
     [cgpeProcuradoresOn, "cgpe-procuradores", runCgpeProcuradores],
     [droCdmxOn, "dro-cdmx", runDroCdmx],
     [profepaVerificentrosEdomexOn, "profepa-verificentros-edomex", runProfepaVerificentrosEdomex],
+    [cmsPecosOn, "cms-pecos", runCmsPecos],
+    [oigLeieOn, "oig-leie", runOigLeie],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],

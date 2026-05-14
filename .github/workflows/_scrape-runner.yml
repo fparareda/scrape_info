@@ -117,6 +117,9 @@ jobs:
 
       # US healthcare registry
       PROLIO_RUN_NPI: ${{ inputs.source == 'npi' && 'true' || 'false' }}
+      # CMS PECOS (Medicare clinicians) + OIG LEIE (federal exclusions)
+      PROLIO_RUN_CMS_PECOS: ${{ inputs.source == 'cms-pecos' && 'true' || 'false' }}
+      PROLIO_RUN_OIG_LEIE:  ${{ inputs.source == 'oig-leie' && 'true' || 'false' }}
       # NPI cap bumped 200→1000/state on 2026-05-07. With 51 states ×
       # 5 taxonomies × 1000 the theoretical ceiling is ~255k US
       # healthcare pros per run; in practice the per-state list query
