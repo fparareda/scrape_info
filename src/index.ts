@@ -156,6 +156,10 @@ import { amdaDistribuidoresSource, runAmdaDistribuidores } from "./sources/amda-
 import { cmicConstructorasSource, runCmicConstructoras } from "./sources/cmic-constructoras.js";
 import { reFranchisesMxSource, runReFranchisesMx } from "./sources/re-franchises-mx.js";
 import { datosGobEsSource, runDatosGobEs } from "./sources/datos-gob-es.js";
+import { guiadentistasEsSource, runGuiadentistasEs } from "./sources/guiadentistas-es.js";
+import { dgtItvEsSource, runDgtItvEs } from "./sources/dgt-itv-es.js";
+import { rasicTalleresCatSource, runRasicTalleresCat } from "./sources/rasic-talleres-cat.js";
+import { cgpeProcuradoresSource, runCgpeProcuradores } from "./sources/cgpe-procuradores.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -293,6 +297,10 @@ async function main(): Promise<void> {
   const cmicConstructorasOn = cmicConstructorasSource.enabled();
   const reFranchisesMxOn = reFranchisesMxSource.enabled();
   const datosGobEsOn = datosGobEsSource.enabled();
+  const guiadentistasEsOn = guiadentistasEsSource.enabled();
+  const dgtItvEsOn = dgtItvEsSource.enabled();
+  const rasicTalleresCatOn = rasicTalleresCatSource.enabled();
+  const cgpeProcuradoresOn = cgpeProcuradoresSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -395,6 +403,10 @@ async function main(): Promise<void> {
     !cmicConstructorasOn &&
     !reFranchisesMxOn &&
     !datosGobEsOn &&
+    !guiadentistasEsOn &&
+    !dgtItvEsOn &&
+    !rasicTalleresCatOn &&
+    !cgpeProcuradoresOn &&
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
@@ -1031,6 +1043,10 @@ async function main(): Promise<void> {
     [cmicConstructorasOn, "cmic-constructoras", runCmicConstructoras],
     [reFranchisesMxOn, "re-franchises-mx", runReFranchisesMx],
     [datosGobEsOn, "datos-gob-es", runDatosGobEs],
+    [guiadentistasEsOn, "guiadentistas-es", runGuiadentistasEs],
+    [dgtItvEsOn, "dgt-itv-es", runDgtItvEs],
+    [rasicTalleresCatOn, "rasic-talleres-cat", runRasicTalleresCat],
+    [cgpeProcuradoresOn, "cgpe-procuradores", runCgpeProcuradores],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],

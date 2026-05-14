@@ -214,6 +214,12 @@ jobs:
       PROLIO_DATOS_GOB_ES_QUERY:        ${{ inputs.category }}
       PROLIO_DATOS_GOB_ES_LIMIT:        "100000"
 
+      # 2026-05-14 wave: ES quick wins + federation fan-outs
+      PROLIO_RUN_GUIADENTISTAS_ES:      ${{ inputs.source == 'guiadentistas-es' && 'true' || 'false' }}
+      PROLIO_RUN_DGT_ITV_ES:            ${{ inputs.source == 'dgt-itv-es' && 'true' || 'false' }}
+      PROLIO_RUN_RASIC_TALLERES_CAT:    ${{ inputs.source == 'rasic-talleres-cat' && 'true' || 'false' }}
+      PROLIO_RUN_CGPE_PROCURADORES:     ${{ inputs.source == 'cgpe-procuradores' && 'true' || 'false' }}
+
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC
       # was excluded because it Disallows the lawyer lookup paths).

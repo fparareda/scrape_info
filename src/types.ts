@@ -121,7 +121,12 @@ export type ScrapeSource =
   | "cmic-constructoras"
   | "re-franchises-mx"
   // 2026-05-14 wave: generic ES open-data catalog
-  | "datos-gob-es";
+  | "datos-gob-es"
+  // 2026-05-14 wave: ES quick wins + federation fan-outs
+  | "guiadentistas-es"
+  | "dgt-itv-es"
+  | "rasic-talleres-cat"
+  | "cgpe-procuradores";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
