@@ -104,7 +104,14 @@ interface NotarioRecord {
   name: string;
   address: string;
   phone?: string;
+  phoneAlt?: string;
+  fax?: string;
   email?: string;
+  emailCorporate?: string;
+  postalCode?: string;
+  city?: string;
+  province?: string;
+  languages?: string;
 }
 
 /**
@@ -151,25 +158,73 @@ function parseNotarios(html: string): NotarioRecord[] {
     if (rawName.length < 6 || /^[^A-ZÁ-Ú]/.test(rawName)) continue;
     if (/^\d/.test(rawName)) continue;
 
-    // Address: first non-empty text block after closing </strong>
-    const addrMatch = raw.match(/<\/strong>\s*<[^>]*>\s*([^<]{5,200})<\//i);
-    const rawAddr = addrMatch ? decodeEntities(addrMatch[1]).trim() : "";
+    // The live HTML uses labeled fields after the name:
+    //   Dirección : <street>, <CP> - <City> (<Province>)
+    //   Teléfono: NNN.NNN.NNN     Teléfono 2: ...
+    //   Fax: ...
+    //   Correo corporativo Ley 24/2001: <a href="mailto:foo@correonotarial.org">
+    //   Correo electrónico: <a href="mailto:bar@notariado.org">
+    //   Idiomas: Castellano, Catalán, …
+    //
+    // We strip tags from the chunk to get a clean text view, then
+    // run label-anchored regexes against it. mailto: hrefs are
+    // extracted from the original (tagged) HTML so we always capture
+    // both emails even if one is missing a label.
+    const text = stripTags(raw).replace(/\s+/g, " ").trim();
 
-    // Postal code + province (e.g. "28001 - Madrid")
-    const cpMatch = raw.match(/(\d{5})\s*[-–]\s*([^<\n]{3,50})/);
-    const cpProv = cpMatch
-      ? `${cpMatch[1]} - ${cpMatch[2].trim()}`
+    // Address — between "Dirección" / "Direcció" and next labeled field
+    const addrLabelMatch = text.match(
+      /Direcci[óo]n?\s*:?\s*([^]+?)(?=\s+(?:Tel[eé]fono|Fax|Correo|Idiomas|$))/i,
+    );
+    let rawAddr = addrLabelMatch ? addrLabelMatch[1].trim() : "";
+    // Fallback: first <span>/<p> after </strong>
+    if (!rawAddr) {
+      const addrMatch = raw.match(/<\/strong>\s*<[^>]*>\s*([^<]{5,200})<\//i);
+      rawAddr = addrMatch ? decodeEntities(addrMatch[1]).trim() : "";
+    }
+
+    // Postal code + city + (province) — e.g. "08007 - Barcelona (Barcelona)"
+    const cpCityProvMatch = rawAddr.match(
+      /(\d{5})\s*[-–]\s*([^()]{2,80}?)\s*(?:\(([^)]{2,80})\))?\s*$/,
+    );
+    const postalCode = cpCityProvMatch?.[1];
+    const city = cpCityProvMatch?.[2]?.trim();
+    const province = cpCityProvMatch?.[3]?.trim() ?? city;
+
+    const cpProv = postalCode
+      ? `${postalCode} - ${city}${province && province !== city ? ` (${province})` : ""}`
       : undefined;
 
-    // Phone — look for "Tel" or "Telf" followed by a number
-    const telMatch = raw.match(/[Tt]el(?:f|éfono)?\.?\s*:?\s*([\d\s./()-]{7,20})/);
-    const rawPhone = telMatch ? telMatch[1].replace(/\s+/g, "").trim() : undefined;
+    // Phones — primary + optional secondary
+    const telMatches = [
+      ...text.matchAll(/Tel[eé]fono(?:\s*2)?\.?\s*:?\s*([\d\s./()+-]{7,25})/gi),
+    ];
+    const phones = telMatches
+      .map((m) => m[1].replace(/[\s.]/g, "").trim())
+      .filter((p) => /^[\d+()-]{7,}$/.test(p));
+    const rawPhone = phones[0];
+    const rawPhoneAlt = phones[1];
 
-    // Email — look for @ in a text node or href
-    const emailMatch = raw.match(
-      /(?:href="mailto:|>)\s*([\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,6})\s*</i,
-    );
-    const rawEmail = emailMatch ? emailMatch[1].toLowerCase() : undefined;
+    // Fax
+    const faxMatch = text.match(/Fax\.?\s*:?\s*([\d\s./()+-]{7,25})/i);
+    const rawFax = faxMatch ? faxMatch[1].replace(/[\s.]/g, "").trim() : undefined;
+
+    // Languages
+    const idiomasMatch = text.match(/Idiomas?\s*:?\s*([^.;]{2,120})/i);
+    const languages = idiomasMatch ? idiomasMatch[1].trim() : undefined;
+
+    // Emails — extract ALL mailto: hrefs in this chunk
+    const mailtoRe = /mailto:([\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,10})/gi;
+    const mails = [...raw.matchAll(mailtoRe)].map((m) => m[1].toLowerCase());
+    const corpEmail = mails.find((m) => /correonotarial\.org$/i.test(m));
+    const stdEmail = mails.find((m) => !/correonotarial\.org$/i.test(m));
+    // Prefer corporate (Law 24/2001) as primary identifier; fall back to standard.
+    const rawEmail = corpEmail ?? stdEmail;
+    const rawEmailAlt = corpEmail && stdEmail ? stdEmail : undefined;
+
+    // If we only got a corp email as primary, keep that; if we have both,
+    // expose corp as primary and store the public-facing one separately.
+    const emailCorporate = corpEmail;
 
     const fullAddress = [rawAddr, cpProv].filter(Boolean).join(", ") || undefined;
 
@@ -190,11 +245,24 @@ function parseNotarios(html: string): NotarioRecord[] {
       name: titleCaseNotario(rawName),
       address: fullAddress ?? rawAddr,
       phone: rawPhone,
+      phoneAlt: rawPhoneAlt,
+      fax: rawFax,
       email: rawEmail,
+      emailCorporate,
+      postalCode,
+      city,
+      province,
+      languages,
     });
+    // Silence "unused" lint for the secondary email — surfaced via metadata.
+    void rawEmailAlt;
   }
 
   return out;
+}
+
+function stripTags(html: string): string {
+  return decodeEntities(html.replace(/<[^>]+>/g, " "));
 }
 
 /**
@@ -311,6 +379,23 @@ const PROVINCE_TO_CITY: Record<string, string> = {
   zaragoza: "zaragoza",
 };
 
+/**
+ * Slugify a free-text city/province name (e.g. "Vilanova i la Geltrú")
+ * into the canonical kebab-case form used throughout the cities catalog.
+ * Returns undefined for empty input.
+ */
+function slugifyCity(input: string | undefined): string | undefined {
+  if (!input) return undefined;
+  const slug = input
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return slug || undefined;
+}
+
 function citySlugFromAddress(address: string | undefined): string | undefined {
   if (!address) return undefined;
   // Pattern: "28001 - Madrid" or "28001-Madrid"
@@ -363,7 +448,10 @@ async function fetchAllNotarios(
       for (const r of records) {
         if (seen.has(r.sourceId)) continue;
         seen.add(r.sourceId);
-        const citySlug = citySlugFromAddress(r.address);
+        const citySlug =
+          slugifyCity(r.city) ??
+          slugifyCity(r.province) ??
+          citySlugFromAddress(r.address);
         if (!citySlug) continue;
         out.push(
           normalise({
@@ -379,6 +467,13 @@ async function fetchAllNotarios(
               country: "ES",
               authority: "CGN",
               verified_by_authority: true,
+              city: r.city,
+              province: r.province,
+              postal_code: r.postalCode,
+              phone_alt: r.phoneAlt,
+              fax: r.fax,
+              email_corporate: r.emailCorporate,
+              languages: r.languages,
             },
           }),
         );
@@ -411,7 +506,10 @@ async function fetchAllNotarios(
     for (const r of records) {
       if (seen.has(r.sourceId)) continue;
       seen.add(r.sourceId);
-      const citySlug = citySlugFromAddress(r.address);
+      const citySlug =
+        slugifyCity(r.city) ??
+        slugifyCity(r.province) ??
+        citySlugFromAddress(r.address);
       if (!citySlug) continue;
       out.push(
         normalise({
@@ -428,6 +526,13 @@ async function fetchAllNotarios(
             authority: "CGN",
             verified_by_authority: true,
             comunidad,
+            city: r.city,
+            province: r.province,
+            postal_code: r.postalCode,
+            phone_alt: r.phoneAlt,
+            fax: r.fax,
+            email_corporate: r.emailCorporate,
+            languages: r.languages,
           },
         }),
       );

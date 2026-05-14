@@ -245,6 +245,10 @@ jobs:
       PROLIO_RUN_CGAE:  ${{ inputs.source == 'cgae' && 'true' || 'false' }}
       PROLIO_RUN_CSCAE: ${{ inputs.source == 'cscae' && 'true' || 'false' }}
 
+      # ES national notariado (CGN) — Consejo General del Notariado.
+      # Bulk HTML scrape of ~3,200 notaries, monthly cadence.
+      PROLIO_RUN_CGN_NOTARIADO: ${{ inputs.source == 'cgn-notariado' && 'true' || 'false' }}
+
       # Default budget knobs — per-source workflows can override via
       # GH Actions vars or by setting an `env:` block before `uses:`.
       PROLIO_BORME_DAYS: "7"      # bumped 1→7 days (weekly back-catalogue per run)
