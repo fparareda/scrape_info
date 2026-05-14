@@ -2,191 +2,267 @@ import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
+import {
+  parseCsv,
+  pick,
+  normaliseNorthAmericanPhone,
+} from "./_bulk-utils.js";
 
 /**
  * Texas TDLR — Department of Licensing and Regulation.
  *
- * TDLR licenses ~30 occupations including electricians, air-condition
- * contractors (HVAC), elevator inspectors and tow operators. Data is
- * published on data.texas.gov as a CSV ("Active Licensees").
+ * Bulk file index: https://www.tdlr.texas.gov/LicenseSearch/licfile.asp
  *
- * Default URL is documented but **must be verified on first run**.
- * Override with `PROLIO_TEXAS_TDLR_CSV`. Off by default;
- * `PROLIO_RUN_TEXAS_TDLR=true` to enable. Cap via
- * `PROLIO_TEXAS_TDLR_LIMIT` (default 2000).
+ * The previous implementation pointed at a data.texas.gov endpoint
+ * (`7358-krk7`) which returned 0 rows (no longer published in that
+ * shape). We now pull per-trade CSVs directly from the TDLR
+ * `dbproduction2/` bulk drop, which is the authoritative source the
+ * licfile.asp index links to and is refreshed daily.
+ *
+ * Strategy: instead of fetching the 181 MB combined master file
+ * (`ltlicfile.csv`, ~3 M rows) we pull one focused CSV per
+ * prolio-relevant category. This keeps the per-runner footprint under
+ * ~5 MB per category and lets us short-circuit cleanly when a
+ * category exceeds the limit.
+ *
+ * Trades covered:
+ *   - electricidad → Electrical Contractors  (Lteecele.csv, ~3.75 MB)
+ *                   + Electrical Sign Contractors (Ltescele.csv, ~0.18 MB)
+ *   - hvac        → A/C Contractors          (ltairref.csv, ~3.62 MB)
+ *   - mecanica    → Tow Truck Companies      (TowCompanies.csv, ~1.08 MB)
+ *                   + Vehicle Storage Facilities (VSFs.csv, ~0.56 MB)
+ *
+ * Texas TDLR does NOT license plumbers (TSBPE handles plumbing — see
+ * separate source), locksmiths (DPS PSB), or vehicle inspection
+ * stations (DPS), so those CategoryKeys have no TDLR feed and are
+ * intentionally absent.
+ *
+ * Off by default. Set `PROLIO_RUN_TEXAS_TDLR=true` to enable. Cap via
+ * `PROLIO_TEXAS_TDLR_LIMIT` (default 2000, applied across all
+ * categories combined).
  */
 
-const DEFAULT_URL =
-  "https://data.texas.gov/api/views/7358-krk7/rows.csv?accessType=DOWNLOAD";
+const BULK_BASE = "https://www.tdlr.texas.gov/dbproduction2/";
 const DEFAULT_LIMIT = 2000;
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
+const REQUEST_TIMEOUT_MS = 240_000;
 
-function licenseTypeToCategory(desc: string): CategoryKey | undefined {
-  const d = desc.toLowerCase();
-  if (d.includes("electric")) return "electricidad";
-  if (d.includes("hvac") || d.includes("air condition") || d.includes("acr"))
-    return "fontaneria";
-  if (d.includes("plumb")) return "fontaneria";
-  if (d.includes("locksmith")) return "cerrajero";
-  return undefined;
+interface Feed {
+  file: string;
+  category: CategoryKey;
+  /** TDLR ships two schema families; tow/VSF use the alt one. */
+  schema: "license" | "certificate";
+  /** Human label for logs / metadata. */
+  label: string;
 }
 
-function splitCsvLine(line: string): string[] {
-  const out: string[] = [];
-  let cur = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const c = line[i];
-    if (inQuotes) {
-      if (c === '"' && line[i + 1] === '"') {
-        cur += '"';
-        i += 1;
-      } else if (c === '"') inQuotes = false;
-      else cur += c;
-    } else {
-      if (c === '"') inQuotes = true;
-      else if (c === ",") {
-        out.push(cur);
-        cur = "";
-      } else cur += c;
+const FEEDS: Feed[] = [
+  {
+    file: "Lteecele.csv",
+    category: "electricidad",
+    schema: "license",
+    label: "Electrical Contractors",
+  },
+  {
+    file: "Ltescele.csv",
+    category: "electricidad",
+    schema: "license",
+    label: "Electrical Sign Contractors",
+  },
+  {
+    file: "ltairref.csv",
+    category: "hvac",
+    schema: "license",
+    label: "A/C Contractors",
+  },
+  {
+    file: "TowCompanies.csv",
+    category: "mecanica",
+    schema: "certificate",
+    label: "Tow Truck Companies",
+  },
+  {
+    file: "VSFs.csv",
+    category: "mecanica",
+    schema: "certificate",
+    label: "Vehicle Storage Facilities",
+  },
+];
+
+async function fetchCsv(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.error(`[texas-tdlr] ${response.status} on ${url}`);
+      return null;
     }
+    return await response.text();
+  } catch (error) {
+    console.error(
+      `[texas-tdlr] network error on ${url}: ${(error as Error).message}`,
+    );
+    return null;
   }
-  out.push(cur);
-  return out;
 }
 
-function parseCsv(text: string): Array<Record<string, string>> {
-  const clean = text.replace(/^﻿/, "");
-  const lines = clean.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length < 2) return [];
-  const header = splitCsvLine(lines[0]).map((h) => h.trim().toLowerCase());
-  const out: Array<Record<string, string>> = [];
-  for (let i = 1; i < lines.length; i += 1) {
-    const cells = splitCsvLine(lines[i]);
-    const row: Record<string, string> = {};
-    for (let j = 0; j < header.length; j += 1) {
-      row[header[j]] = (cells[j] ?? "").trim();
-    }
-    out.push(row);
-  }
-  return out;
+function parseCityStateZip(combined: string): {
+  city: string;
+  zip: string;
+} {
+  // "HOUSTON TX 77031-2516" or "HOUSTON TX 77031" → city="HOUSTON", zip
+  // We strip the trailing state+zip and treat the rest as the city.
+  // Texas TDLR emits these with NO comma between city and state.
+  const m = combined.match(/^(.*?)\s+TX\s+(\d{5})(?:-\d{4})?\s*$/i);
+  if (m) return { city: m[1].trim(), zip: m[2] };
+  // Fallback: take everything before the last space-separated token
+  // that looks like a state/zip.
+  return { city: combined.split(/\s+TX\s+/i)[0]?.trim() ?? "", zip: "" };
 }
 
-function pick(row: Record<string, string>, candidates: string[]): string {
-  for (const k of candidates) if (row[k]) return row[k];
-  for (const k of Object.keys(row)) {
-    for (const c of candidates) {
-      if (k.includes(c) && row[k]) return row[k];
-    }
-  }
-  return "";
+function mapLicenseRow(
+  row: Record<string, string>,
+  feed: Feed,
+): ScrapedProfessional | null {
+  const licence = pick(row, ["license_number"]);
+  if (!licence) return null;
+  const name =
+    pick(row, ["business_name"]) || pick(row, ["name"]);
+  if (!name) return null;
+
+  const cityStateZip =
+    pick(row, ["business_city_state_zip"]) ||
+    pick(row, ["mailing_address_city_state_zip"]);
+  const { city: cityName } = parseCityStateZip(cityStateZip);
+  const citySlug = slugify(cityName);
+  if (!citySlug) return null;
+
+  const street =
+    pick(row, ["business_address_line1"]) ||
+    pick(row, ["mailing_address_line1"]);
+  const address = [street, cityStateZip].filter(Boolean).join(", ");
+  const phone =
+    normaliseNorthAmericanPhone(pick(row, ["business_phone"])) ||
+    normaliseNorthAmericanPhone(pick(row, ["phone_number"]));
+  const licType = pick(row, ["license_type"]);
+  const subType = pick(row, ["license_subtype"]);
+
+  return normalise({
+    source: "texas-tdlr",
+    sourceId: `texas-tdlr:${licence}:${feed.category}`,
+    name,
+    categoryKey: feed.category,
+    citySlug,
+    phone,
+    address: address || undefined,
+    licenseNumber: String(licence),
+    metadata: {
+      country: "US",
+      state: "TX",
+      authority: "Texas TDLR",
+      verified_by_authority: true,
+      tdlr_license_type: licType || feed.label,
+      tdlr_license_subtype: subType || undefined,
+      tdlr_feed: feed.file,
+    },
+  });
 }
 
-function normalisePhone(raw: string | undefined): string | undefined {
-  if (!raw) return undefined;
-  const digits = raw.replace(/[^\d]/g, "");
-  if (digits.length === 10) return `+1${digits}`;
-  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
-  return undefined;
+function mapCertificateRow(
+  row: Record<string, string>,
+  feed: Feed,
+): ScrapedProfessional | null {
+  const certNo = pick(row, ["certificate_number"]);
+  if (!certNo) return null;
+  const name =
+    pick(row, ["customer_dba_name"]) ||
+    pick(row, ["customer_name"]);
+  if (!name) return null;
+
+  const cityName =
+    pick(row, ["site_city"]) || pick(row, ["mail_city"]);
+  const citySlug = slugify(cityName);
+  if (!citySlug) return null;
+
+  const stateRaw =
+    pick(row, ["site_state"]) || pick(row, ["mail_state"]) || "TX";
+  // Skip out-of-state filings (rare but possible).
+  if (stateRaw.toUpperCase() !== "TX") return null;
+
+  const zipPrefix =
+    pick(row, ["site_zip_prefix"]) || pick(row, ["mail_zip_prefix"]);
+  const zipSuffix =
+    pick(row, ["site_zip_suffix"]) || pick(row, ["mail_zip_suffix"]);
+  const zip =
+    zipPrefix && zipSuffix
+      ? `${zipPrefix}-${zipSuffix}`
+      : zipPrefix || "";
+  const street =
+    pick(row, ["site_addr1"]) || pick(row, ["mail_addr_line1"]);
+  const address = [street, cityName, stateRaw, zip]
+    .filter(Boolean)
+    .join(", ");
+  const phone = normaliseNorthAmericanPhone(pick(row, ["phone"]));
+  const certType = pick(row, ["certificate_type"]) || feed.label;
+
+  return normalise({
+    source: "texas-tdlr",
+    sourceId: `texas-tdlr:${certNo}:${feed.category}`,
+    name,
+    categoryKey: feed.category,
+    citySlug,
+    phone,
+    address: address || undefined,
+    licenseNumber: String(certNo),
+    metadata: {
+      country: "US",
+      state: "TX",
+      authority: "Texas TDLR",
+      verified_by_authority: true,
+      tdlr_license_type: certType,
+      tdlr_feed: feed.file,
+    },
+  });
 }
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
-  const url = process.env.PROLIO_TEXAS_TDLR_CSV || DEFAULT_URL;
-  let response: Response;
-  try {
-    // Texas TDLR CSV is ~50 MB+. The default 60 s timeout aborted on
-    // first dispatch (observed 2026-05-07). Bumped to 4 min to leave
-    // headroom on slower runners.
-    response = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(240_000),
-    });
-  } catch (error) {
-    console.error(`[texas-tdlr] network error: ${(error as Error).message}`);
-    return [];
-  }
-  if (!response.ok) {
-    console.error(`[texas-tdlr] ${response.status} on ${url}`);
-    return [];
-  }
-  const text = await response.text();
-  const rows = parseCsv(text);
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
+  const perFeedLimit = Math.max(100, Math.ceil(limit / FEEDS.length) * 2);
 
-  for (const row of rows) {
+  for (const feed of FEEDS) {
     if (out.length >= limit) break;
-    const status = pick(row, ["license_status", "status"]).toLowerCase();
-    if (status && !status.includes("active") && !status.includes("current"))
-      continue;
-
-    const licence = pick(row, ["license_number", "license_no", "license"]);
-    if (!licence) continue;
-    const licType = pick(row, ["license_type", "license_subtype", "type"]);
-    const category = licenseTypeToCategory(licType);
-    if (!category) continue;
-
-    // Texas CSV combines "BUSINESS CITY, STATE ZIP" into a single
-    // column (after normaliseHeaderKey it becomes
-    // `business_city_state_zip` and the value is e.g. "AUSTIN, TX 78701").
-    // Split on comma, take the first segment as the city. Fall back
-    // to the simpler `city` columns if a future schema separates them.
-    const cityRaw =
-      pick(row, ["city", "owner_city", "business_city"]) ||
-      pick(row, ["business_city_state_zip", "mailing_address_city_state_zip"]);
-    const cityName = cityRaw.split(",")[0]?.trim() ?? "";
-    const citySlug = slugify(cityName);
-    if (!citySlug) continue;
-
-    const key = `${licence}:${category}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    const name = pick(row, [
-      "business_name",
-      "owner_name",
-      "company_name",
-      "name",
-      "full_name",
-    ]);
-    if (!name) continue;
-
-    const street = pick(row, [
-      "business_address_line1",
-      "address",
-      "street",
-      "owner_address",
-    ]);
-    const stateRaw = "TX";
-    // The combined column already contains city+state+zip; reuse it as
-    // the "address" tail rather than re-concatenating bits we don't
-    // have separately.
-    const address = [street, cityRaw].filter(Boolean).join(", ");
-
-    out.push(
-      normalise({
-        source: "texas-tdlr",
-        sourceId: `texas-tdlr:${licence}:${category}`,
-        name,
-        categoryKey: category,
-        citySlug,
-        phone: normalisePhone(pick(row, ["phone", "owner_phone"])),
-        address: address || undefined,
-        licenseNumber: licence,
-        metadata: {
-          country: "US",
-          state: stateRaw || "TX",
-          authority: "Texas TDLR",
-          verified_by_authority: true,
-          tdlr_license_type: licType,
-          tdlr_status: status || "ACTIVE",
-        },
-      }),
+    const url = `${BULK_BASE}${feed.file}`;
+    const text = await fetchCsv(url);
+    if (!text) continue;
+    const rows = parseCsv(text);
+    let kept = 0;
+    let skippedNoCity = 0;
+    for (const row of rows) {
+      if (out.length >= limit) break;
+      if (kept >= perFeedLimit) break;
+      const mapped =
+        feed.schema === "license"
+          ? mapLicenseRow(row, feed)
+          : mapCertificateRow(row, feed);
+      if (!mapped) {
+        skippedNoCity += 1;
+        continue;
+      }
+      if (seen.has(mapped.sourceId)) continue;
+      seen.add(mapped.sourceId);
+      out.push(mapped);
+      kept += 1;
+    }
+    console.log(
+      `[texas-tdlr] ${feed.file} (${feed.label}) — rows=${rows.length} kept=${kept} dropped=${skippedNoCity}`,
     );
   }
 
-  console.log(`[texas-tdlr] parsed=${out.length}`);
+  console.log(`[texas-tdlr] parsed total=${out.length}`);
   return out;
 }
 
