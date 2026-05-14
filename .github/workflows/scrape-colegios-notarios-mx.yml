@@ -1,0 +1,12 @@
+name: Scrape · colegios notarios mx
+on:
+  schedule:
+    - cron: "0 4 20 * *" # Day 20 of each month, 04:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: colegios-notarios-mx
+      timeout_minutes: 60

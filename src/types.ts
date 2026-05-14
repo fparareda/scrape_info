@@ -38,6 +38,7 @@ export type ScrapeSource =
   | "tssa"
   | "hcra"
   | "florida-dbpr"
+  | "fl-doh-mqa"
   | "texas-tdlr"
   | "arizona-roc"
   | "washington-li"
@@ -61,6 +62,9 @@ export type ScrapeSource =
   | "minnesota-dli"
   | "missouri-dpr"
   | "ohio-elicense"
+  | "ny-sed-professions"
+  | "pa-pals"
+  | "oh-elicense"
   | "michigan-lara"
   | "maryland-dllr"
   | "new-jersey-dca"
@@ -109,7 +113,9 @@ export type ScrapeSource =
   | "conahcyt-snii"
   // 2026-05-13 wave: MX fraud/risk + regulatory permits
   | "sat-efos-edos"
+  | "sat-cpr-mx"
   | "profeco-sancionados"
+  | "profeco-rpca-talleres"
   | "cre-permisionarios"
   // 2026-05-13 wave 2: MX business directories
   | "siem"
@@ -119,7 +125,27 @@ export type ScrapeSource =
   // 2026-05-13 wave 3: MX construction + autos + real estate
   | "amda-distribuidores"
   | "cmic-constructoras"
-  | "re-franchises-mx";
+  | "re-franchises-mx"
+  // 2026-05-14: MX médicos certificados (CONACEM) — stub honesto, bloqueado por proxy SSR
+  | "conacem-mx"
+  // 2026-05-14 wave: generic ES open-data catalog
+  | "datos-gob-es"
+  // 2026-05-14 wave: ES quick wins + federation fan-outs
+  | "guiadentistas-es"
+  | "dgt-itv-es"
+  | "rasic-talleres-cat"
+  | "cgpe-procuradores"
+  | "colegios-notarios-mx"
+  // 2026-05-14 wave: MX small clean directories
+  | "dro-cdmx"
+  | "profepa-verificentros-edomex"
+  // 2026-05-14: US federal healthcare complement to NPI
+  | "cms-pecos"
+  | "oig-leie"
+  // 2026-05-14: California DCA — 35 boards bulk licensee dumps (~3M)
+  | "ca-dca-open-data"
+  // 2026-05-14: HIFLD US — DHS open-data hospitals + UC + nursing homes + EMS
+  | "hifld-us";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

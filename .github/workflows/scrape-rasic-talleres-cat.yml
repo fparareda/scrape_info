@@ -1,0 +1,12 @@
+name: Scrape · RASIC Talleres Cataluña
+on:
+  schedule:
+    - cron: "30 5 * * 1" # Monday 05:30 UTC weekly
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rasic-talleres-cat
+      timeout_minutes: 60

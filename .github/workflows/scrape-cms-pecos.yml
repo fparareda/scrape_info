@@ -1,0 +1,19 @@
+name: Scrape · CMS PECOS (US Medicare clinicians)
+
+# CMS Doctors and Clinicians dataset (mj5m-pzi6). ~3.37M Medicare-
+# enrolled individual clinicians with real practice addresses + primary
+# specialty. Complements the NPI registry by filtering to providers
+# actually billing Medicare. Monthly cadence — data refreshes monthly.
+
+on:
+  schedule:
+    - cron: "0 15 23 * *"  # 23rd of month 15:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cms-pecos
+      timeout_minutes: 360

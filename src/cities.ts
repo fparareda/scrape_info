@@ -362,7 +362,20 @@ async function loadFromDb(): Promise<ScraperCity[]> {
       lng: number | null;
     }>) {
       const country = row.country as CountryCode;
-      if (country !== "ES" && country !== "US" && country !== "CA") continue;
+      // 2026-05-14: dropped the country whitelist (was 'ES'|'US'|'CA') that
+      // silently filtered out MX and FR rows. The CountryCode union (line 1)
+      // already covers all five countries; the DB has 300+ MX cities seeded
+      // that were never loaded, leaving validSlugs empty → every MX source
+      // dropped 100% of categorised rows by city. Discovered via SIEM
+      // (kept=0 dropped_no_city=18,631).
+      if (
+        country !== "ES" &&
+        country !== "US" &&
+        country !== "CA" &&
+        country !== "FR" &&
+        country !== "MX"
+      )
+        continue;
       // Some DB rows (e.g. legacy ES seeds before lat/lng was populated)
       // may be NULL. Fall back to 0,0 — the scrapers that need geo (Google
       // Places nearbySearch) can skip rows where lat===0 && lng===0; the

@@ -1,0 +1,19 @@
+name: Scrape · OIG LEIE (US healthcare exclusions)
+
+# HHS OIG List of Excluded Individuals/Entities — federal blacklist
+# of healthcare providers barred from Medicare/Medicaid. ~75k rows.
+# Refreshed monthly by OIG. Records carry metadata.risk_flag =
+# "OIG_LEIE_EXCLUDED" — inverse trust badge (similar to SAT-EFOS in MX).
+
+on:
+  schedule:
+    - cron: "0 15 24 * *"  # 24th of month 15:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: oig-leie
+      timeout_minutes: 60

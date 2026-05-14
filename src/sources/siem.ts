@@ -8,7 +8,11 @@ import { normalise, slugify } from "../normalise.js";
 import { getCities } from "../cities.js";
 import { getSink } from "../sink.js";
 import { parseCsv, pick } from "./_bulk-utils.js";
-import { mxStateToCity, MX_STATE_TO_CITY } from "./_mx-states.js";
+import {
+  mxStateToCity,
+  mxMunicipioToCity,
+  MX_STATE_TO_CITY,
+} from "./_mx-states.js";
 
 /**
  * SIEM — Sistema de Información Empresarial Mexicano (Secretaría de
@@ -227,16 +231,24 @@ function siemRowToCitySlug(
   estado: string,
   validSlugs: Set<string>,
 ): string | null {
+  // 1. Alias map (chilpancingo-de-los-bravo → chilpancingo, etc.).
+  const aliased = mxMunicipioToCity(municipio);
+  if (aliased && validSlugs.has(aliased)) return aliased;
+
+  // 2. Direct slugify match against seeded MX cities.
   const muniSlug = slugify(municipio);
   if (muniSlug && validSlugs.has(muniSlug)) return muniSlug;
+
+  // 3. State → metro mapping (seeded preferred).
   const stateMapped = mxStateToCity(estado);
   if (stateMapped && validSlugs.has(stateMapped)) return stateMapped;
-  // Last-ditch: even if the state slug isn't seeded, MX_STATE_TO_CITY
-  // collapses to a known metro for every estado.
+
+  // 4. Final unconditional fallback: MX_STATE_TO_CITY covers every one
+  //    of the 32 estados; return the metro even if validSlugs check
+  //    misses (defensive — keeps records over dropping them).
   const stateSlug = slugify(estado);
   if (stateSlug && MX_STATE_TO_CITY[stateSlug]) {
-    const fallback = MX_STATE_TO_CITY[stateSlug];
-    if (validSlugs.has(fallback)) return fallback;
+    return MX_STATE_TO_CITY[stateSlug];
   }
   return null;
 }

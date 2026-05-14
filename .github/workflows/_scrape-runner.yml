@@ -117,6 +117,9 @@ jobs:
 
       # US healthcare registry
       PROLIO_RUN_NPI: ${{ inputs.source == 'npi' && 'true' || 'false' }}
+      # CMS PECOS (Medicare clinicians) + OIG LEIE (federal exclusions)
+      PROLIO_RUN_CMS_PECOS: ${{ inputs.source == 'cms-pecos' && 'true' || 'false' }}
+      PROLIO_RUN_OIG_LEIE:  ${{ inputs.source == 'oig-leie' && 'true' || 'false' }}
       # NPI cap bumped 200→1000/state on 2026-05-07. With 51 states ×
       # 5 taxonomies × 1000 the theoretical ceiling is ~255k US
       # healthcare pros per run; in practice the per-state list query
@@ -130,6 +133,14 @@ jobs:
       # are best-effort and may need verification on first run (override
       # via PROLIO_<NAME>_CSV).
       PROLIO_RUN_FLORIDA_DBPR:        ${{ inputs.source == 'florida-dbpr' && 'true' || 'false' }}
+      PROLIO_RUN_FL_DOH_MQA:          ${{ inputs.source == 'fl-doh-mqa' && 'true' || 'false' }}
+      PROLIO_FL_DOH_MQA_LIMIT:        "20000"
+
+      # 2026-05-14 US/MX wave: federal bulk + state HTML (final wiring)
+      PROLIO_RUN_HIFLD_US:            ${{ inputs.source == 'hifld-us' && 'true' || 'false' }}
+      PROLIO_RUN_RENIECYT_MX:         ${{ inputs.source == 'reniecyt-mx' && 'true' || 'false' }}
+      PROLIO_RUN_PADRON_NOTARIOS_FED_MX: ${{ inputs.source == 'padron-notarios-fed-mx' && 'true' || 'false' }}
+      PROLIO_RUN_CA_DCA_OPEN_DATA:    ${{ inputs.source == 'ca-dca-open-data' && 'true' || 'false' }}
       PROLIO_RUN_TEXAS_TDLR:          ${{ inputs.source == 'texas-tdlr' && 'true' || 'false' }}
       PROLIO_RUN_ARIZONA_ROC:         ${{ inputs.source == 'arizona-roc' && 'true' || 'false' }}
       PROLIO_RUN_WASHINGTON_LI:       ${{ inputs.source == 'washington-li' && 'true' || 'false' }}
@@ -151,6 +162,9 @@ jobs:
       PROLIO_RUN_MARYLAND_DLLR:       ${{ inputs.source == 'maryland-dllr' && 'true' || 'false' }}
       PROLIO_RUN_NEW_JERSEY_DCA:      ${{ inputs.source == 'new-jersey-dca' && 'true' || 'false' }}
       PROLIO_RUN_TENNESSEE_TDCI:      ${{ inputs.source == 'tennessee-tdci' && 'true' || 'false' }}
+      PROLIO_RUN_NY_SED_PROFESSIONS:  ${{ inputs.source == 'ny-sed-professions' && 'true' || 'false' }}
+      PROLIO_RUN_PA_PALS:             ${{ inputs.source == 'pa-pals' && 'true' || 'false' }}
+      PROLIO_RUN_OH_ELICENSE:         ${{ inputs.source == 'oh-elicense' && 'true' || 'false' }}
 
       # France national registries. CNB via data.gouv.fr CSV API
       # (Lov2 license — commercial OK). Architectes via POST form on
@@ -194,6 +208,7 @@ jobs:
 
       # 2026-05-13 wave: MX fraud/risk + regulatory permits
       PROLIO_RUN_SAT_EFOS_EDOS:         ${{ inputs.source == 'sat-efos-edos' && 'true' || 'false' }}
+      PROLIO_RUN_SAT_CPR_MX:            ${{ inputs.source == 'sat-cpr-mx' && 'true' || 'false' }}
       PROLIO_RUN_PROFECO_SANCIONADOS:   ${{ inputs.source == 'profeco-sancionados' && 'true' || 'false' }}
       PROLIO_RUN_CRE_PERMISIONARIOS:    ${{ inputs.source == 'cre-permisionarios' && 'true' || 'false' }}
 
@@ -208,6 +223,28 @@ jobs:
       PROLIO_RUN_AMDA_DISTRIBUIDORES:   ${{ inputs.source == 'amda-distribuidores' && 'true' || 'false' }}
       PROLIO_RUN_CMIC_CONSTRUCTORAS:    ${{ inputs.source == 'cmic-constructoras' && 'true' || 'false' }}
       PROLIO_RUN_RE_FRANCHISES_MX:      ${{ inputs.source == 're-franchises-mx' && 'true' || 'false' }}
+
+      # 2026-05-14 wave: MX médicos certificados (CONACEM) — stub honesto.
+      # Buscador bloqueado por proxy SSR (backend Flask requiere token
+      # server-only). Mantenemos la flag para reactivar sin tocar runner
+      # cuando: a) CONACEM libere API pública, o b) un adaptador
+      # Playwright resuelva el flujo SSR.
+      PROLIO_RUN_CONACEM_MX:            ${{ inputs.source == 'conacem-mx' && 'true' || 'false' }}
+      PROLIO_CONACEM_MX_LIMIT:          "80000"
+
+      # 2026-05-14 wave: ES generic open-data catalog
+      PROLIO_RUN_DATOS_GOB_ES:          ${{ inputs.source == 'datos-gob-es' && 'true' || 'false' }}
+      PROLIO_DATOS_GOB_ES_QUERY:        ${{ inputs.category }}
+      PROLIO_DATOS_GOB_ES_LIMIT:        "100000"
+
+      # 2026-05-14 wave: ES quick wins + federation fan-outs
+      PROLIO_RUN_GUIADENTISTAS_ES:      ${{ inputs.source == 'guiadentistas-es' && 'true' || 'false' }}
+      PROLIO_RUN_DGT_ITV_ES:            ${{ inputs.source == 'dgt-itv-es' && 'true' || 'false' }}
+      PROLIO_RUN_RASIC_TALLERES_CAT:    ${{ inputs.source == 'rasic-talleres-cat' && 'true' || 'false' }}
+      PROLIO_RUN_CGPE_PROCURADORES:     ${{ inputs.source == 'cgpe-procuradores' && 'true' || 'false' }}
+      # 2026-05-14 wave: MX small clean directories
+      PROLIO_RUN_DRO_CDMX:                       ${{ inputs.source == 'dro-cdmx' && 'true' || 'false' }}
+      PROLIO_RUN_PROFEPA_VERIFICENTROS_EDOMEX:   ${{ inputs.source == 'profepa-verificentros-edomex' && 'true' || 'false' }}
 
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC
@@ -244,6 +281,10 @@ jobs:
       # (see apps/scraper/launchd/).
       PROLIO_RUN_CGAE:  ${{ inputs.source == 'cgae' && 'true' || 'false' }}
       PROLIO_RUN_CSCAE: ${{ inputs.source == 'cscae' && 'true' || 'false' }}
+
+      # ES national notariado (CGN) — Consejo General del Notariado.
+      # Bulk HTML scrape of ~3,200 notaries, monthly cadence.
+      PROLIO_RUN_CGN_NOTARIADO: ${{ inputs.source == 'cgn-notariado' && 'true' || 'false' }}
 
       # Default budget knobs — per-source workflows can override via
       # GH Actions vars or by setting an `env:` block before `uses:`.

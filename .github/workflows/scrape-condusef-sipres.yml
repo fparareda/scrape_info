@@ -1,0 +1,23 @@
+name: Scrape · condusef sipres
+on:
+  schedule:
+    - cron: "0 15 * * 0" # Sunday 15:00 UTC weekly
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PROLIO_RUN_CONDUSEF_SIPRES: "true"
+      PROLIO_CONDUSEF_SIPRES_LIMIT: "10000"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: scrape condusef-sipres
+        run: npx tsx src/run-condusef-sipres.ts

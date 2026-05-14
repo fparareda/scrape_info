@@ -1,0 +1,12 @@
+name: Scrape · profeco rpca talleres
+on:
+  schedule:
+    - cron: "0 6 21 * *" # Day 21 of each month, 06:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: profeco-rpca-talleres
+      timeout_minutes: 45

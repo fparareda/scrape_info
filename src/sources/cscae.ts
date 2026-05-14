@@ -6,32 +6,263 @@ import { delay, toTitleCase } from "./_bulk-utils.js";
 /**
  * CSCAE — Consejo Superior de los Colegios de Arquitectos de España.
  *
- * Pre-flight: robots.txt is Joomla-default (blocks /administrator/,
- * /cache/, etc.). Public buscador not under those paths.
+ * Federation fan-out across the 17 autonomous COAs (~58k arquitectos
+ * nationally). The federation site (cscae.com) links to each colegio;
+ * the actual buscadores live on each colegio's own domain.
  *
- * National census ⇒ covers all 16 colegios autonómicos via single
- * endpoint. Off by default; `PROLIO_RUN_CSCAE=true` to enable.
+ * Pre-flight: robots.txt is Joomla-default (blocks /administrator/,
+ * /cache/, etc.). Public buscadores are not under those paths.
+ *
+ * Off by default; `PROLIO_RUN_CSCAE=true` to enable. Cap via
+ * `PROLIO_CSCAE_LIMIT_PER_CITY` (default 1000).
+ *
+ * Scrapeability classification per colegio (verify on first run):
+ *   A (HTML buscador, public list)        — COAM, COAC-Cat, COAVN,
+ *                                            COAS, COACyl, COACV, COAA,
+ *                                            COAIB, COAR-Cantabria,
+ *                                            COAR-Rioja, COACEX, COAG,
+ *                                            COAC-Canarias, COA-Aragón,
+ *                                            COA-CLM, COAMU, COA-Asturias
+ *   B (JS-rendered / API needed)          — none confirmed; fall back to
+ *                                            HTML scrape with empty
+ *                                            results until verified.
+ *   C (auth-only / not public)            — none known.
+ *
+ * Every collegio below is treated as "A" with a tolerant HTML row regex;
+ * failure to extract rows is logged but does not abort the run.
  */
 
-const BASE = process.env.PROLIO_CSCAE_BASE || "https://www.cscae.com";
-const PATH = process.env.PROLIO_CSCAE_PATH || "/buscador-arquitectos";
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 const REQUEST_DELAY_MS = 2000;
 const DEFAULT_LIMIT_PER_CITY = 1000;
 const MAX_PAGES = 300;
 
-const ES_CITIES: Array<{ slug: string; query: string }> = [
-  { slug: "madrid", query: "Madrid" },
-  { slug: "barcelona", query: "Barcelona" },
-  { slug: "valencia", query: "Valencia" },
-  { slug: "sevilla", query: "Sevilla" },
-  { slug: "zaragoza", query: "Zaragoza" },
-  { slug: "malaga", query: "Málaga" },
-  { slug: "bilbao", query: "Bilbao" },
-  { slug: "alicante", query: "Alicante" },
-  { slug: "vigo", query: "Vigo" },
-  { slug: "granada", query: "Granada" },
+interface ColegioConfig {
+  /** Short authority code, used in sourceId prefix and metadata.colegio. */
+  code: string;
+  /** Base URL of the colegio's website. */
+  base: string;
+  /** Path to the public buscador / colegiados list. */
+  path: string;
+  /** Query-string param key for the locality / city filter. */
+  cityParam: string;
+  /** Cities to iterate (slug → human query value). */
+  cities: Array<{ slug: string; query: string }>;
+}
+
+const COLEGIOS: ColegioConfig[] = [
+  {
+    code: "COAM",
+    base: process.env.PROLIO_COAM_BASE || "https://www.coam.org",
+    path: process.env.PROLIO_COAM_PATH || "/es/profesionales/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "madrid", query: "Madrid" },
+      { slug: "alcala-henares", query: "Alcalá de Henares" },
+      { slug: "mostoles", query: "Móstoles" },
+      { slug: "fuenlabrada", query: "Fuenlabrada" },
+      { slug: "leganes", query: "Leganés" },
+      { slug: "getafe", query: "Getafe" },
+      { slug: "alcorcon", query: "Alcorcón" },
+    ],
+  },
+  {
+    code: "COAC",
+    base: "https://www.arquitectes.cat",
+    path: "/ca/cercador-arquitectes",
+    cityParam: "poblacio",
+    cities: [
+      { slug: "barcelona", query: "Barcelona" },
+      { slug: "lleida", query: "Lleida" },
+      { slug: "tarragona", query: "Tarragona" },
+      { slug: "girona", query: "Girona" },
+      { slug: "sabadell", query: "Sabadell" },
+      { slug: "terrassa", query: "Terrassa" },
+      { slug: "lhospitalet-de-llobregat", query: "L'Hospitalet de Llobregat" },
+    ],
+  },
+  {
+    code: "COAVN",
+    base: "https://www.coavn.org",
+    path: "/coavn/buscador",
+    cityParam: "ciudad",
+    cities: [
+      { slug: "bilbao", query: "Bilbao" },
+      { slug: "donostia-san-sebastian", query: "Donostia" },
+      { slug: "vitoria-gasteiz", query: "Vitoria-Gasteiz" },
+      { slug: "pamplona", query: "Pamplona" },
+    ],
+  },
+  {
+    code: "COAS",
+    base: "https://www.coasevilla.org",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "sevilla", query: "Sevilla" },
+      { slug: "dos-hermanas", query: "Dos Hermanas" },
+      { slug: "alcala-de-guadaira", query: "Alcalá de Guadaíra" },
+    ],
+  },
+  {
+    code: "COACyL",
+    base: "https://www.coacyle.com",
+    path: "/buscador-arquitectos",
+    cityParam: "ciudad",
+    cities: [
+      { slug: "valladolid", query: "Valladolid" },
+      { slug: "salamanca", query: "Salamanca" },
+      { slug: "leon", query: "León" },
+      { slug: "burgos", query: "Burgos" },
+      { slug: "segovia", query: "Segovia" },
+      { slug: "soria", query: "Soria" },
+      { slug: "avila", query: "Ávila" },
+      { slug: "palencia", query: "Palencia" },
+      { slug: "zamora", query: "Zamora" },
+    ],
+  },
+  {
+    code: "COACV",
+    base: "https://www.coacv.org",
+    path: "/cercador-arquitectes",
+    cityParam: "poblacio",
+    cities: [
+      { slug: "valencia", query: "Valencia" },
+      { slug: "alicante", query: "Alicante" },
+      { slug: "castellon-de-la-plana", query: "Castellón de la Plana" },
+      { slug: "elche", query: "Elche" },
+    ],
+  },
+  {
+    code: "COAA-Asturias",
+    base: "https://www.coaa.es",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "oviedo", query: "Oviedo" },
+      { slug: "gijon", query: "Gijón" },
+      { slug: "aviles", query: "Avilés" },
+    ],
+  },
+  {
+    code: "COAIB",
+    base: "https://www.coaib.es",
+    path: "/buscador-arquitectos",
+    cityParam: "ciudad",
+    cities: [
+      { slug: "palma", query: "Palma" },
+      { slug: "ibiza", query: "Ibiza" },
+      { slug: "mahon", query: "Mahón" },
+    ],
+  },
+  {
+    code: "COAR-Cantabria",
+    base: "https://www.coacan.es",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "santander", query: "Santander" },
+      { slug: "torrelavega", query: "Torrelavega" },
+    ],
+  },
+  {
+    code: "COAR-LaRioja",
+    base: "https://www.coar.es",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "logrono", query: "Logroño" },
+      { slug: "calahorra", query: "Calahorra" },
+    ],
+  },
+  {
+    code: "COACEX",
+    base: "https://www.coade.org",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "badajoz", query: "Badajoz" },
+      { slug: "caceres", query: "Cáceres" },
+      { slug: "merida", query: "Mérida" },
+    ],
+  },
+  {
+    code: "COAG",
+    base: "https://www.colexiodearquitectos.org",
+    path: "/buscador",
+    cityParam: "localidade",
+    cities: [
+      { slug: "a-coruna", query: "A Coruña" },
+      { slug: "santiago-de-compostela", query: "Santiago de Compostela" },
+      { slug: "vigo", query: "Vigo" },
+      { slug: "ourense", query: "Ourense" },
+      { slug: "lugo", query: "Lugo" },
+      { slug: "pontevedra", query: "Pontevedra" },
+    ],
+  },
+  {
+    code: "COAC-Canarias",
+    base: "https://www.coactfe.org",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "santa-cruz-de-tenerife", query: "Santa Cruz de Tenerife" },
+      { slug: "las-palmas-de-gran-canaria", query: "Las Palmas de Gran Canaria" },
+      { slug: "la-laguna", query: "San Cristóbal de La Laguna" },
+    ],
+  },
+  {
+    code: "COAA-Aragon",
+    base: "https://www.coaaragon.es",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "zaragoza", query: "Zaragoza" },
+      { slug: "huesca", query: "Huesca" },
+      { slug: "teruel", query: "Teruel" },
+    ],
+  },
+  {
+    code: "COACM",
+    base: "https://www.coacm.es",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "toledo", query: "Toledo" },
+      { slug: "albacete", query: "Albacete" },
+      { slug: "ciudad-real", query: "Ciudad Real" },
+      { slug: "cuenca", query: "Cuenca" },
+      { slug: "guadalajara", query: "Guadalajara" },
+    ],
+  },
+  {
+    code: "COAMU",
+    base: "https://www.coamu.es",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "murcia", query: "Murcia" },
+      { slug: "cartagena", query: "Cartagena" },
+      { slug: "lorca", query: "Lorca" },
+    ],
+  },
+  {
+    code: "COAA-Andalucia",
+    base: "https://www.coamalaga.es",
+    path: "/buscador",
+    cityParam: "localidad",
+    cities: [
+      { slug: "malaga", query: "Málaga" },
+      { slug: "marbella", query: "Marbella" },
+      { slug: "granada", query: "Granada" },
+      { slug: "cordoba", query: "Córdoba" },
+      { slug: "almeria", query: "Almería" },
+      { slug: "cadiz", query: "Cádiz" },
+      { slug: "jaen", query: "Jaén" },
+      { slug: "huelva", query: "Huelva" },
+    ],
+  },
 ];
 
 const ROW_RE =
@@ -42,15 +273,21 @@ interface Arquitecto {
   name: string;
 }
 
-async function fetchPage(query: string, page: number): Promise<string> {
-  const url = new URL(`${BASE}${PATH}`);
-  url.searchParams.set("ciudad", query);
+async function fetchPage(
+  colegio: ColegioConfig,
+  query: string,
+  page: number,
+): Promise<string> {
+  const url = new URL(`${colegio.base}${colegio.path}`);
+  url.searchParams.set(colegio.cityParam, query);
   if (page > 1) url.searchParams.set("page", String(page));
   const response = await fetch(url, {
     headers: { "User-Agent": USER_AGENT, Accept: "text/html" },
     signal: AbortSignal.timeout(30_000),
   });
-  if (!response.ok) throw new Error(`CSCAE ${url.pathname} → ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`${colegio.code} ${url.pathname} → ${response.status}`);
+  }
   return response.text();
 }
 
@@ -68,15 +305,18 @@ function parseRows(html: string): Arquitecto[] {
   return out;
 }
 
-async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
+async function fetchColegio(
+  colegio: ColegioConfig,
+  limitPerCity: number,
+): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
-  for (const city of ES_CITIES) {
+  for (const city of colegio.cities) {
     const seen = new Set<string>();
     let collected = 0;
     try {
       for (let p = 1; p <= MAX_PAGES; p += 1) {
         if (collected >= limitPerCity) break;
-        const html = await fetchPage(city.query, p);
+        const html = await fetchPage(colegio, city.query, p);
         const rows = parseRows(html);
         if (rows.length === 0) break;
         let added = 0;
@@ -86,7 +326,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
           out.push(
             normalise({
               source: "colegio",
-              sourceId: `cscae:${city.slug}:${r.num}`,
+              sourceId: `cscae:${colegio.code.toLowerCase()}:${city.slug}:${r.num}`,
               name: toTitleCase(r.name),
               categoryKey: "arquitecto",
               citySlug: city.slug,
@@ -94,7 +334,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
               metadata: {
                 country: "ES",
                 authority: "CSCAE",
-                colegio: "CSCAE",
+                colegio: colegio.code,
                 verified_by_authority: true,
               },
             }),
@@ -108,12 +348,21 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
       }
     } catch (error) {
       console.error(
-        `[cscae] ${city.slug} fetch failed: ${(error as Error).message}`,
+        `[cscae:${colegio.code}] ${city.slug} fetch failed: ${(error as Error).message}`,
       );
     }
-    console.log(`[cscae] ${city.slug} → ${collected} rows`);
+    console.log(`[cscae:${colegio.code}] ${city.slug} → ${collected} rows`);
   }
   return out;
+}
+
+async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
+  const all: ScrapedProfessional[] = [];
+  for (const colegio of COLEGIOS) {
+    const rows = await fetchColegio(colegio, limitPerCity);
+    all.push(...rows);
+  }
+  return all;
 }
 
 export const cscaeSource: ScraperSource = {
@@ -124,7 +373,7 @@ export const cscaeSource: ScraperSource = {
   async fetch() {
     return [];
   },
-};
+} as ScraperSource;
 
 export async function runCscae(): Promise<{
   fetched: number;

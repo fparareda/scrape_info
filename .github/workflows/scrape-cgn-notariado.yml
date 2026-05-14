@@ -1,0 +1,14 @@
+name: Scrape · cgn notariado (ES)
+on:
+  schedule:
+    # Monthly — notarial appointments are published in the BOE and the
+    # CGN roster turns over slowly. First Sunday 03:00 UTC.
+    - cron: "0 3 1-7 * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cgn-notariado
+      timeout_minutes: 90

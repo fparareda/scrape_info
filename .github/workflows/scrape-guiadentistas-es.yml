@@ -1,0 +1,12 @@
+name: Scrape · guiadentistas.es (CGCD dentistas nacional ~44k)
+on:
+  schedule:
+    - cron: "0 9 13 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: guiadentistas-es
+      timeout_minutes: 180

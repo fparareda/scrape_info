@@ -1,0 +1,12 @@
+name: Scrape · padron notarios fed mx
+on:
+  schedule:
+    - cron: "0 5 15 * *" # day 15 of each month, 05:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: padron-notarios-fed-mx
+      timeout_minutes: 30

@@ -45,10 +45,10 @@ import { mxStateToCity } from "./_mx-states.js";
  */
 
 const USER_AGENT =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36";
 const DEFAULT_LIMIT = 12_000;
-const PINCALI_BASE = "https://pincali.com/inmobiliarios";
-const POLITE_DELAY_MS = 400;
+const PINCALI_BASE = "https://www.pincali.com/inmobiliarios";
+const POLITE_DELAY_MS = 600;
 const CATEGORY: CategoryKey = "arquitecto";
 const SOURCE_NAME = "re-franchises-mx" as ScrapeSource;
 
@@ -142,17 +142,25 @@ function pincaliLocationToCitySlug(
 // ---------- Pincali sub-fetcher ---------------------------------------
 
 /**
- * Pincali's list page renders each broker as a card. The card layout
- * is HTML-only (no JS hydration required); each entry exposes the
- * name and profile slug in a `<a href="/inmobiliarios/{slug}">` and
- * the agency + location in nearby text nodes.
+ * Pincali's list page renders each broker as a `<div class="agent-profile">`
+ * card. The relevant inner shape is:
  *
- * We parse very loosely on purpose — Pincali tweaks card markup
- * roughly twice a year, so we anchor on the stable `/inmobiliarios/`
- * href pattern and then walk forward in the HTML to find sibling
- * text. If a card layout change drops yield to zero, the override
- * via `PROLIO_PINCALI_LIST_URL` lets us swap in a JSON endpoint when
- * Pincali ships one.
+ *   <div class="agent-profile">
+ *     <a class="eb-avatar --xl" href="/inmobiliarios/{slug}">
+ *       <img alt="{NAME}">
+ *     </a>
+ *     <div class="agent-profile__info">
+ *       <div class="name"><a href="/inmobiliarios/{slug}">{NAME}</a></div>
+ *       <div class="organization">{AGENCY}</div>
+ *     </div>
+ *     <div class="agent-profile__bio">
+ *       <i class="fal fa-location-dot"></i>{City, State}
+ *       <i class="fal fa-calendar"></i>Miembro desde {YEAR}
+ *     </div>
+ *   </div>
+ *
+ * We split the HTML on the card boundary and pull each field from its
+ * stable selector. Anchors and the `<img alt>` give us name + slug.
  */
 async function fetchPincaliPage(page: number): Promise<PincaliRow[]> {
   const url = `${PINCALI_BASE}?page=${page}`;
@@ -161,8 +169,13 @@ async function fetchPincaliPage(page: number): Promise<PincaliRow[]> {
     response = await fetch(url, {
       headers: {
         "User-Agent": USER_AGENT,
-        Accept: "text/html,application/xhtml+xml",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "Accept-Language": "es-MX,es;q=0.9,en;q=0.7",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Dest": "document",
+        "Upgrade-Insecure-Requests": "1",
       },
       signal: AbortSignal.timeout(60_000),
     });
@@ -178,53 +191,58 @@ async function fetchPincaliPage(page: number): Promise<PincaliRow[]> {
   }
   const html = await response.text();
 
-  // Find every profile anchor. We then look ahead ~2 KB for an agency
-  // hint and a "City, State" location string. This is intentionally
-  // forgiving: if either is missing we still emit the row (location
-  // null → row dropped at sink validation).
   const rows: PincaliRow[] = [];
-  const anchorRe = /<a[^>]+href="\/inmobiliarios\/([a-z0-9_\-]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   const seenSlug = new Set<string>();
-  let match: RegExpExecArray | null;
-  while ((match = anchorRe.exec(html)) !== null) {
-    const slug = match[1].trim();
+
+  // Split on card boundary. First chunk is the page chrome before the
+  // first card — discard it. Remaining chunks each start at the
+  // contents of an `<div class="agent-profile">` element.
+  const chunks = html.split(/<div\s+class="agent-profile"[^>]*>/i);
+  for (let i = 1; i < chunks.length; i++) {
+    const card = chunks[i];
+
+    // Slug: first /inmobiliarios/{slug} href in this card.
+    const slugMatch = card.match(/\/inmobiliarios\/([a-z0-9_\-]+)/i);
+    if (!slugMatch) continue;
+    const slug = slugMatch[1].trim();
     if (!slug || slug === "page" || seenSlug.has(slug)) continue;
-    seenSlug.add(slug);
-    const innerName = stripTags(match[2]);
-    if (!innerName || innerName.length < 2) continue;
-    // Snapshot the next ~2 KB of HTML to look for agency / location.
-    const tail = html.slice(match.index, match.index + 2400);
-    // Pincali typically renders location as "<span>City, State</span>"
-    // immediately under the name. Try the first comma-separated text.
-    const textBits = tail
-      .replace(/<a[\s\S]*?<\/a>/g, " ")
-      .replace(/<[^>]+>/g, "\n")
-      .split("\n")
-      .map((s) => decodeEntities(s).trim())
-      .filter((s) => s.length > 1 && s.length < 120);
-    let location: string | undefined;
-    let agency: string | undefined;
-    for (const bit of textBits) {
-      if (!location && /,\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]/.test(bit) && bit.length < 80) {
-        location = bit;
-      } else if (
-        !agency &&
-        bit.length > 2 &&
-        bit !== innerName &&
-        !/^(página|page|siguiente|anterior|inicio)/i.test(bit)
-      ) {
-        // Heuristic: agency name is often near-identical to anchor
-        // name but in upper-case (Pincali repeats it).
-        if (
-          bit.toLowerCase().includes(innerName.toLowerCase().slice(0, 6)) ||
-          /(real|estate|inmobiliaria|bienes\s+raic|raices|remax|re\/max|century|coldwell|keller)/i.test(bit)
-        ) {
-          agency = bit;
-        }
-      }
-      if (location && agency) break;
+
+    // Name: prefer `<div class="name"><a>NAME</a></div>`, fallback to
+    // the avatar `<img alt="NAME">`.
+    let name = "";
+    const nameDiv = card.match(
+      /<div\s+class="name"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i,
+    );
+    if (nameDiv) name = stripTags(nameDiv[1]);
+    if (!name) {
+      const altMatch = card.match(/<img[^>]+alt="([^"]+)"/i);
+      if (altMatch) name = decodeEntities(altMatch[1]).trim();
     }
-    rows.push({ name: innerName, slug, agency, locationRaw: location });
+    if (!name || name.length < 2) continue;
+
+    // Agency: <div class="organization">AGENCY</div>
+    let agency: string | undefined;
+    const orgMatch = card.match(
+      /<div\s+class="organization"[^>]*>([\s\S]*?)<\/div>/i,
+    );
+    if (orgMatch) {
+      const orgText = stripTags(orgMatch[1]);
+      if (orgText) agency = orgText;
+    }
+
+    // Location: text immediately after `<i class="...fa-location-dot..."></i>`
+    // up to the next `<i ` tag or closing `</div>`.
+    let locationRaw: string | undefined;
+    const locMatch = card.match(
+      /<i[^>]*fa-location-dot[^>]*><\/i>([\s\S]*?)(?:<i\s|<\/div>)/i,
+    );
+    if (locMatch) {
+      const loc = stripTags(locMatch[1]);
+      if (loc) locationRaw = loc;
+    }
+
+    seenSlug.add(slug);
+    rows.push({ name, slug, agency, locationRaw });
   }
   return rows;
 }
@@ -258,7 +276,7 @@ async function fetchPincaliAll(limit: number): Promise<ScrapedProfessional[]> {
           name: row.name,
           categoryKey: CATEGORY,
           citySlug,
-          website: `https://pincali.com/inmobiliarios/${row.slug}`,
+          website: `https://www.pincali.com/inmobiliarios/${row.slug}`,
           metadata: {
             country: "MX",
             franchise,
