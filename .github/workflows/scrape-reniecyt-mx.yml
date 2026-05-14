@@ -1,0 +1,12 @@
+name: Scrape · reniecyt mx
+on:
+  schedule:
+    - cron: "0 5 14 * *" # day 14 of each month, 05:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: reniecyt-mx
+      timeout_minutes: 30
