@@ -136,6 +136,7 @@ import { cpmPhysioSource, runCpmPhysio } from "./sources/cpm-physio.js";
 import { lssSaskatchewanSource, runLssSaskatchewan } from "./sources/lss-saskatchewan.js";
 import { amvicDealersSource, runAmvicDealers } from "./sources/amvic-dealers.js";
 import { apegaSource, runApega } from "./sources/apega.js";
+import { cptbcPhysioSource, runCptbcPhysio } from "./sources/cptbc-physio.js";
 import { notariadoMxSource, runNotariadoMx } from "./sources/notariado-mx.js";
 import { sedemaVerificentrosCdmxSource, runSedemaVerificentrosCdmx } from "./sources/sedema-verificentros-cdmx.js";
 import { verificacionEdomexSource, runVerificacionEdomex } from "./sources/verificacion-edomex.js";
@@ -271,6 +272,8 @@ async function main(): Promise<void> {
   const lssSaskatchewanOn = lssSaskatchewanSource.enabled();
   const amvicDealersOn = amvicDealersSource.enabled();
   const apegaOn = apegaSource.enabled();
+  // 2026-05-14 wave: CA
+  const cptbcPhysioOn = cptbcPhysioSource.enabled();
   // 2026-05 wave: MX
   const notariadoMxOn = notariadoMxSource.enabled();
   const sedemaVerificentrosCdmxOn = sedemaVerificentrosCdmxSource.enabled();
@@ -373,6 +376,7 @@ async function main(): Promise<void> {
     !lssSaskatchewanOn &&
     !amvicDealersOn &&
     !apegaOn &&
+    !cptbcPhysioOn &&
     !notariadoMxOn &&
     !sedemaVerificentrosCdmxOn &&
     !verificacionEdomexOn &&
@@ -475,6 +479,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CAP_PSYCHOLOGISTS=true, PROLIO_RUN_CPM_PHYSIO=true, " +
         "PROLIO_RUN_LSS_SASKATCHEWAN=true, PROLIO_RUN_AMVIC_DEALERS=true, " +
         "PROLIO_RUN_APEGA=true, " +
+        "PROLIO_RUN_CPTBC_PHYSIO=true, " +
         "PROLIO_RUN_NOTARIADO_MX=true, " +
         "PROLIO_RUN_SEDEMA_VERIFICENTROS_CDMX=true, " +
         "PROLIO_RUN_VERIFICACION_EDOMEX=true, PROLIO_RUN_VERIFICACION_JALISCO=true, " +
@@ -1008,6 +1013,7 @@ async function main(): Promise<void> {
     [lssSaskatchewanOn, "lss-saskatchewan", runLssSaskatchewan],
     [amvicDealersOn, "amvic-dealers", runAmvicDealers],
     [apegaOn, "apega", runApega],
+    [cptbcPhysioOn, "cptbc-physio", runCptbcPhysio],
     [notariadoMxOn, "notariado-mx", runNotariadoMx],
     [sedemaVerificentrosCdmxOn, "sedema-verificentros-cdmx", runSedemaVerificentrosCdmx],
     [verificacionEdomexOn, "verificacion-edomex", runVerificacionEdomex],
