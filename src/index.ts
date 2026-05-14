@@ -147,6 +147,7 @@ import { fedmvzColegiosVetSource, runFedmvzColegiosVet } from "./sources/fedmvz-
 import { conahcytSniiSource, runConahcytSnii } from "./sources/conahcyt-snii.js";
 import { satEfosEdosSource, runSatEfosEdos } from "./sources/sat-efos-edos.js";
 import { profecoSancionadosSource, runProfecoSancionados } from "./sources/profeco-sancionados.js";
+import { profecoRpcaTalleresSource, runProfecoRpcaTalleres } from "./sources/profeco-rpca-talleres.js";
 import { crePermisionariosSource, runCrePermisionarios } from "./sources/cre-permisionarios.js";
 import { siemSource, runSiem } from "./sources/siem.js";
 import { cofeprisFarmaciasSource, runCofeprisFarmacias } from "./sources/cofepris-farmacias.js";
@@ -288,6 +289,7 @@ async function main(): Promise<void> {
   const conahcytSniiOn = conahcytSniiSource.enabled();
   const satEfosEdosOn = satEfosEdosSource.enabled();
   const profecoSancionadosOn = profecoSancionadosSource.enabled();
+  const profecoRpcaTalleresOn = profecoRpcaTalleresSource.enabled();
   const crePermisionariosOn = crePermisionariosSource.enabled();
   const siemOn = siemSource.enabled();
   const cofeprisFarmaciasOn = cofeprisFarmaciasSource.enabled();
@@ -394,6 +396,7 @@ async function main(): Promise<void> {
     !conahcytSniiOn &&
     !satEfosEdosOn &&
     !profecoSancionadosOn &&
+    !profecoRpcaTalleresOn &&
     !crePermisionariosOn &&
     !siemOn &&
     !cofeprisFarmaciasOn &&
@@ -1034,6 +1037,7 @@ async function main(): Promise<void> {
     [conahcytSniiOn, "conahcyt-snii", runConahcytSnii],
     [satEfosEdosOn, "sat-efos-edos", runSatEfosEdos],
     [profecoSancionadosOn, "profeco-sancionados", runProfecoSancionados],
+    [profecoRpcaTalleresOn, "profeco-rpca-talleres", runProfecoRpcaTalleres],
     [crePermisionariosOn, "cre-permisionarios", runCrePermisionarios],
     [siemOn, "siem", runSiem],
     [cofeprisFarmaciasOn, "cofepris-farmacias", runCofeprisFarmacias],
