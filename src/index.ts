@@ -155,6 +155,8 @@ import { padronGanaderoNacionalSource, runPadronGanaderoNacional } from "./sourc
 import { amdaDistribuidoresSource, runAmdaDistribuidores } from "./sources/amda-distribuidores.js";
 import { cmicConstructorasSource, runCmicConstructoras } from "./sources/cmic-constructoras.js";
 import { reFranchisesMxSource, runReFranchisesMx } from "./sources/re-franchises-mx.js";
+import { irsPtinSource, runIrsPtin } from "./sources/irs-ptin.js";
+import { cgcfeFisioterapeutasSource, runCgcfeFisioterapeutas } from "./sources/cgcfe-fisioterapeutas.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -291,6 +293,8 @@ async function main(): Promise<void> {
   const amdaDistribuidoresOn = amdaDistribuidoresSource.enabled();
   const cmicConstructorasOn = cmicConstructorasSource.enabled();
   const reFranchisesMxOn = reFranchisesMxSource.enabled();
+  // 2026-05-14 wave: US
+  const irsPtinOn = irsPtinSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -401,7 +405,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !irsPtinOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -483,7 +488,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CONAHCYT_SNII=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
-        "PROLIO_SCRAPE_OVERTURE=true",
+        "PROLIO_SCRAPE_OVERTURE=true, " +
+        "PROLIO_RUN_IRS_PTIN=true",
     );
     return;
   }
@@ -1027,6 +1033,7 @@ async function main(): Promise<void> {
     [amdaDistribuidoresOn, "amda-distribuidores", runAmdaDistribuidores],
     [cmicConstructorasOn, "cmic-constructoras", runCmicConstructoras],
     [reFranchisesMxOn, "re-franchises-mx", runReFranchisesMx],
+    [irsPtinOn, "irs-ptin", runIrsPtin],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],
