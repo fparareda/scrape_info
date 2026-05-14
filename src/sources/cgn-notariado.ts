@@ -9,20 +9,24 @@ import { withScrapeRun } from "../telemetry.js";
  *
  * The "Elige a tu notario" directory at:
  *   https://www.notariado.org/portal/elige-a-tu-notario-orden
- * returns all ~3,200 Spanish notaries in server-rendered HTML.
+ * returns the full Spanish notarial roster in server-rendered HTML.
  *
- * Pre-flight (2026-05-12):
+ * Pre-flight (2026-05-14, re-verified):
  *   robots.txt — User-agent: * with Disallow: (empty = allow all).
  *     Only named bots (Baidu, Yandex, AhrefsBot…) are fully blocked.
  *     Crawl-delay: 5 is honoured. Path /portal/ is NOT in any Disallow.
- *   Page structure — Jinja/Liferay server-side template.
- *     Each notary appears as a <div> block with name, street address,
- *     postal code, province, phone, fax, and email fields in plain HTML.
- *   Record fields — name, address (street + CP + province), phone, email.
- *     No individual licence number in the HTML; we use the protocol
- *     number in the page text where available.
- *   Record count — full Spain all-notary fetch (comunidad=0) returns
- *     ~3,200 rows. Verified with comunidad=0&idioma=0 on 2026-05-12.
+ *   Page structure — Liferay portlet, single-page render. All entries
+ *     are emitted as Bootstrap accordion cards with the name in a
+ *     `<span class="btn-title">` element. Pagination is client-side
+ *     only (bootpag JS slices the in-page list).
+ *   Record fields — name, address (street, CP, city, province), 1-2
+ *     phones, fax, two emails (corporate `@correonotarial.org` per Ley
+ *     24/2001 + public `@notariado.org`), and optional languages.
+ *   Record count — live HTML reports `totalNotarios = 833` for
+ *     comunidad=0&idioma=0 (2026-05-14). The `comunidad` query param
+ *     is effectively ignored by the current portlet (every value 0..19
+ *     returns the same 833-row roster) but is preserved for future
+ *     compatibility. Coverage spans all 50 provinces.
  *   Auth / WAF — no login required, no Cloudflare, no captcha detected
  *     in test fetch from CI-class IP.
  *
@@ -117,17 +121,21 @@ interface NotarioRecord {
 /**
  * Extract notary records from the Liferay-rendered HTML.
  *
- * The page renders each notary in a block structured like:
+ * The page renders each notary inside a Bootstrap accordion card:
  *
- *   <strong>APELLIDO APELLIDO, Nombre</strong>
- *   <span>Calle Foo 1, 2º</span>
- *   <span>28001 - Madrid</span>
- *   Tel: 91 xxx xx xx  |  Fax: …
- *   Email corporativo: foo@notarios.org
+ *   <h4 class="main-title-purple p-2 mt-1">
+ *     <span class="btn-title"> José Alberto Marín Sánchez </span>
+ *   </h4>
+ *   ...
+ *   <b>Dirección :</b> Calle Diputació, número 268 ... 08007 - Barcelona (Barcelona)
+ *   <b>Teléfono:</b> 933.444.500
+ *   <b>Fax:</b> 934.124.055
+ *   <b>Correo corporativo Ley 24/2001:</b> <a href="mailto:foo@correonotarial.org">…</a>
+ *   <b>Correo electrónico:</b> <a href="mailto:bar@notariado.org">…</a>
+ *   <b>Idiomas:</b> Castellano, Catalán
  *
- * We use a two-pass approach:
- *   1. Split on `<strong>` blocks to isolate each notary's HTML chunk.
- *   2. Extract fields from each chunk via targeted regexes.
+ * The reliable anchor is `<span class="btn-title">` — split on it and
+ * treat each chunk as a candidate record.
  *
  * sourceId is derived from the notary name (stable slug) since there is
  * no published numeric ID in the listing HTML.
@@ -136,26 +144,20 @@ function parseNotarios(html: string): NotarioRecord[] {
   const out: NotarioRecord[] = [];
   const seen = new Set<string>();
 
-  // Each entry is wrapped in a structural block ending with the next
-  // entry or a section boundary. The reliable anchor is the notary's
-  // name in <strong>…</strong> immediately after the CSS class marker.
-  //
-  // We split the page on each <strong> occurrence and treat each chunk
-  // as a candidate record.
-  const chunks = html.split(/<strong[^>]*>/i);
-  // chunks[0] is the page header — skip it.
+  // Split the page on each btn-title span; chunks[0] is the page header.
+  const chunks = html.split(/<span[^>]*class="[^"]*\bbtn-title\b[^"]*"[^>]*>/i);
   for (let i = 1; i < chunks.length; i += 1) {
     const raw = chunks[i];
 
-    // Extract the name: everything up to </strong>
-    const nameMatch = raw.match(/^([^<]{4,120})<\/strong>/i);
+    // Extract the name: everything up to closing </span>
+    const nameMatch = raw.match(/^\s*([^<]{4,160})<\/span>/i);
     if (!nameMatch) continue;
     const rawName = decodeEntities(nameMatch[1]).trim();
-    // Notary names are ALL-CAPS surname(s), given name — e.g.
-    //   "GARCÍA LÓPEZ, María Dolores"
-    //   "MARTÍNEZ, Juan"
-    // Skip fragments that look like headings/labels.
-    if (rawName.length < 6 || /^[^A-ZÁ-Ú]/.test(rawName)) continue;
+    // Notary names start with a capital letter (server returns
+    // title-case "José Alberto Marín Sánchez" or ALL-CAPS depending on
+    // legacy template). Reject obvious non-name fragments.
+    if (rawName.length < 6) continue;
+    if (!/^[A-ZÁÉÍÓÚÑÜ]/i.test(rawName.charAt(0).toUpperCase() + rawName.slice(1))) continue;
     if (/^\d/.test(rawName)) continue;
 
     // The live HTML uses labeled fields after the name:
@@ -443,7 +445,7 @@ async function fetchAllNotarios(
   } else {
     const records = parseNotarios(allSpainResponse.body);
     console.log(`[cgn_notariado] all-Spain parsed ${records.length} notarios`);
-    if (records.length >= 500) {
+    if (records.length >= 400) {
       // Looks like a full census — use it directly.
       for (const r of records) {
         if (seen.has(r.sourceId)) continue;
