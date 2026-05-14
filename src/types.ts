@@ -119,7 +119,11 @@ export type ScrapeSource =
   // 2026-05-13 wave 3: MX construction + autos + real estate
   | "amda-distribuidores"
   | "cmic-constructoras"
-  | "re-franchises-mx";
+  | "re-franchises-mx"
+  // 2026-05-14 wave: US
+  | "irs-ptin"
+  // 2026-05-14 wave: ES fisioterapia national registry
+  | "cgcfe-fisioterapeutas";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
