@@ -154,6 +154,9 @@ jobs:
       PROLIO_RUN_MARYLAND_DLLR:       ${{ inputs.source == 'maryland-dllr' && 'true' || 'false' }}
       PROLIO_RUN_NEW_JERSEY_DCA:      ${{ inputs.source == 'new-jersey-dca' && 'true' || 'false' }}
       PROLIO_RUN_TENNESSEE_TDCI:      ${{ inputs.source == 'tennessee-tdci' && 'true' || 'false' }}
+      PROLIO_RUN_NY_SED_PROFESSIONS:  ${{ inputs.source == 'ny-sed-professions' && 'true' || 'false' }}
+      PROLIO_RUN_PA_PALS:             ${{ inputs.source == 'pa-pals' && 'true' || 'false' }}
+      PROLIO_RUN_OH_ELICENSE:         ${{ inputs.source == 'oh-elicense' && 'true' || 'false' }}
 
       # France national registries. CNB via data.gouv.fr CSV API
       # (Lov2 license — commercial OK). Architectes via POST form on

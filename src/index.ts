@@ -105,6 +105,9 @@ import { wisconsinDspsSource, runWisconsinDsps } from "./sources/wisconsin-dsps.
 import { minnesotaDliSource, runMinnesotaDli } from "./sources/minnesota-dli.js";
 import { missouriDprSource, runMissouriDpr } from "./sources/missouri-dpr.js";
 import { ohioElicenseSource, runOhioElicense } from "./sources/ohio-elicense.js";
+import { nySedProfessionsSource, runNySedProfessions } from "./sources/ny-sed-professions.js";
+import { paPalsSource, runPaPals } from "./sources/pa-pals.js";
+import { ohElicenseSource, runOhElicense } from "./sources/oh-elicense.js";
 import { michiganLaraSource, runMichiganLara } from "./sources/michigan-lara.js";
 import { marylandDllrSource, runMarylandDllr } from "./sources/maryland-dllr.js";
 import { newJerseyDcaSource, runNewJerseyDca } from "./sources/new-jersey-dca.js";
@@ -255,6 +258,9 @@ async function main(): Promise<void> {
   const minnesotaDliOn = minnesotaDliSource.enabled();
   const missouriDprOn = missouriDprSource.enabled();
   const ohioElicenseOn = ohioElicenseSource.enabled();
+  const nySedProfessionsOn = nySedProfessionsSource.enabled();
+  const paPalsOn = paPalsSource.enabled();
+  const ohElicenseOn = ohElicenseSource.enabled();
   const michiganLaraOn = michiganLaraSource.enabled();
   const marylandDllrOn = marylandDllrSource.enabled();
   const newJerseyDcaOn = newJerseyDcaSource.enabled();
@@ -372,6 +378,9 @@ async function main(): Promise<void> {
     !minnesotaDliOn &&
     !missouriDprOn &&
     !ohioElicenseOn &&
+    !nySedProfessionsOn &&
+    !paPalsOn &&
+    !ohElicenseOn &&
     !michiganLaraOn &&
     !marylandDllrOn &&
     !newJerseyDcaOn &&
@@ -1021,6 +1030,9 @@ async function main(): Promise<void> {
     [minnesotaDliOn, "minnesota-dli", runMinnesotaDli],
     [missouriDprOn, "missouri-dpr", runMissouriDpr],
     [ohioElicenseOn, "ohio-elicense", runOhioElicense],
+    [nySedProfessionsOn, "ny-sed-professions", runNySedProfessions],
+    [paPalsOn, "pa-pals", runPaPals],
+    [ohElicenseOn, "oh-elicense", runOhElicense],
     [michiganLaraOn, "michigan-lara", runMichiganLara],
     [marylandDllrOn, "maryland-dllr", runMarylandDllr],
     [newJerseyDcaOn, "new-jersey-dca", runNewJerseyDca],
