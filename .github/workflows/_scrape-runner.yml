@@ -210,6 +210,14 @@ jobs:
       PROLIO_RUN_CMIC_CONSTRUCTORAS:    ${{ inputs.source == 'cmic-constructoras' && 'true' || 'false' }}
       PROLIO_RUN_RE_FRANCHISES_MX:      ${{ inputs.source == 're-franchises-mx' && 'true' || 'false' }}
 
+      # 2026-05-14 wave: MX médicos certificados (CONACEM) — stub honesto.
+      # Buscador bloqueado por proxy SSR (backend Flask requiere token
+      # server-only). Mantenemos la flag para reactivar sin tocar runner
+      # cuando: a) CONACEM libere API pública, o b) un adaptador
+      # Playwright resuelva el flujo SSR.
+      PROLIO_RUN_CONACEM_MX:            ${{ inputs.source == 'conacem-mx' && 'true' || 'false' }}
+      PROLIO_CONACEM_MX_LIMIT:          "80000"
+
       # 2026-05-14 wave: ES generic open-data catalog
       PROLIO_RUN_DATOS_GOB_ES:          ${{ inputs.source == 'datos-gob-es' && 'true' || 'false' }}
       PROLIO_DATOS_GOB_ES_QUERY:        ${{ inputs.category }}

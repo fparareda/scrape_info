@@ -122,6 +122,8 @@ export type ScrapeSource =
   | "amda-distribuidores"
   | "cmic-constructoras"
   | "re-franchises-mx"
+  // 2026-05-14: MX médicos certificados (CONACEM) — stub honesto, bloqueado por proxy SSR
+  | "conacem-mx"
   // 2026-05-14 wave: generic ES open-data catalog
   | "datos-gob-es"
   // 2026-05-14 wave: ES quick wins + federation fan-outs

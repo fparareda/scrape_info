@@ -157,6 +157,7 @@ import { cnbvEntidadesSource, runCnbvEntidades } from "./sources/cnbv-entidades.
 import { padronGanaderoNacionalSource, runPadronGanaderoNacional } from "./sources/padron-ganadero-nacional.js";
 import { amdaDistribuidoresSource, runAmdaDistribuidores } from "./sources/amda-distribuidores.js";
 import { cmicConstructorasSource, runCmicConstructoras } from "./sources/cmic-constructoras.js";
+import { conacemMxSource, runConacemMx } from "./sources/conacem-mx.js";
 import { reFranchisesMxSource, runReFranchisesMx } from "./sources/re-franchises-mx.js";
 import { datosGobEsSource, runDatosGobEs } from "./sources/datos-gob-es.js";
 import { guiadentistasEsSource, runGuiadentistasEs } from "./sources/guiadentistas-es.js";
@@ -303,6 +304,7 @@ async function main(): Promise<void> {
   const padronGanaderoNacionalOn = padronGanaderoNacionalSource.enabled();
   const amdaDistribuidoresOn = amdaDistribuidoresSource.enabled();
   const cmicConstructorasOn = cmicConstructorasSource.enabled();
+  const conacemMxOn = conacemMxSource.enabled();
   const reFranchisesMxOn = reFranchisesMxSource.enabled();
   const datosGobEsOn = datosGobEsSource.enabled();
   const guiadentistasEsOn = guiadentistasEsSource.enabled();
@@ -414,6 +416,7 @@ async function main(): Promise<void> {
     !padronGanaderoNacionalOn &&
     !amdaDistribuidoresOn &&
     !cmicConstructorasOn &&
+    !conacemMxOn &&
     !reFranchisesMxOn &&
     !datosGobEsOn &&
     !guiadentistasEsOn &&
@@ -1060,6 +1063,7 @@ async function main(): Promise<void> {
     [padronGanaderoNacionalOn, "padron-ganadero-nacional", runPadronGanaderoNacional],
     [amdaDistribuidoresOn, "amda-distribuidores", runAmdaDistribuidores],
     [cmicConstructorasOn, "cmic-constructoras", runCmicConstructoras],
+    [conacemMxOn, "conacem-mx", runConacemMx],
     [reFranchisesMxOn, "re-franchises-mx", runReFranchisesMx],
     [datosGobEsOn, "datos-gob-es", runDatosGobEs],
     [guiadentistasEsOn, "guiadentistas-es", runGuiadentistasEs],
