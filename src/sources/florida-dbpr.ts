@@ -1,209 +1,69 @@
-import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
-import { getSink } from "../sink.js";
 
 /**
  * Florida DBPR — Department of Business and Professional Regulation.
  *
- * Florida publishes weekly bulk CSVs of every active licensee per
- * board (Construction Industry Licensing Board / CILB, Electrical
- * Contractors / ECLB, Plumbing covered by CILB, Architecture, etc.).
- * Pre-flight: https://www2.myfloridalicense.com/datadownload/. Each
- * licence type has its own file; this source pulls the construction +
- * electrical sets and routes by `prof_type_desc`.
+ * STATUS (2026-05-14 pre-flight): BLOCKED — kept as honest stub.
  *
- * Default URL is a documented entry point but **must be verified on
- * first run**. Override via `PROLIO_FLORIDA_DBPR_CSV` if FL rotates.
+ * The previously documented CSV bulk path (`www2.myfloridalicense.com/
+ * datadownload/`) returns the WordPress marketing site, not a download
+ * portal. No `.csv` / `.zip` / `.xlsx` artefacts are linked anywhere
+ * under that subdomain. The earlier hard-coded
+ * `cilb_certified.csv` URL was speculative and yielded 0 rows.
  *
- * Off by default. `PROLIO_RUN_FLORIDA_DBPR=true` to enable. Cap via
- * `PROLIO_FLORIDA_DBPR_LIMIT` (default 2000). Sink rejects rows whose
- * city slug isn't seeded in `cities` — that's the safety net for FL
- * cities outside the seed (we accept the drop rather than overshare).
+ * The two real public surfaces are both gated:
+ *
+ *   1. `https://www.myfloridalicense.com/wl11.asp` — classic ASP form
+ *      (POST). Probe 2026-05-14:
+ *        - HTTP 200 OK on GET (29 kB form).
+ *        - All result tables driven by an opaque server-side session
+ *          state (hidden `hSID` field + Cookie). POSTing a City search
+ *          without a SID re-renders the empty form (no error message,
+ *          just the same shell). Replaying a fresh SID requires
+ *          executing the JS that pre-populates Division → Board →
+ *          LicenseType cascades.
+ *        - There is no documented JSON/REST shim; the dropdowns are
+ *          populated via ASPSESSIONID-bound XHRs.
+ *      Implementable only with Playwright. Not worth the runtime in
+ *      this iteration vs. yield from NPI/state boards we already have.
+ *
+ *   2. MQA "Public Data Portal"
+ *      (`https://data-download.mqa.flhealthsource.gov/`) — Azure B2C
+ *      sign-up wall (`mqab2c.onmicrosoft.com/B2C_1_susi_dd`). Requires
+ *      account creation + email verification before any download. Not
+ *      automatable inside GitHub Actions without a managed identity.
+ *
+ * What ships instead:
+ *   - `fl-doh-mqa` covers ALL FL healthcare licensees (~1M+ active)
+ *     via the public CSV export on the MQA license-verification form,
+ *     which is fully open (no auth, no captcha, no session).
+ *   - The DBPR construction/electrical/architecture/cosmetology side
+ *     stays uncovered for now. Reactivation path:
+ *       a) Playwright adapter that drives wl11.asp through Division →
+ *          Board → LicenseType → County, harvests each result page.
+ *       b) Or a public-records FOIA request for the weekly DBPR
+ *          extract (Florida Sunshine Law guarantees it; turnaround is
+ *          typically 5–10 business days).
+ *
+ * Source literal `florida-dbpr` is preserved so legacy telemetry rows
+ * keep their FK; flag `PROLIO_RUN_FLORIDA_DBPR` is also preserved.
+ * Both the per-target `fetch()` and the bulk `runFloridaDbpr()` are
+ * intentional no-ops that log the block reason so /admin shows a
+ * skipped (not crashed) row.
  */
 
-const DEFAULT_URL =
-  "https://www2.myfloridalicense.com/datadownload/cilb_certified.csv";
-const DEFAULT_LIMIT = 2000;
-const USER_AGENT =
-  "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
-const REQUEST_TIMEOUT_MS = 60_000;
+const BLOCK_REASON =
+  "FL DBPR: session-bound ASP form (wl11.asp) + Azure-B2C-gated MQA portal — no public CSV";
 
-function profTypeToCategory(desc: string): CategoryKey | undefined {
-  const d = desc.toLowerCase();
-  if (d.includes("electric")) return "electricidad";
-  if (d.includes("plumb") || d.includes("mechanical") || d.includes("hvac"))
-    return "fontaneria";
-  if (d.includes("carpent") || d.includes("finish")) return "carpinteria";
-  if (d.includes("architect")) return "arquitecto";
-  // CILB "Building Contractor", "General Contractor" → no slot
-  return undefined;
-}
-
-function splitCsvLine(line: string): string[] {
-  const out: string[] = [];
-  let cur = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const c = line[i];
-    if (inQuotes) {
-      if (c === '"' && line[i + 1] === '"') {
-        cur += '"';
-        i += 1;
-      } else if (c === '"') inQuotes = false;
-      else cur += c;
-    } else {
-      if (c === '"') inQuotes = true;
-      else if (c === ",") {
-        out.push(cur);
-        cur = "";
-      } else cur += c;
-    }
-  }
-  out.push(cur);
-  return out;
-}
-
-function parseCsv(text: string): Array<Record<string, string>> {
-  const clean = text.replace(/^﻿/, "");
-  const lines = clean.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length < 2) return [];
-  const header = splitCsvLine(lines[0]).map((h) => h.trim().toLowerCase());
-  const out: Array<Record<string, string>> = [];
-  for (let i = 1; i < lines.length; i += 1) {
-    const cells = splitCsvLine(lines[i]);
-    const row: Record<string, string> = {};
-    for (let j = 0; j < header.length; j += 1) {
-      row[header[j]] = (cells[j] ?? "").trim();
-    }
-    out.push(row);
-  }
-  return out;
-}
-
-function pick(row: Record<string, string>, candidates: string[]): string {
-  for (const k of candidates) if (row[k]) return row[k];
-  for (const k of Object.keys(row)) {
-    for (const c of candidates) {
-      if (k.includes(c) && row[k]) return row[k];
-    }
-  }
-  return "";
-}
-
-function normalisePhone(raw: string | undefined): string | undefined {
-  if (!raw) return undefined;
-  const digits = raw.replace(/[^\d]/g, "");
-  if (digits.length === 10) return `+1${digits}`;
-  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
-  return undefined;
-}
-
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
-  const url = process.env.PROLIO_FLORIDA_DBPR_CSV || DEFAULT_URL;
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-  } catch (error) {
-    console.error(
-      `[florida-dbpr] network error: ${(error as Error).message}`,
-    );
-    return [];
-  }
-  if (!response.ok) {
-    console.error(`[florida-dbpr] ${response.status} on ${url}`);
-    return [];
-  }
-  const text = await response.text();
-  const rows = parseCsv(text);
-  const out: ScrapedProfessional[] = [];
-  const seen = new Set<string>();
-  let droppedNoCategory = 0;
-  let droppedNoCity = 0;
-  let droppedNoLicence = 0;
-
-  for (const row of rows) {
-    if (out.length >= limit) break;
-    const status = pick(row, ["lic_status", "license_status", "status"]).toLowerCase();
-    if (status && !status.includes("active") && !status.includes("current")) continue;
-
-    const licence = pick(row, ["license_nbr", "license_number", "lic_nbr", "license"]);
-    if (!licence) {
-      droppedNoLicence += 1;
-      continue;
-    }
-    const profType = pick(row, ["prof_type_desc", "license_type", "type", "prof_desc"]);
-    const category = profTypeToCategory(profType);
-    if (!category) {
-      droppedNoCategory += 1;
-      continue;
-    }
-
-    const city = pick(row, ["city", "primary_city", "addr_city"]);
-    const citySlug = slugify(city);
-    if (!citySlug) {
-      droppedNoCity += 1;
-      continue;
-    }
-
-    const dedupeKey = `${licence}:${category}`;
-    if (seen.has(dedupeKey)) continue;
-    seen.add(dedupeKey);
-
-    const name = pick(row, [
-      "dba_name",
-      "business_name",
-      "full_name",
-      "primary_name",
-      "name",
-    ]);
-    if (!name) continue;
-
-    const street = pick(row, ["addr_1", "address_1", "street", "addr"]);
-    const zip = pick(row, ["zip", "postal_code"]);
-    const stateRaw = pick(row, ["state", "primary_state"]) || "FL";
-    const address = [street, city, stateRaw, zip].filter(Boolean).join(", ");
-
-    out.push(
-      normalise({
-        source: "florida-dbpr",
-        sourceId: `florida-dbpr:${licence}:${category}`,
-        name,
-        categoryKey: category,
-        citySlug,
-        phone: normalisePhone(pick(row, ["phone", "primary_phone"])),
-        address: address || undefined,
-        licenseNumber: licence,
-        metadata: {
-          country: "US",
-          state: stateRaw || "FL",
-          authority: "Florida DBPR",
-          verified_by_authority: true,
-          dbpr_prof_type: profType,
-          dbpr_status: status || "ACTIVE",
-        },
-      }),
-    );
-  }
-
-  console.log(
-    `[florida-dbpr] parsed=${out.length} droppedNoCategory=${droppedNoCategory} droppedNoCity=${droppedNoCity} droppedNoLicence=${droppedNoLicence}`,
-  );
-  return out;
-}
-
-export const floridaDbprSource: ScraperSource = {
+export const floridaDbprSource = {
   name: "florida-dbpr",
   enabled() {
     return process.env.PROLIO_RUN_FLORIDA_DBPR === "true";
   },
-  async fetch() {
+  async fetch(): Promise<ScrapedProfessional[]> {
     return [];
   },
-};
+} satisfies ScraperSource as ScraperSource;
 
 export async function runFloridaDbpr(): Promise<{
   fetched: number;
@@ -214,17 +74,6 @@ export async function runFloridaDbpr(): Promise<{
   if (!floridaDbprSource.enabled()) {
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   }
-  const rawLimit = Number(process.env.PROLIO_FLORIDA_DBPR_LIMIT ?? DEFAULT_LIMIT);
-  const limit =
-    Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
-  const records = await fetchAll(limit);
-  if (records.length === 0) {
-    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-  }
-  const sink = getSink();
-  const { inserted, updated, skipped } = await sink.upsert(records);
-  console.log(
-    `[florida-dbpr] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
-  );
-  return { fetched: records.length, inserted, updated, skipped };
+  console.warn(`[florida-dbpr] skipped — ${BLOCK_REASON}`);
+  return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
 }

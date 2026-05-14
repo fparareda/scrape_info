@@ -81,6 +81,7 @@ import {
 import { gleifEnabled, runGleifEnrichment } from "./sources/gleif.js";
 import { npiSource, runNpi } from "./sources/npi.js";
 import { floridaDbprSource, runFloridaDbpr } from "./sources/florida-dbpr.js";
+import { flDohMqaSource, runFlDohMqa } from "./sources/fl-doh-mqa.js";
 import { texasTdlrSource, runTexasTdlr } from "./sources/texas-tdlr.js";
 import { arizonaRocSource, runArizonaRoc } from "./sources/arizona-roc.js";
 import { washingtonLiSource, runWashingtonLi } from "./sources/washington-li.js";
@@ -177,6 +178,7 @@ import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
 import { oaaSource, runOaa } from "./sources/oaa.js";
 import { louisianaLslbcSource, runLouisianaLslbc } from "./sources/louisiana-lslbc.js";
 import { nycDobSource, runNycDob } from "./sources/nyc-dob.js";
+import { hifldUsSource, runHifldUs } from "./sources/hifld-us.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -234,6 +236,7 @@ async function main(): Promise<void> {
   const gleifOn = gleifEnabled();
   const npiOn = npiSource.enabled();
   const floridaDbprOn = floridaDbprSource.enabled();
+  const flDohMqaOn = flDohMqaSource.enabled();
   const texasTdlrOn = texasTdlrSource.enabled();
   const arizonaRocOn = arizonaRocSource.enabled();
   const washingtonLiOn = washingtonLiSource.enabled();
@@ -329,6 +332,7 @@ async function main(): Promise<void> {
   const oaaOn = oaaSource.enabled();
   const louisianaLslbcOn = louisianaLslbcSource.enabled();
   const nycDobOn = nycDobSource.enabled();
+  const hifldUsOn = hifldUsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -354,6 +358,7 @@ async function main(): Promise<void> {
     !gleifOn &&
     !npiOn &&
     !floridaDbprOn &&
+    !flDohMqaOn &&
     !texasTdlrOn &&
     !arizonaRocOn &&
     !washingtonLiOn &&
@@ -446,6 +451,7 @@ async function main(): Promise<void> {
     !oaaOn &&
     !louisianaLslbcOn &&
     !nycDobOn &&
+    !hifldUsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -509,6 +515,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_OAQ=true, " +
         "PROLIO_RUN_OAA=true, " +
         "PROLIO_RUN_NYC_DOB=true, " +
+        "PROLIO_RUN_HIFLD_US=true, " +
         "PROLIO_RUN_ORDRE_VET_FR=true, " +
         "PROLIO_RUN_SIRENE_INSEE=true, " +
         "PROLIO_RUN_ADEME_RGE=true, " +
@@ -1097,6 +1104,7 @@ async function main(): Promise<void> {
     [oaaOn, "oaa", runOaa],
     [louisianaLslbcOn, "louisiana-lslbc", runLouisianaLslbc],
     [nycDobOn, "nyc-dob", runNycDob],
+    [flDohMqaOn, "fl-doh-mqa", runFlDohMqa],
     [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;

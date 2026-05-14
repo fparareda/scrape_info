@@ -38,6 +38,7 @@ export type ScrapeSource =
   | "tssa"
   | "hcra"
   | "florida-dbpr"
+  | "fl-doh-mqa"
   | "texas-tdlr"
   | "arizona-roc"
   | "washington-li"
@@ -140,7 +141,11 @@ export type ScrapeSource =
   | "profepa-verificentros-edomex"
   // 2026-05-14: US federal healthcare complement to NPI
   | "cms-pecos"
-  | "oig-leie";
+  | "oig-leie"
+  // 2026-05-14: California DCA — 35 boards bulk licensee dumps (~3M)
+  | "ca-dca-open-data"
+  // 2026-05-14: HIFLD US — DHS open-data hospitals + UC + nursing homes + EMS
+  | "hifld-us";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
