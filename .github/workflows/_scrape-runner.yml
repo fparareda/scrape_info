@@ -194,6 +194,7 @@ jobs:
 
       # 2026-05-13 wave: MX fraud/risk + regulatory permits
       PROLIO_RUN_SAT_EFOS_EDOS:         ${{ inputs.source == 'sat-efos-edos' && 'true' || 'false' }}
+      PROLIO_RUN_SAT_CPR_MX:            ${{ inputs.source == 'sat-cpr-mx' && 'true' || 'false' }}
       PROLIO_RUN_PROFECO_SANCIONADOS:   ${{ inputs.source == 'profeco-sancionados' && 'true' || 'false' }}
       PROLIO_RUN_CRE_PERMISIONARIOS:    ${{ inputs.source == 'cre-permisionarios' && 'true' || 'false' }}
 
@@ -219,6 +220,9 @@ jobs:
       PROLIO_RUN_DGT_ITV_ES:            ${{ inputs.source == 'dgt-itv-es' && 'true' || 'false' }}
       PROLIO_RUN_RASIC_TALLERES_CAT:    ${{ inputs.source == 'rasic-talleres-cat' && 'true' || 'false' }}
       PROLIO_RUN_CGPE_PROCURADORES:     ${{ inputs.source == 'cgpe-procuradores' && 'true' || 'false' }}
+      # 2026-05-14 wave: MX small clean directories
+      PROLIO_RUN_DRO_CDMX:                       ${{ inputs.source == 'dro-cdmx' && 'true' || 'false' }}
+      PROLIO_RUN_PROFEPA_VERIFICENTROS_EDOMEX:   ${{ inputs.source == 'profepa-verificentros-edomex' && 'true' || 'false' }}
 
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC

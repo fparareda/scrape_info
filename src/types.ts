@@ -109,6 +109,7 @@ export type ScrapeSource =
   | "conahcyt-snii"
   // 2026-05-13 wave: MX fraud/risk + regulatory permits
   | "sat-efos-edos"
+  | "sat-cpr-mx"
   | "profeco-sancionados"
   | "profeco-rpca-talleres"
   | "cre-permisionarios"
@@ -127,7 +128,11 @@ export type ScrapeSource =
   | "guiadentistas-es"
   | "dgt-itv-es"
   | "rasic-talleres-cat"
-  | "cgpe-procuradores";
+  | "cgpe-procuradores"
+  | "colegios-notarios-mx"
+  // 2026-05-14 wave: MX small clean directories
+  | "dro-cdmx"
+  | "profepa-verificentros-edomex";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

@@ -1,0 +1,12 @@
+name: Scrape · profepa verificentros edomex
+on:
+  schedule:
+    - cron: "0 6 17 * *" # monthly, day 17 at 06:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: profepa-verificentros-edomex
+      timeout_minutes: 60

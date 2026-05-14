@@ -142,10 +142,12 @@ import { verificacionEdomexSource, runVerificacionEdomex } from "./sources/verif
 import { verificacionJaliscoSource, runVerificacionJalisco } from "./sources/verificacion-jalisco.js";
 import { cnsfAgentesSource, runCnsfAgentes } from "./sources/cnsf-agentes.js";
 import { colegioNotariosCdmxSource, runColegioNotariosCdmx } from "./sources/colegio-notarios-cdmx.js";
+import { colegiosNotariosMxSource, runColegiosNotariosMx } from "./sources/colegios-notarios-mx.js";
 import { fcarmArquitectosSource, runFcarmArquitectos } from "./sources/fcarm-arquitectos.js";
 import { fedmvzColegiosVetSource, runFedmvzColegiosVet } from "./sources/fedmvz-colegios-vet.js";
 import { conahcytSniiSource, runConahcytSnii } from "./sources/conahcyt-snii.js";
 import { satEfosEdosSource, runSatEfosEdos } from "./sources/sat-efos-edos.js";
+import { satCprMxSource, runSatCprMx } from "./sources/sat-cpr-mx.js";
 import { profecoSancionadosSource, runProfecoSancionados } from "./sources/profeco-sancionados.js";
 import { profecoRpcaTalleresSource, runProfecoRpcaTalleres } from "./sources/profeco-rpca-talleres.js";
 import { crePermisionariosSource, runCrePermisionarios } from "./sources/cre-permisionarios.js";
@@ -161,6 +163,8 @@ import { guiadentistasEsSource, runGuiadentistasEs } from "./sources/guiadentist
 import { dgtItvEsSource, runDgtItvEs } from "./sources/dgt-itv-es.js";
 import { rasicTalleresCatSource, runRasicTalleresCat } from "./sources/rasic-talleres-cat.js";
 import { cgpeProcuradoresSource, runCgpeProcuradores } from "./sources/cgpe-procuradores.js";
+import { droCdmxSource, runDroCdmx } from "./sources/dro-cdmx.js";
+import { profepaVerificentrosEdomexSource, runProfepaVerificentrosEdomex } from "./sources/profepa-verificentros-edomex.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
@@ -284,10 +288,12 @@ async function main(): Promise<void> {
   const verificacionJaliscoOn = verificacionJaliscoSource.enabled();
   const cnsfAgentesOn = cnsfAgentesSource.enabled();
   const colegioNotariosCdmxOn = colegioNotariosCdmxSource.enabled();
+  const colegiosNotariosMxOn = colegiosNotariosMxSource.enabled();
   const fcarmArquitectosOn = fcarmArquitectosSource.enabled();
   const fedmvzColegiosVetOn = fedmvzColegiosVetSource.enabled();
   const conahcytSniiOn = conahcytSniiSource.enabled();
   const satEfosEdosOn = satEfosEdosSource.enabled();
+  const satCprMxOn = satCprMxSource.enabled();
   const profecoSancionadosOn = profecoSancionadosSource.enabled();
   const profecoRpcaTalleresOn = profecoRpcaTalleresSource.enabled();
   const crePermisionariosOn = crePermisionariosSource.enabled();
@@ -303,6 +309,8 @@ async function main(): Promise<void> {
   const dgtItvEsOn = dgtItvEsSource.enabled();
   const rasicTalleresCatOn = rasicTalleresCatSource.enabled();
   const cgpeProcuradoresOn = cgpeProcuradoresSource.enabled();
+  const droCdmxOn = droCdmxSource.enabled();
+  const profepaVerificentrosEdomexOn = profepaVerificentrosEdomexSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -391,10 +399,12 @@ async function main(): Promise<void> {
     !verificacionJaliscoOn &&
     !cnsfAgentesOn &&
     !colegioNotariosCdmxOn &&
+    !colegiosNotariosMxOn &&
     !fcarmArquitectosOn &&
     !fedmvzColegiosVetOn &&
     !conahcytSniiOn &&
     !satEfosEdosOn &&
+    !satCprMxOn &&
     !profecoSancionadosOn &&
     !profecoRpcaTalleresOn &&
     !crePermisionariosOn &&
@@ -410,6 +420,8 @@ async function main(): Promise<void> {
     !dgtItvEsOn &&
     !rasicTalleresCatOn &&
     !cgpeProcuradoresOn &&
+    !droCdmxOn &&
+    !profepaVerificentrosEdomexOn &&
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
@@ -497,6 +509,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_SEDEMA_VERIFICENTROS_CDMX=true, " +
         "PROLIO_RUN_VERIFICACION_EDOMEX=true, PROLIO_RUN_VERIFICACION_JALISCO=true, " +
         "PROLIO_RUN_CNSF_AGENTES=true, PROLIO_RUN_COLEGIO_NOTARIOS_CDMX=true, " +
+        "PROLIO_RUN_COLEGIOS_NOTARIOS_MX=true, " +
         "PROLIO_RUN_FCARM_ARQUITECTOS=true, PROLIO_RUN_FEDMVZ_COLEGIOS_VET=true, " +
         "PROLIO_RUN_CONAHCYT_SNII=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
@@ -1032,10 +1045,12 @@ async function main(): Promise<void> {
     [verificacionJaliscoOn, "verificacion-jalisco", runVerificacionJalisco],
     [cnsfAgentesOn, "cnsf-agentes", runCnsfAgentes],
     [colegioNotariosCdmxOn, "colegio-notarios-cdmx", runColegioNotariosCdmx],
+    [colegiosNotariosMxOn, "colegios-notarios-mx", runColegiosNotariosMx],
     [fcarmArquitectosOn, "fcarm-arquitectos", runFcarmArquitectos],
     [fedmvzColegiosVetOn, "fedmvz-colegios-vet", runFedmvzColegiosVet],
     [conahcytSniiOn, "conahcyt-snii", runConahcytSnii],
     [satEfosEdosOn, "sat-efos-edos", runSatEfosEdos],
+    [satCprMxOn, "sat-cpr-mx", runSatCprMx],
     [profecoSancionadosOn, "profeco-sancionados", runProfecoSancionados],
     [profecoRpcaTalleresOn, "profeco-rpca-talleres", runProfecoRpcaTalleres],
     [crePermisionariosOn, "cre-permisionarios", runCrePermisionarios],
@@ -1051,6 +1066,8 @@ async function main(): Promise<void> {
     [dgtItvEsOn, "dgt-itv-es", runDgtItvEs],
     [rasicTalleresCatOn, "rasic-talleres-cat", runRasicTalleresCat],
     [cgpeProcuradoresOn, "cgpe-procuradores", runCgpeProcuradores],
+    [droCdmxOn, "dro-cdmx", runDroCdmx],
+    [profepaVerificentrosEdomexOn, "profepa-verificentros-edomex", runProfepaVerificentrosEdomex],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],

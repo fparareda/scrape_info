@@ -1,0 +1,12 @@
+name: Scrape · dro cdmx
+on:
+  schedule:
+    - cron: "0 5 16 * *" # monthly, day 16 at 05:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: dro-cdmx
+      timeout_minutes: 60
