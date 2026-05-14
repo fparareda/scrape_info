@@ -295,6 +295,8 @@ async function main(): Promise<void> {
   const reFranchisesMxOn = reFranchisesMxSource.enabled();
   // 2026-05-14 wave: US
   const irsPtinOn = irsPtinSource.enabled();
+  // 2026-05-14 wave: ES
+  const cgcfeFisioterapeutasOn = cgcfeFisioterapeutasSource.enabled();
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
@@ -406,7 +408,8 @@ async function main(): Promise<void> {
     !overtureOn &&
     !competitorNaOn &&
     !competitorEsMegaOn &&
-    !irsPtinOn
+    !irsPtinOn &&
+    !cgcfeFisioterapeutasOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -489,7 +492,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
         "PROLIO_SCRAPE_OVERTURE=true, " +
-        "PROLIO_RUN_IRS_PTIN=true",
+        "PROLIO_RUN_IRS_PTIN=true, " +
+        "PROLIO_RUN_CGCFE_FISIOTERAPEUTAS=true",
     );
     return;
   }
@@ -1034,6 +1038,7 @@ async function main(): Promise<void> {
     [cmicConstructorasOn, "cmic-constructoras", runCmicConstructoras],
     [reFranchisesMxOn, "re-franchises-mx", runReFranchisesMx],
     [irsPtinOn, "irs-ptin", runIrsPtin],
+    [cgcfeFisioterapeutasOn, "cgcfe-fisioterapeutas", runCgcfeFisioterapeutas],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
     [oaaOn, "oaa", runOaa],
