@@ -179,6 +179,9 @@ import { oaaSource, runOaa } from "./sources/oaa.js";
 import { louisianaLslbcSource, runLouisianaLslbc } from "./sources/louisiana-lslbc.js";
 import { nycDobSource, runNycDob } from "./sources/nyc-dob.js";
 import { hifldUsSource, runHifldUs } from "./sources/hifld-us.js";
+import { reniecytMxSource, runReniecytMx } from "./sources/reniecyt-mx.js";
+import { padronNotariosFedMxSource, runPadronNotariosFedMx } from "./sources/padron-notarios-fed-mx.js";
+import { caDcaOpenDataSource, runCaDcaOpenData } from "./sources/ca-dca-open-data.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -333,6 +336,9 @@ async function main(): Promise<void> {
   const louisianaLslbcOn = louisianaLslbcSource.enabled();
   const nycDobOn = nycDobSource.enabled();
   const hifldUsOn = hifldUsSource.enabled();
+  const reniecytMxOn = reniecytMxSource.enabled();
+  const padronNotariosFedMxOn = padronNotariosFedMxSource.enabled();
+  const caDcaOpenDataOn = caDcaOpenDataSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -452,6 +458,9 @@ async function main(): Promise<void> {
     !louisianaLslbcOn &&
     !nycDobOn &&
     !hifldUsOn &&
+    !reniecytMxOn &&
+    !padronNotariosFedMxOn &&
+    !caDcaOpenDataOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1106,6 +1115,10 @@ async function main(): Promise<void> {
     [nycDobOn, "nyc-dob", runNycDob],
     [flDohMqaOn, "fl-doh-mqa", runFlDohMqa],
     [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
+    [hifldUsOn, "hifld-us", runHifldUs],
+    [reniecytMxOn, "reniecyt-mx", runReniecytMx],
+    [padronNotariosFedMxOn, "padron-notarios-fed-mx", runPadronNotariosFedMx],
+    [caDcaOpenDataOn, "ca-dca-open-data", runCaDcaOpenData],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

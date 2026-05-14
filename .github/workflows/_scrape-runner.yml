@@ -135,6 +135,12 @@ jobs:
       PROLIO_RUN_FLORIDA_DBPR:        ${{ inputs.source == 'florida-dbpr' && 'true' || 'false' }}
       PROLIO_RUN_FL_DOH_MQA:          ${{ inputs.source == 'fl-doh-mqa' && 'true' || 'false' }}
       PROLIO_FL_DOH_MQA_LIMIT:        "20000"
+
+      # 2026-05-14 US/MX wave: federal bulk + state HTML (final wiring)
+      PROLIO_RUN_HIFLD_US:            ${{ inputs.source == 'hifld-us' && 'true' || 'false' }}
+      PROLIO_RUN_RENIECYT_MX:         ${{ inputs.source == 'reniecyt-mx' && 'true' || 'false' }}
+      PROLIO_RUN_PADRON_NOTARIOS_FED_MX: ${{ inputs.source == 'padron-notarios-fed-mx' && 'true' || 'false' }}
+      PROLIO_RUN_CA_DCA_OPEN_DATA:    ${{ inputs.source == 'ca-dca-open-data' && 'true' || 'false' }}
       PROLIO_RUN_TEXAS_TDLR:          ${{ inputs.source == 'texas-tdlr' && 'true' || 'false' }}
       PROLIO_RUN_ARIZONA_ROC:         ${{ inputs.source == 'arizona-roc' && 'true' || 'false' }}
       PROLIO_RUN_WASHINGTON_LI:       ${{ inputs.source == 'washington-li' && 'true' || 'false' }}
