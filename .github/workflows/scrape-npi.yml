@@ -1,14 +1,14 @@
 name: Scrape · NPI Registry (US healthcare)
 
-# CMS National Provider Identifier registry. Public free JSON API.
-# Iterates 51 US states (50 + DC) × 5 taxonomies (Family Medicine,
-# Dentist, Psychologist, Physical Therapist, Anesthesiology) with a
-# 200-row per-state cap by default. Monthly — provider data changes
-# slowly.
+# CMS National Provider Identifier registry — bulk file ingestion.
+# Default path: download the weekly NPPES diff (~6 MB) from
+# https://download.cms.gov/nppes/NPI_Files.html, stream-parse, upsert.
+# Optional baseline (PROLIO_NPI_BASELINE_CSV_URL) for a pre-processed
+# healthcare-only snapshot. See src/sources/npi.ts for details.
 
 on:
   schedule:
-    - cron: "0 15 1 * *"  # 1st of month 15:00 UTC
+    - cron: "0 15 * * 0"  # Sundays 15:00 UTC — aligned with NPPES weekly publish (Mon)
   workflow_dispatch:
 
 jobs:
