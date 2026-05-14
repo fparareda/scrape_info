@@ -1,0 +1,12 @@
+name: Scrape · DGT ITV ES
+on:
+  schedule:
+    - cron: "0 5 * * 1" # Monday 05:00 UTC weekly
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: dgt-itv-es
+      timeout_minutes: 30
