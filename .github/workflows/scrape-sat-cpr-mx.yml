@@ -1,0 +1,14 @@
+name: Scrape · SAT CPR (Contadores Públicos Registrados)
+on:
+  schedule:
+    # Mensual, día 19 a las 06:00 UTC. El padrón crece despacio
+    # (~unas decenas de altas por mes); una corrida mensual sobra.
+    - cron: "0 6 19 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: sat-cpr-mx
+      timeout_minutes: 60
