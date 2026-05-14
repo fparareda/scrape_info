@@ -209,6 +209,11 @@ jobs:
       PROLIO_RUN_CMIC_CONSTRUCTORAS:    ${{ inputs.source == 'cmic-constructoras' && 'true' || 'false' }}
       PROLIO_RUN_RE_FRANCHISES_MX:      ${{ inputs.source == 're-franchises-mx' && 'true' || 'false' }}
 
+      # 2026-05-14 wave: ES generic open-data catalog
+      PROLIO_RUN_DATOS_GOB_ES:          ${{ inputs.source == 'datos-gob-es' && 'true' || 'false' }}
+      PROLIO_DATOS_GOB_ES_QUERY:        ${{ inputs.category }}
+      PROLIO_DATOS_GOB_ES_LIMIT:        "100000"
+
       # CA Quebec + BC provincial regulators. HTML scrapers — each was
       # pre-flighted against robots.txt before adding (Law Society BC
       # was excluded because it Disallows the lawyer lookup paths).

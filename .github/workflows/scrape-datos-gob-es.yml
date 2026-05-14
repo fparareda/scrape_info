@@ -1,0 +1,70 @@
+name: Scrape · datos.gob.es (Spain generic CKAN)
+on:
+  schedule:
+    # Daily at 03:00 UTC. The runner rotates the focused query slug
+    # based on day-of-year so we cover every QUERY_MAP entry over a
+    # ~month window without slamming all ~25 queries in a single run.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      query:
+        description: "Force a specific QUERY_MAP slug (e.g. 'talleres', 'farmacias', 'itv'). Leave blank for daily rotation."
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  pick-query:
+    runs-on: ubuntu-latest
+    outputs:
+      query: ${{ steps.rotate.outputs.query }}
+    steps:
+      - id: rotate
+        name: Rotate query by day-of-year
+        run: |
+          if [ -n "${{ inputs.query }}" ]; then
+            echo "query=${{ inputs.query }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Keep this list in sync with QUERY_MAP in src/sources/datos-gob-es.ts.
+          # Length-mismatch is harmless — we modulo by array length.
+          QUERIES=(
+            talleres-mecanica
+            talleres
+            itv
+            inspeccion-tecnica
+            autoescuelas
+            farmacias
+            centros-sanitarios
+            centros-salud
+            hospitales
+            clinicas-dentales
+            veterinarios
+            clinicas-veterinarias
+            psicologia
+            fisioterapia
+            instaladores-electricidad
+            instaladores-gas
+            instaladores-fontaneria
+            instaladores-calefaccion
+            instaladores-climatizacion
+            notarios
+            colegio-arquitectos
+            colegio-abogados
+            colegio-medicos
+            ingenieria
+            cerrajeria
+            carpinteria
+          )
+          DOY=$(date -u +%j)
+          IDX=$(( 10#$DOY % ${#QUERIES[@]} ))
+          echo "query=${QUERIES[$IDX]}" >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: pick-query
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: datos-gob-es
+      category: ${{ needs.pick-query.outputs.query }}
+      timeout_minutes: 90
