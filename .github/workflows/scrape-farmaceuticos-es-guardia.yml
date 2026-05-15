@@ -1,0 +1,12 @@
+name: Scrape · Farmaceuticos.com guardia (stub federación CGCOF ~22k)
+on:
+  schedule:
+    - cron: "0 9 18 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: farmaceuticos-es-guardia
+      timeout_minutes: 30

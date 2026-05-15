@@ -1,0 +1,12 @@
+name: Scrape · PEGNL (Engineers & Geoscientists NL)
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: pegnl-nl
+      timeout_minutes: 90

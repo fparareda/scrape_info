@@ -194,6 +194,7 @@ jobs:
       PROLIO_RUN_DOCTORALIA_MX:         ${{ inputs.source == 'doctoralia-mx' && 'true' || 'false' }}
       PROLIO_RUN_SENASICA_MX_VET:       ${{ inputs.source == 'senasica-mx-vet' && 'true' || 'false' }}
       PROLIO_RUN_DENUE_MX:              ${{ inputs.source == 'denue-mx' && 'true' || 'false' }}
+      PROLIO_RUN_CLUES_SINAIS_MX:       ${{ inputs.source == 'clues-sinais-mx' && 'true' || 'false' }}
 
       # 2026-05 wave: MX federal + state directories
       PROLIO_RUN_NOTARIADO_MX:          ${{ inputs.source == 'notariado-mx' && 'true' || 'false' }}
@@ -224,6 +225,11 @@ jobs:
       PROLIO_RUN_CMIC_CONSTRUCTORAS:    ${{ inputs.source == 'cmic-constructoras' && 'true' || 'false' }}
       PROLIO_RUN_RE_FRANCHISES_MX:      ${{ inputs.source == 're-franchises-mx' && 'true' || 'false' }}
 
+      # 2026-05-15 wave: MX quick wins (ANTAD retail seeds + EMA/IMSS stubs)
+      PROLIO_RUN_ANTAD_ASOCIADOS:       ${{ inputs.source == 'antad-asociados' && 'true' || 'false' }}
+      PROLIO_RUN_EMA_ACREDITADOS:       ${{ inputs.source == 'ema-acreditados' && 'true' || 'false' }}
+      PROLIO_RUN_IMSS_DIRECTORIO:       ${{ inputs.source == 'imss-directorio' && 'true' || 'false' }}
+
       # 2026-05-14 wave: MX médicos certificados (CONACEM) — stub honesto.
       # Buscador bloqueado por proxy SSR (backend Flask requiere token
       # server-only). Mantenemos la flag para reactivar sin tocar runner
@@ -242,6 +248,18 @@ jobs:
       PROLIO_RUN_DGT_ITV_ES:            ${{ inputs.source == 'dgt-itv-es' && 'true' || 'false' }}
       PROLIO_RUN_RASIC_TALLERES_CAT:    ${{ inputs.source == 'rasic-talleres-cat' && 'true' || 'false' }}
       PROLIO_RUN_CGPE_PROCURADORES:     ${{ inputs.source == 'cgpe-procuradores' && 'true' || 'false' }}
+
+      # 2026-05-15 wave: ES quick wins (habitissimo SSR + Open Data BCN +
+      # farmacéuticos guardia federation stub + COMB Barcelona stub)
+      PROLIO_RUN_HABITISSIMO_ES:             ${{ inputs.source == 'habitissimo-es' && 'true' || 'false' }}
+      PROLIO_HABITISSIMO_ES_LIMIT:           "50000"
+      PROLIO_RUN_OPEN_DATA_BCN_LOCALES:      ${{ inputs.source == 'open-data-bcn-locales' && 'true' || 'false' }}
+      PROLIO_OPEN_DATA_BCN_LOCALES_LIMIT:    "100000"
+      PROLIO_RUN_FARMACEUTICOS_ES_GUARDIA:   ${{ inputs.source == 'farmaceuticos-es-guardia' && 'true' || 'false' }}
+      PROLIO_FARMACEUTICOS_ES_GUARDIA_LIMIT: "30000"
+      PROLIO_RUN_COMB_BARCELONA:             ${{ inputs.source == 'comb-barcelona' && 'true' || 'false' }}
+      PROLIO_COMB_BARCELONA_LIMIT:           "40000"
+
       # 2026-05-14 wave: MX small clean directories
       PROLIO_RUN_DRO_CDMX:                       ${{ inputs.source == 'dro-cdmx' && 'true' || 'false' }}
       PROLIO_RUN_PROFEPA_VERIFICENTROS_EDOMEX:   ${{ inputs.source == 'profepa-verificentros-edomex' && 'true' || 'false' }}
@@ -254,6 +272,18 @@ jobs:
       PROLIO_RUN_ODQ:        ${{ inputs.source == 'odq' && 'true' || 'false' }}
       PROLIO_RUN_OAQ:        ${{ inputs.source == 'oaq' && 'true' || 'false' }}
       PROLIO_RUN_CPSBC:      ${{ inputs.source == 'cpsbc' && 'true' || 'false' }}
+      PROLIO_RUN_SCPP_SK_PHARMACISTS: ${{ inputs.source == 'scpp-sk-pharmacists' && 'true' || 'false' }}
+
+      # 2026-05-15: CA iMIS-hosted public registers
+      PROLIO_RUN_ENGINEERS_NS: ${{ inputs.source == 'engineers-ns' && 'true' || 'false' }}
+      PROLIO_RUN_NSBS_NS:      ${{ inputs.source == 'nsbs-ns' && 'true' || 'false' }}
+      PROLIO_RUN_PEGNL_NL:     ${{ inputs.source == 'pegnl-nl' && 'true' || 'false' }}
+
+      # 2026-05-15 CA quick wins: SVMA SK vets (flat HTML) + CPSNS NS
+      # physicians (ASP.NET WebForms POST) + LSNB NB bar (Alinity reuse).
+      PROLIO_RUN_SVMA_SK_VETS:        ${{ inputs.source == 'svma-sk-vets' && 'true' || 'false' }}
+      PROLIO_RUN_CPSNS_NS_PHYSICIANS: ${{ inputs.source == 'cpsns-ns-physicians' && 'true' || 'false' }}
+      PROLIO_RUN_LSNB_BAR:            ${{ inputs.source == 'lsnb-bar' && 'true' || 'false' }}
 
       # 2026-05 wave: CA — Alinity/Thentia hosted + provincial regulators
       PROLIO_RUN_TSASK:               ${{ inputs.source == 'tsask' && 'true' || 'false' }}
@@ -281,6 +311,21 @@ jobs:
       # (see apps/scraper/launchd/).
       PROLIO_RUN_CGAE:  ${{ inputs.source == 'cgae' && 'true' || 'false' }}
       PROLIO_RUN_CSCAE: ${{ inputs.source == 'cscae' && 'true' || 'false' }}
+
+      # ES federaciones tipo "Consejo General + Ventanilla Única" (Ley
+      # 17/2009). Fan-out por colegio provincial/autonómico. Helper en
+      # src/sources/_consejo-vu-utils.ts.
+      PROLIO_RUN_CGCFE_FISIO:           ${{ inputs.source == 'cgcfe-fisio' && 'true' || 'false' }}
+      PROLIO_RUN_COP_PSICOLOGIA:        ${{ inputs.source == 'cop-psicologia' && 'true' || 'false' }}
+      PROLIO_RUN_COGITI_INGENIEROS:     ${{ inputs.source == 'cogiti-ingenieros' && 'true' || 'false' }}
+      PROLIO_RUN_GRADUADOS_SOCIALES_ES: ${{ inputs.source == 'graduados-sociales-es' && 'true' || 'false' }}
+
+      # ES national Ventanilla Única (Ley 17/2009) — veterinarians (OCV,
+      # ~35k) and ópticos-optometristas (CGCOO, ~20k). Both are
+      # POST/GET form scrapers; fan out per provincia and (for
+      # vucolvet) per surname prefix to respect the 3-char minimum.
+      PROLIO_RUN_VUCOLVET:       ${{ inputs.source == 'vucolvet' && 'true' || 'false' }}
+      PROLIO_RUN_CGCOO_OPTICOS:  ${{ inputs.source == 'cgcoo-opticos' && 'true' || 'false' }}
 
       # ES national notariado (CGN) — Consejo General del Notariado.
       # Bulk HTML scrape of ~3,200 notaries, monthly cadence.
@@ -322,6 +367,7 @@ jobs:
       PROLIO_RPPS_FR_LIMIT: "100000"            # RPPS national ~1.7M activity rows; cap to keep run under 4h
 
       PROLIO_DENUE_MX_LIMIT: "100000"           # DENUE has 5M; 100k spread across 4 sectors
+      PROLIO_CLUES_SINAIS_MX_LIMIT: "50000"     # CLUES national ~63k rows; 50k covers operating subset
       PROLIO_SENASICA_MX_VET_LIMIT: "20000"     # full SENASICA ~6k, leave headroom
       PROLIO_DOCTORALIA_MX_LIMIT: "10000"       # boost in case Cloudflare lifts
       PROLIO_OAA_LIMIT: "10000"                 # OAA architects ~8.7k total; 10k headroom

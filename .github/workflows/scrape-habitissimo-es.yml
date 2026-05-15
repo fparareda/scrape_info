@@ -1,0 +1,12 @@
+name: Scrape · habitissimo.es (empresas servicios hogar ES, ~150k cross-cat)
+on:
+  schedule:
+    - cron: "0 7 18 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: habitissimo-es
+      timeout_minutes: 330
