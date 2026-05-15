@@ -1,0 +1,12 @@
+name: Scrape · ema acreditados
+on:
+  schedule:
+    - cron: "0 15 15 * *" # Day 15 of each month, 15:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ema-acreditados
+      timeout_minutes: 15

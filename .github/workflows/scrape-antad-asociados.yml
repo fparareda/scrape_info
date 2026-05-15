@@ -1,0 +1,12 @@
+name: Scrape · antad asociados
+on:
+  schedule:
+    - cron: "0 14 15 * *" # Day 15 of each month, 14:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: antad-asociados
+      timeout_minutes: 15

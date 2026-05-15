@@ -92,8 +92,18 @@ import { barreauQcSource, runBarreauQc } from "./sources/barreau-qc.js";
 import { odqSource, runOdq } from "./sources/odq.js";
 import { oaqSource, runOaq } from "./sources/oaq.js";
 import { cpsbcSource, runCpsbc } from "./sources/cpsbc.js";
+import {
+  scppSkPharmacistsSource,
+  runScppSkPharmacists,
+} from "./sources/scpp-sk-pharmacists.js";
 import { cgaeSource, runCgae } from "./sources/cgae.js";
 import { cscaeSource, runCscae } from "./sources/cscae.js";
+import { cgcfeFisioSource, runCgcfeFisio } from "./sources/cgcfe-fisio.js";
+import { copPsicologiaSource, runCopPsicologia } from "./sources/cop-psicologia.js";
+import { cogitiIngenierosSource, runCogitiIngenieros } from "./sources/cogiti-ingenieros.js";
+import { graduadosSocialesEsSource, runGraduadosSocialesEs } from "./sources/graduados-sociales-es.js";
+import { vucolvetSource, runVucolvet } from "./sources/vucolvet.js";
+import { cgcooOpticosSource, runCgcooOpticos } from "./sources/cgcoo-opticos.js";
 import { illinoisIdfprSource, runIllinoisIdfpr } from "./sources/illinois-idfpr.js";
 import { newYorkDosSource, runNewYorkDos } from "./sources/new-york-dos.js";
 import { northCarolinaLbcSource, runNorthCarolinaLbc } from "./sources/north-carolina-lbc.js";
@@ -175,6 +185,7 @@ import { oigLeieSource, runOigLeie } from "./sources/oig-leie.js";
 import { competitorDoctoraliaMxSource, runCompetitorDoctoraliaMx } from "./sources/competitor-mx-doctoralia.js";
 import { senasicaMxVetSource, runSenasicaMxVet } from "./sources/senasica-mx-vet.js";
 import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
+import { cluesSinaisMxSource, runCluesSinaisMx } from "./sources/clues-sinais-mx.js";
 import { oaaSource, runOaa } from "./sources/oaa.js";
 import { louisianaLslbcSource, runLouisianaLslbc } from "./sources/louisiana-lslbc.js";
 import { nycDobSource, runNycDob } from "./sources/nyc-dob.js";
@@ -182,6 +193,21 @@ import { hifldUsSource, runHifldUs } from "./sources/hifld-us.js";
 import { reniecytMxSource, runReniecytMx } from "./sources/reniecyt-mx.js";
 import { padronNotariosFedMxSource, runPadronNotariosFedMx } from "./sources/padron-notarios-fed-mx.js";
 import { caDcaOpenDataSource, runCaDcaOpenData } from "./sources/ca-dca-open-data.js";
+import { engineersNsSource, runEngineersNs } from "./sources/engineers-ns.js";
+import { nsbsNsSource, runNsbsNs } from "./sources/nsbs-ns.js";
+import { pegnlNlSource, runPegnlNl } from "./sources/pegnl-nl.js";
+import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios-mx.js";
+import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
+import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
+import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
+import { antadAsociadosSource, runAntadAsociados } from "./sources/antad-asociados.js";
+import { emaAcreditadosSource, runEmaAcreditados } from "./sources/ema-acreditados.js";
+import { imssDirectorioSource, runImssDirectorio } from "./sources/imss-directorio.js";
+import { habitissimoEsSource, runHabitissimoEs } from "./sources/habitissimo-es.js";
+import { openDataBcnLocalesSource, runOpenDataBcnLocales } from "./sources/open-data-bcn-locales.js";
+import { farmaceuticosEsGuardiaSource, runFarmaceuticosEsGuardia } from "./sources/farmaceuticos-es-guardia.js";
+import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.js";
+import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -250,8 +276,15 @@ async function main(): Promise<void> {
   const odqOn = odqSource.enabled();
   const oaqOn = oaqSource.enabled();
   const cpsbcOn = cpsbcSource.enabled();
+  const scppSkPharmacistsOn = scppSkPharmacistsSource.enabled();
   const cgaeOn = cgaeSource.enabled();
   const cscaeOn = cscaeSource.enabled();
+  const cgcfeFisioOn = cgcfeFisioSource.enabled();
+  const copPsicologiaOn = copPsicologiaSource.enabled();
+  const cogitiIngenierosOn = cogitiIngenierosSource.enabled();
+  const graduadosSocialesEsOn = graduadosSocialesEsSource.enabled();
+  const vucolvetOn = vucolvetSource.enabled();
+  const cgcooOpticosOn = cgcooOpticosSource.enabled();
   const illinoisIdfprOn = illinoisIdfprSource.enabled();
   const newYorkDosOn = newYorkDosSource.enabled();
   const northCarolinaLbcOn = northCarolinaLbcSource.enabled();
@@ -332,6 +365,7 @@ async function main(): Promise<void> {
   const doctoraliaMxOn = competitorDoctoraliaMxSource.enabled();
   const senasicaMxVetOn = senasicaMxVetSource.enabled();
   const denueMxOn = denueMxSource.enabled();
+  const cluesSinaisMxOn = cluesSinaisMxSource.enabled();
   const oaaOn = oaaSource.enabled();
   const louisianaLslbcOn = louisianaLslbcSource.enabled();
   const nycDobOn = nycDobSource.enabled();
@@ -339,6 +373,21 @@ async function main(): Promise<void> {
   const reniecytMxOn = reniecytMxSource.enabled();
   const padronNotariosFedMxOn = padronNotariosFedMxSource.enabled();
   const caDcaOpenDataOn = caDcaOpenDataSource.enabled();
+  const engineersNsOn = engineersNsSource.enabled();
+  const nsbsNsOn = nsbsNsSource.enabled();
+  const pegnlNlOn = pegnlNlSource.enabled();
+  const imcpColegiosMxOn = imcpColegiosMxSource.enabled();
+  const svmaSkVetsOn = svmaSkVetsSource.enabled();
+  const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
+  const lsnbBarOn = lsnbBarSource.enabled();
+  const antadAsociadosOn = antadAsociadosSource.enabled();
+  const emaAcreditadosOn = emaAcreditadosSource.enabled();
+  const imssDirectorioOn = imssDirectorioSource.enabled();
+  const iftRpcMxOn = iftRpcMxSource.enabled();
+  const habitissimoEsOn = habitissimoEsSource.enabled();
+  const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
+  const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
+  const combBarcelonaOn = comBarcelonaSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -375,8 +424,15 @@ async function main(): Promise<void> {
     !odqOn &&
     !oaqOn &&
     !cpsbcOn &&
+    !scppSkPharmacistsOn &&
     !cgaeOn &&
     !cscaeOn &&
+    !cgcfeFisioOn &&
+    !copPsicologiaOn &&
+    !cogitiIngenierosOn &&
+    !graduadosSocialesEsOn &&
+    !vucolvetOn &&
+    !cgcooOpticosOn &&
     !illinoisIdfprOn &&
     !newYorkDosOn &&
     !northCarolinaLbcOn &&
@@ -454,6 +510,7 @@ async function main(): Promise<void> {
     !doctoraliaMxOn &&
     !senasicaMxVetOn &&
     !denueMxOn &&
+    !cluesSinaisMxOn &&
     !oaaOn &&
     !louisianaLslbcOn &&
     !nycDobOn &&
@@ -461,6 +518,21 @@ async function main(): Promise<void> {
     !reniecytMxOn &&
     !padronNotariosFedMxOn &&
     !caDcaOpenDataOn &&
+    !engineersNsOn &&
+    !nsbsNsOn &&
+    !pegnlNlOn &&
+    !imcpColegiosMxOn &&
+    !svmaSkVetsOn &&
+    !cpsnsNsPhysiciansOn &&
+    !lsnbBarOn &&
+    !antadAsociadosOn &&
+    !emaAcreditadosOn &&
+    !imssDirectorioOn &&
+    !iftRpcMxOn &&
+    !habitissimoEsOn &&
+    !openDataBcnLocalesOn &&
+    !farmaceuticosEsGuardiaOn &&
+    !combBarcelonaOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -494,6 +566,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_BARREAU_QC=true, " +
         "PROLIO_RUN_ODQ=true, " +
         "PROLIO_RUN_CPSBC=true, " +
+        "PROLIO_RUN_SCPP_SK_PHARMACISTS=true, " +
         "PROLIO_RUN_CGAE=true, " +
         "PROLIO_RUN_CSCAE=true, " +
         "PROLIO_RUN_ILLINOIS_IDFPR=true, " +
@@ -519,6 +592,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_DOCTORALIA_MX=true, " +
         "PROLIO_RUN_SENASICA_MX_VET=true, " +
         "PROLIO_RUN_DENUE_MX=true, " +
+        "PROLIO_RUN_CLUES_SINAIS_MX=true, " +
         "PROLIO_RUN_LOUISIANA_LSLBC=true, " +
         "PROLIO_RUN_CGN_NOTARIADO=true, " +
         "PROLIO_RUN_OAQ=true, " +
@@ -1000,6 +1074,24 @@ async function main(): Promise<void> {
     );
   }
 
+  if (scppSkPharmacistsOn) {
+    await withScrapeRun("scpp-sk-pharmacists", async () => {
+      const res = await runScppSkPharmacists();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(
+        `[scraper] scpp-sk-pharmacists crashed:`,
+        (e as Error).message,
+      ),
+    );
+  }
+
   // ES national colegios. Single endpoint covers all autonomic
   // colegios for that profession.
   if (cgaeOn) {
@@ -1029,6 +1121,36 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] cscae crashed:`, (e as Error).message),
+    );
+  }
+
+  if (vucolvetOn) {
+    await withScrapeRun("vucolvet", async () => {
+      const res = await runVucolvet();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] vucolvet crashed:`, (e as Error).message),
+    );
+  }
+
+  if (cgcooOpticosOn) {
+    await withScrapeRun("cgcoo-opticos", async () => {
+      const res = await runCgcooOpticos();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] cgcoo-opticos crashed:`, (e as Error).message),
     );
   }
 
@@ -1110,15 +1232,34 @@ async function main(): Promise<void> {
     [oigLeieOn, "oig-leie", runOigLeie],
     [senasicaMxVetOn, "senasica-mx-vet", runSenasicaMxVet],
     [denueMxOn, "denue-mx", runDenueMx],
+    [cluesSinaisMxOn, "clues-sinais-mx", runCluesSinaisMx],
     [oaaOn, "oaa", runOaa],
     [louisianaLslbcOn, "louisiana-lslbc", runLouisianaLslbc],
     [nycDobOn, "nyc-dob", runNycDob],
     [flDohMqaOn, "fl-doh-mqa", runFlDohMqa],
     [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
+    [cgcfeFisioOn, "cgcfe-fisio", runCgcfeFisio],
+    [copPsicologiaOn, "cop-psicologia", runCopPsicologia],
+    [cogitiIngenierosOn, "cogiti-ingenieros", runCogitiIngenieros],
+    [graduadosSocialesEsOn, "graduados-sociales-es", runGraduadosSocialesEs],
     [hifldUsOn, "hifld-us", runHifldUs],
     [reniecytMxOn, "reniecyt-mx", runReniecytMx],
     [padronNotariosFedMxOn, "padron-notarios-fed-mx", runPadronNotariosFedMx],
     [caDcaOpenDataOn, "ca-dca-open-data", runCaDcaOpenData],
+    [engineersNsOn, "engineers-ns", runEngineersNs],
+    [nsbsNsOn, "nsbs-ns", runNsbsNs],
+    [pegnlNlOn, "pegnl-nl", runPegnlNl],
+    [imcpColegiosMxOn, "imcp-colegios-mx", runImcpColegiosMx],
+    [antadAsociadosOn, "antad-asociados", runAntadAsociados],
+    [emaAcreditadosOn, "ema-acreditados", runEmaAcreditados],
+    [imssDirectorioOn, "imss-directorio", runImssDirectorio],
+    [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
+    [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
+    [lsnbBarOn, "lsnb-bar", runLsnbBar],
+    [habitissimoEsOn, "habitissimo-es", runHabitissimoEs],
+    [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
+    [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
+    [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

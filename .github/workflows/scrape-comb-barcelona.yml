@@ -1,0 +1,12 @@
+name: Scrape · COMB Barcelona — registre metges (stub ~35k)
+on:
+  schedule:
+    - cron: "0 10 18 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: comb-barcelona
+      timeout_minutes: 30

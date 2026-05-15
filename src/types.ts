@@ -49,6 +49,7 @@ export type ScrapeSource =
   | "odq"
   | "oaq"
   | "cpsbc"
+  | "scpp-sk-pharmacists"
   | "law-society-bc"
   | "illinois-idfpr"
   | "new-york-dos"
@@ -145,7 +146,34 @@ export type ScrapeSource =
   // 2026-05-14: California DCA — 35 boards bulk licensee dumps (~3M)
   | "ca-dca-open-data"
   // 2026-05-14: HIFLD US — DHS open-data hospitals + UC + nursing homes + EMS
-  | "hifld-us";
+  | "hifld-us"
+  // 2026-05-15: CA iMIS-hosted public registers (NS engineers, NSBS lawyers, NL engineers)
+  | "engineers-ns"
+  | "nsbs-ns"
+  | "pegnl-nl"
+  // 2026-05-15: MX IMCP — federación de colegios de contadores públicos
+  | "imcp-colegios-mx"
+  // 2026-05-15 wave: CA quick wins (SVMA SK vets + CPSNS NS physicians + LSNB Alinity)
+  | "svma-sk-vets"
+  | "cpsns-ns-physicians"
+  | "lsnb-bar"
+  // 2026-05-15 MX quick wins: ANTAD retail seeds + EMA/IMSS stubs
+  | "antad-asociados"
+  | "ema-acreditados"
+  | "imss-directorio"
+  // 2026-05-15: IFT RPC — concesiones telecom + radio + TV (MX)
+  | "ift-rpc-mx"
+  // 2026-05-15 wave: ES quick wins (habitissimo SSR + Open Data BCN locales
+  // + farmacéuticos guardia federation stub + COMB Barcelona stub)
+  | "habitissimo-es"
+  | "open-data-bcn-locales"
+  | "farmaceuticos-es-guardia"
+  | "comb-barcelona"
+  // 2026-05-15: MX CLUES — national health establishment master registry
+  | "clues-sinais-mx"
+  // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
+  | "vucolvet"
+  | "cgcoo-opticos";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

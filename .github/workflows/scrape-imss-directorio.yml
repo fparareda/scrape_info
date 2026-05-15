@@ -1,0 +1,12 @@
+name: Scrape · imss directorio
+on:
+  schedule:
+    - cron: "0 16 15 * *" # Day 15 of each month, 16:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: imss-directorio
+      timeout_minutes: 30

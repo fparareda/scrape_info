@@ -1,0 +1,16 @@
+name: Scrape · CLUES SINAIS MX (DGIS)
+on:
+  schedule:
+    # Monthly on the 5th at 18:00 UTC. CLUES publishes a fresh monthly
+    # cut "al siguiente día hábil del mes inmediato posterior", so the
+    # prior month's XLSX is typically live by day 3–4. ~26 MB compressed
+    # XLSX → ~150 MB inflated sheet1; expect 5–10 min wall clock.
+    - cron: "0 18 5 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: clues-sinais-mx
+      timeout_minutes: 60

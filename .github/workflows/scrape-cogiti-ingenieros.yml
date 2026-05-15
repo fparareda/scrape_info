@@ -1,0 +1,12 @@
+name: Scrape · COGITI ingeniería técnica industrial (ES federación)
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cogiti-ingenieros
+      timeout_minutes: 180
