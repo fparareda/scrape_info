@@ -145,7 +145,9 @@ export type ScrapeSource =
   // 2026-05-14: California DCA — 35 boards bulk licensee dumps (~3M)
   | "ca-dca-open-data"
   // 2026-05-14: HIFLD US — DHS open-data hospitals + UC + nursing homes + EMS
-  | "hifld-us";
+  | "hifld-us"
+  // 2026-05-15: US DE contractors — Delaware Business Licenses (Socrata)
+  | "delaware-contractor";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
