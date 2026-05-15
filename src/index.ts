@@ -182,6 +182,7 @@ import { hifldUsSource, runHifldUs } from "./sources/hifld-us.js";
 import { reniecytMxSource, runReniecytMx } from "./sources/reniecyt-mx.js";
 import { padronNotariosFedMxSource, runPadronNotariosFedMx } from "./sources/padron-notarios-fed-mx.js";
 import { caDcaOpenDataSource, runCaDcaOpenData } from "./sources/ca-dca-open-data.js";
+import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -339,6 +340,7 @@ async function main(): Promise<void> {
   const reniecytMxOn = reniecytMxSource.enabled();
   const padronNotariosFedMxOn = padronNotariosFedMxSource.enabled();
   const caDcaOpenDataOn = caDcaOpenDataSource.enabled();
+  const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -461,6 +463,7 @@ async function main(): Promise<void> {
     !reniecytMxOn &&
     !padronNotariosFedMxOn &&
     !caDcaOpenDataOn &&
+    !svmaSkVetsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1119,6 +1122,7 @@ async function main(): Promise<void> {
     [reniecytMxOn, "reniecyt-mx", runReniecytMx],
     [padronNotariosFedMxOn, "padron-notarios-fed-mx", runPadronNotariosFedMx],
     [caDcaOpenDataOn, "ca-dca-open-data", runCaDcaOpenData],
+    [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
