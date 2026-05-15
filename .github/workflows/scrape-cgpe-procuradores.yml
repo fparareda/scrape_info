@@ -1,0 +1,17 @@
+name: Scrape · CGPE Procuradores (ES)
+
+# Consejo General de Procuradores — ~10k procuradores across 52 colegios.
+# Wave 2026-05-14 ES quick wins.
+
+on:
+  schedule:
+    - cron: "0 4 22 * *"  # Day 22 of month at 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cgpe-procuradores
+      timeout_minutes: 90
