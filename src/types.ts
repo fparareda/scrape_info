@@ -173,7 +173,11 @@ export type ScrapeSource =
   | "clues-sinais-mx"
   // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
   | "vucolvet"
-  | "cgcoo-opticos";
+  | "cgcoo-opticos"
+  // 2026-05-16: ES Ministerio de Industria — RII gas installers (fontaneria)
+  | "rii-instaladores-es"
+  // 2026-05-16: CA Ontario veterinarians — CVO (Thentia Cloud)
+  | "cvo-on-vets";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
