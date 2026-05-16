@@ -208,6 +208,7 @@ import { openDataBcnLocalesSource, runOpenDataBcnLocales } from "./sources/open-
 import { farmaceuticosEsGuardiaSource, runFarmaceuticosEsGuardia } from "./sources/farmaceuticos-es-guardia.js";
 import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
+import { riiInstaladoresEsSource, runRiiInstaladoresEs } from "./sources/rii-instaladores-es.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -392,6 +393,7 @@ async function main(): Promise<void> {
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
+  const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -536,7 +538,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !riiInstaladoresEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1260,6 +1263,7 @@ async function main(): Promise<void> {
     [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
+    [riiInstaladoresEsOn, "rii-instaladores-es", runRiiInstaladoresEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
