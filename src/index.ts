@@ -209,6 +209,7 @@ import { farmaceuticosEsGuardiaSource, runFarmaceuticosEsGuardia } from "./sourc
 import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import { riiInstaladoresEsSource, runRiiInstaladoresEs } from "./sources/rii-instaladores-es.js";
+import { cvoOnVetsSource, runCvoOnVets } from "./sources/cvo-on-vets.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -394,6 +395,7 @@ async function main(): Promise<void> {
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
   const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
+  const cvoOnVetsOn = cvoOnVetsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -539,7 +541,8 @@ async function main(): Promise<void> {
     !overtureOn &&
     !competitorNaOn &&
     !competitorEsMegaOn &&
-    !riiInstaladoresEsOn
+    !riiInstaladoresEsOn &&
+    !cvoOnVetsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1264,6 +1267,7 @@ async function main(): Promise<void> {
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
     [riiInstaladoresEsOn, "rii-instaladores-es", runRiiInstaladoresEs],
+    [cvoOnVetsOn, "cvo-on-vets", runCvoOnVets],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
