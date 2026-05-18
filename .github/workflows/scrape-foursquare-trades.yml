@@ -1,0 +1,25 @@
+name: Scrape · Foursquare Trades (US trades — generic searcher)
+
+# Foursquare Places API v3 free tier (1k requests/day). Generic trades
+# searcher — pass `category` input (fontaneria / carpinteria / hvac /
+# electricidad / cerrajero). Requires repo secret FOURSQUARE_API_KEY.
+# Cap PROLIO_FOURSQUARE_REQUESTS_PER_RUN=800 leaves headroom in the
+# daily quota. Wave 2026-05-18 US → 500k.
+
+on:
+  workflow_dispatch:
+    inputs:
+      category:
+        description: "Prolio category (fontaneria | carpinteria | hvac | electricidad | cerrajero)"
+        type: string
+        required: true
+        default: "fontaneria"
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: foursquare-trades
+      category: ${{ inputs.category }}
+      timeout_minutes: 90

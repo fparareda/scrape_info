@@ -207,6 +207,13 @@ import { habitissimoEsSource, runHabitissimoEs } from "./sources/habitissimo-es.
 import { openDataBcnLocalesSource, runOpenDataBcnLocales } from "./sources/open-data-bcn-locales.js";
 import { farmaceuticosEsGuardiaSource, runFarmaceuticosEsGuardia } from "./sources/farmaceuticos-es-guardia.js";
 import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.js";
+import { npiBulkStreamSource, runNpiBulkStream } from "./sources/npi-bulk-stream.js";
+import { npiNursesSource, runNpiNurses } from "./sources/npi-nurses.js";
+import { npiPharmacistsSource, runNpiPharmacists } from "./sources/npi-pharmacists.js";
+import { adaFindADentistSource, runAdaFindADentist } from "./sources/ada-find-a-dentist.js";
+import { usdaAphisVetsSource, runUsdaAphisVets } from "./sources/usda-aphis-vets.js";
+import { stateBarsBulkSource, runStateBarsBulk } from "./sources/state-bars-bulk.js";
+import { foursquareTradesSource, runFoursquareTrades } from "./sources/foursquare-trades.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import {
   cgnNotariadoEnabled,
@@ -388,6 +395,13 @@ async function main(): Promise<void> {
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
   const combBarcelonaOn = comBarcelonaSource.enabled();
+  const npiBulkStreamOn = npiBulkStreamSource.enabled();
+  const npiNursesOn = npiNursesSource.enabled();
+  const npiPharmacistsOn = npiPharmacistsSource.enabled();
+  const adaFindADentistOn = adaFindADentistSource.enabled();
+  const usdaAphisVetsOn = usdaAphisVetsSource.enabled();
+  const stateBarsBulkOn = stateBarsBulkSource.enabled();
+  const foursquareTradesOn = foursquareTradesSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -533,6 +547,13 @@ async function main(): Promise<void> {
     !openDataBcnLocalesOn &&
     !farmaceuticosEsGuardiaOn &&
     !combBarcelonaOn &&
+    !npiBulkStreamOn &&
+    !npiNursesOn &&
+    !npiPharmacistsOn &&
+    !adaFindADentistOn &&
+    !usdaAphisVetsOn &&
+    !stateBarsBulkOn &&
+    !foursquareTradesOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1260,6 +1281,13 @@ async function main(): Promise<void> {
     [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
+    [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
+    [npiNursesOn, "npi-nurses", runNpiNurses],
+    [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
+    [adaFindADentistOn, "ada-find-a-dentist", runAdaFindADentist],
+    [usdaAphisVetsOn, "usda-aphis-vets", runUsdaAphisVets],
+    [stateBarsBulkOn, "state-bars-bulk", runStateBarsBulk],
+    [foursquareTradesOn, "foursquare-trades", runFoursquareTrades],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

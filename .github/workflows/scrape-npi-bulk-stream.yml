@@ -1,0 +1,21 @@
+name: Scrape · NPI Bulk Stream (CMS NPPES monthly ZIP)
+
+# Streams the monthly NPPES full snapshot (~1 GB ZIP / ~7M rows) from
+# https://download.cms.gov/nppes/NPI_Files.html, filters to Prolio's
+# healthcare taxonomies (medicine, dentistry, vet, nursing, pharmacy)
+# and upserts in batches. Set PROLIO_NPI_INGEST_FULL_MONTHLY=true at
+# the workflow level. Cap 1M rows/run.
+# manual / monthly cadence (heavy job — disabled by default in cron).
+
+on:
+  schedule:
+    - cron: "0 4 27 * *"  # Day 27 of month at 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: npi-bulk-stream
+      timeout_minutes: 360

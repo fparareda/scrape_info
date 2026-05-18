@@ -1,0 +1,18 @@
+name: Scrape · NPI Pharmacists (farmacia US)
+
+# NPI Registry V2 API filtered to pharmacy taxonomies (Pharmacist,
+# Pharmacy org, Pharmacy Tech, Clinical Pharmacology). Cap default 100k.
+# Wave 2026-05-18 US → 500k.
+
+on:
+  schedule:
+    - cron: "0 5 23 * *"  # Day 23 of month at 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: npi-pharmacists
+      timeout_minutes: 180
