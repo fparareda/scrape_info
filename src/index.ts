@@ -244,6 +244,7 @@ import { padronAbogadosMxSource, runPadronAbogadosMx } from "./sources/padron-ab
 import { fedArquitectosMxSource, runFedArquitectosMx } from "./sources/fed-arquitectos-mx.js";
 import { fedPsicologosMxSource, runFedPsicologosMx } from "./sources/fed-psicologos-mx.js";
 import { denueMxTradesSource, runDenueMxTrades } from "./sources/denue-mx-trades.js";
+import { denueMxBulkSource, runDenueMxBulk } from "./sources/denue-mx-bulk.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -446,6 +447,7 @@ async function main(): Promise<void> {
   const fedArquitectosMxOn = fedArquitectosMxSource.enabled();
   const fedPsicologosMxOn = fedPsicologosMxSource.enabled();
   const denueMxTradesOn = denueMxTradesSource.enabled();
+  const denueMxBulkOn = denueMxBulkSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -632,6 +634,7 @@ async function main(): Promise<void> {
     !fedArquitectosMxOn &&
     !fedPsicologosMxOn &&
     !denueMxTradesOn &&
+    !denueMxBulkOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1378,6 +1381,7 @@ async function main(): Promise<void> {
     [fedArquitectosMxOn, "fed-arquitectos-mx", runFedArquitectosMx],
     [fedPsicologosMxOn, "fed-psicologos-mx", runFedPsicologosMx],
     [denueMxTradesOn, "denue-mx-trades", runDenueMxTrades],
+    [denueMxBulkOn, "denue-mx-bulk", runDenueMxBulk],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

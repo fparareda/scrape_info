@@ -218,6 +218,8 @@ export type ScrapeSource =
   | "fed-arquitectos-mx"
   | "fed-psicologos-mx"
   | "denue-mx-trades"
+  // 2026-05-18: DENUE BULK — per-state ZIPs, ~5M MX businesses; ~400-700k after SCIAN filter
+  | "denue-mx-bulk"
   // 2026-05-18: Yelp Fusion API (per-target search, daily cadence)
   | "yelp_fusion";
 
