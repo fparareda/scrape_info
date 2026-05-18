@@ -1,0 +1,16 @@
+name: Scrape · DENUE MX BULK (INEGI)
+on:
+  schedule:
+    # Monthly on the 7th at 04:00 UTC. INEGI refreshes DENUE every ~6
+    # months but smaller deltas land continuously; monthly polling is
+    # cheap (sink dedupes on stable CLEE). 32 per-state ZIPs total
+    # ~565 MB compressed; expect 60–120 min wall clock for 800k inserts.
+    - cron: "0 4 7 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: denue-mx-bulk
+      timeout_minutes: 180
