@@ -248,6 +248,7 @@ import { denueMxBulkSource, runDenueMxBulk } from "./sources/denue-mx-bulk.js";
 import { statcanCbrSource, runStatcanCbr } from "./sources/statcan-cbr.js";
 import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sources/toronto-business-licenses.js";
 import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
+import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -454,6 +455,7 @@ async function main(): Promise<void> {
   const statcanCbrOn = statcanCbrSource.enabled();
   const torontoBusinessLicensesOn = torontoBusinessLicensesSource.enabled();
   const vancouverBusinessLicensesOn = vancouverBusinessLicensesSource.enabled();
+  const calgaryBusinessLicencesOn = calgaryBusinessLicencesSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -644,6 +646,7 @@ async function main(): Promise<void> {
     !statcanCbrOn &&
     !torontoBusinessLicensesOn &&
     !vancouverBusinessLicensesOn &&
+    !calgaryBusinessLicencesOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1394,6 +1397,7 @@ async function main(): Promise<void> {
     [statcanCbrOn, "statcan-cbr", runStatcanCbr],
     [torontoBusinessLicensesOn, "toronto-business-licenses", runTorontoBusinessLicenses],
     [vancouverBusinessLicensesOn, "vancouver-business-licenses", runVancouverBusinessLicenses],
+    [calgaryBusinessLicencesOn, "calgary-business-licences", runCalgaryBusinessLicences],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

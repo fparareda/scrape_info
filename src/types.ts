@@ -228,7 +228,9 @@ export type ScrapeSource =
   //   - vancouver-business-licenses: City of Vancouver Opendatasoft CSV.
   | "statcan-cbr"
   | "toronto-business-licenses"
-  | "vancouver-business-licenses";
+  | "vancouver-business-licenses"
+  // 2026-05-18: Calgary Open Data Socrata licences (~22k AB businesses)
+  | "calgary-business-licences";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
