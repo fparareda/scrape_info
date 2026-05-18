@@ -219,7 +219,14 @@ export type ScrapeSource =
   | "fed-psicologos-mx"
   | "denue-mx-trades"
   // 2026-05-18: Yelp Fusion API (per-target search, daily cadence)
-  | "yelp_fusion";
+  | "yelp_fusion"
+  // 2026-05-18 wave CA bulk open-data → 500k:
+  //   - statcan-cbr: StatCan Canadian Business Counts (aggregate, stub).
+  //   - toronto-business-licenses: City of Toronto MLS CKAN CSV.
+  //   - vancouver-business-licenses: City of Vancouver Opendatasoft CSV.
+  | "statcan-cbr"
+  | "toronto-business-licenses"
+  | "vancouver-business-licenses";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
