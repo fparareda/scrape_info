@@ -25,5 +25,6 @@ jobs:
     secrets: inherit
     with:
       source: yelp
+      shard: usa
       timeout_minutes: 60
       budget: ${{ inputs.budget || '5000' }}
