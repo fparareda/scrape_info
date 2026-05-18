@@ -166,9 +166,12 @@ function seoCopyFields(
 // the network round-trip dominates, so larger slices = fewer
 // round-trips = much faster total. Supabase tolerates up to ~5k rows
 // per upsert before URL size issues.
-const BATCH_SIZE = Number(process.env.PROLIO_SINK_BATCH ?? "2000");
+// `||` (not `??`) so empty-string env vars passed by GH Actions when
+// the source-specific override is unset fall through to the default
+// instead of becoming Number("") = 0 → instant empty-batch loop.
+const BATCH_SIZE = Number(process.env.PROLIO_SINK_BATCH || "2000");
 const EXISTING_LOOKUP_CHUNK = Number(
-  process.env.PROLIO_SINK_LOOKUP_CHUNK ?? "500",
+  process.env.PROLIO_SINK_LOOKUP_CHUNK || "500",
 );
 
 /**

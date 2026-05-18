@@ -66,6 +66,12 @@ jobs:
       GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
       YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
       YELP_DAILY_BUDGET: ${{ inputs.source == 'yelp' && inputs.budget || '' }}
+      # Yelp-specific tuning: smaller sink batches avoid Supabase
+      # statement-timeout cancellations seen at the default 2000, and
+      # daily rotation cycles through US cities across runs (5000 reqs
+      # only covers ~12 of ~50 cities per day).
+      PROLIO_SINK_BATCH: ${{ inputs.source == 'yelp' && '500' || '' }}
+      PROLIO_DAILY_ROTATE: ${{ inputs.source == 'yelp' && 'true' || 'false' }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       PROLIO_SCRAPE_SHARD: ${{ inputs.shard }}
