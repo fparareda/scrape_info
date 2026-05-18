@@ -285,6 +285,18 @@ jobs:
       PROLIO_RUN_CPSNS_NS_PHYSICIANS: ${{ inputs.source == 'cpsns-ns-physicians' && 'true' || 'false' }}
       PROLIO_RUN_LSNB_BAR:            ${{ inputs.source == 'lsnb-bar' && 'true' || 'false' }}
 
+      # 2026-05-18 wave CA → 500k: 8 new CA sources (mostly nursing).
+      # All ship as honest stubs today; wiring complete for residential-IP
+      # / Playwright drop-ins later.
+      PROLIO_RUN_CNO_ONTARIO:         ${{ inputs.source == 'cno-ontario' && 'true' || 'false' }}
+      PROLIO_RUN_OIIQ_QUEBEC:         ${{ inputs.source == 'oiiq-quebec' && 'true' || 'false' }}
+      PROLIO_RUN_BCCNM_BC:            ${{ inputs.source == 'bccnm-bc' && 'true' || 'false' }}
+      PROLIO_RUN_ALBERTA_CRNA:        ${{ inputs.source == 'alberta-crna' && 'true' || 'false' }}
+      PROLIO_RUN_OCP_PHARMACY:        ${{ inputs.source == 'ocp-pharmacy' && 'true' || 'false' }}
+      PROLIO_RUN_LSO_BAR_ONTARIO:     ${{ inputs.source == 'lso-bar-ontario' && 'true' || 'false' }}
+      PROLIO_RUN_OPPQ_QUEBEC_PHYSIO:  ${{ inputs.source == 'oppq-quebec-physio' && 'true' || 'false' }}
+      PROLIO_RUN_CVO_VETS_ONTARIO:    ${{ inputs.source == 'cvo-vets-ontario' && 'true' || 'false' }}
+
       # 2026-05 wave: CA — Alinity/Thentia hosted + provincial regulators
       PROLIO_RUN_TSASK:               ${{ inputs.source == 'tsask' && 'true' || 'false' }}
       PROLIO_RUN_TSBC:                ${{ inputs.source == 'tsbc' && 'true' || 'false' }}

@@ -200,6 +200,14 @@ import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
+import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
+import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
+import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
+import { albertaCrnaSource, runAlbertaCrna } from "./sources/alberta-crna.js";
+import { ocpPharmacySource, runOcpPharmacy } from "./sources/ocp-pharmacy.js";
+import { lsoBarOntarioSource, runLsoBarOntario } from "./sources/lso-bar-ontario.js";
+import { oppqQuebecPhysioSource, runOppqQuebecPhysio } from "./sources/oppq-quebec-physio.js";
+import { cvoVetsOntarioSource, runCvoVetsOntario } from "./sources/cvo-vets-ontario.js";
 import { antadAsociadosSource, runAntadAsociados } from "./sources/antad-asociados.js";
 import { emaAcreditadosSource, runEmaAcreditados } from "./sources/ema-acreditados.js";
 import { imssDirectorioSource, runImssDirectorio } from "./sources/imss-directorio.js";
@@ -380,6 +388,14 @@ async function main(): Promise<void> {
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
+  const cnoOntarioOn = cnoOntarioSource.enabled();
+  const oiiqQuebecOn = oiiqQuebecSource.enabled();
+  const bccnmBcOn = bccnmBcSource.enabled();
+  const albertaCrnaOn = albertaCrnaSource.enabled();
+  const ocpPharmacyOn = ocpPharmacySource.enabled();
+  const lsoBarOntarioOn = lsoBarOntarioSource.enabled();
+  const oppqQuebecPhysioOn = oppqQuebecPhysioSource.enabled();
+  const cvoVetsOntarioOn = cvoVetsOntarioSource.enabled();
   const antadAsociadosOn = antadAsociadosSource.enabled();
   const emaAcreditadosOn = emaAcreditadosSource.enabled();
   const imssDirectorioOn = imssDirectorioSource.enabled();
@@ -525,6 +541,14 @@ async function main(): Promise<void> {
     !svmaSkVetsOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
+    !cnoOntarioOn &&
+    !oiiqQuebecOn &&
+    !bccnmBcOn &&
+    !albertaCrnaOn &&
+    !ocpPharmacyOn &&
+    !lsoBarOntarioOn &&
+    !oppqQuebecPhysioOn &&
+    !cvoVetsOntarioOn &&
     !antadAsociadosOn &&
     !emaAcreditadosOn &&
     !imssDirectorioOn &&
@@ -1256,6 +1280,14 @@ async function main(): Promise<void> {
     [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
+    [cnoOntarioOn, "cno-ontario", runCnoOntario],
+    [oiiqQuebecOn, "oiiq-quebec", runOiiqQuebec],
+    [bccnmBcOn, "bccnm-bc", runBccnmBc],
+    [albertaCrnaOn, "alberta-crna", runAlbertaCrna],
+    [ocpPharmacyOn, "ocp-pharmacy", runOcpPharmacy],
+    [lsoBarOntarioOn, "lso-bar-ontario", runLsoBarOntario],
+    [oppqQuebecPhysioOn, "oppq-quebec-physio", runOppqQuebecPhysio],
+    [cvoVetsOntarioOn, "cvo-vets-ontario", runCvoVetsOntario],
     [habitissimoEsOn, "habitissimo-es", runHabitissimoEs],
     [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
