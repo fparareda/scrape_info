@@ -173,7 +173,17 @@ export type ScrapeSource =
   | "clues-sinais-mx"
   // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
   | "vucolvet"
-  | "cgcoo-opticos";
+  | "cgcoo-opticos"
+  // 2026-05-18 wave US → 500k: NPI taxonomy slices + bulk variant + new cats
+  // (enfermeria, farmacia, abogado) + Foursquare trades. Stubs documented
+  // in each source file (ADA + APHIS + state-bars-bulk blocked by WAF).
+  | "npi-bulk-stream"
+  | "npi-nurses"
+  | "npi-pharmacists"
+  | "ada-find-a-dentist"
+  | "usda-aphis-vets"
+  | "state-bars-bulk"
+  | "foursquare-trades";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
