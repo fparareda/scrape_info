@@ -66,12 +66,21 @@ interface DatasetMeta {
 function professionToCategory(profession: string): CategoryKey | undefined {
   const p = profession.toLowerCase();
   if (p.includes("médecin") || p.includes("medecin")) return "medicina";
+  if (p.includes("psychiatre")) return "medicina";
   if (p.includes("chirurgien") && p.includes("dentiste")) return "dentista";
   if (p.includes("dentiste")) return "dentista";
   if (p.includes("kinésithéra") || p.includes("kinesithera"))
     return "fisioterapia";
+  if (p.includes("orthophoniste")) return "fisioterapia";
+  if (p.includes("ostéopathe") || p.includes("osteopathe")) return "fisioterapia";
   if (p.includes("psycholog") || p.includes("psychomot"))
     return "psicologia";
+  // Added 2026-05-18 — biggest FR cohort by row count is infirmiers
+  // (106k in the ANS file at last sample). Sages-femmes are nurses-
+  // adjacent and get lumped under enfermeria too.
+  if (p.includes("infirmier") || p.includes("infirmière")) return "enfermeria";
+  if (p.includes("sage-femme")) return "enfermeria";
+  if (p.includes("pharmacien")) return "farmacia";
   return undefined;
 }
 

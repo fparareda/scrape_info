@@ -1,0 +1,72 @@
+name: NPI bulk re-ingest (monthly)
+
+# Sprint 2 of the 500k-per-country plan (2026-05-16). NPPES publishes a
+# full archive on the 2nd Monday of each month at
+# https://download.cms.gov/nppes/NPI_Files.html — this workflow streams
+# the latest file and bulk-upserts ~500k US healthcare providers into
+# `professionals` (capped to keep room for other US sources).
+#
+# Runs the 3rd Tuesday so CMS has a day of buffer to publish.
+
+on:
+  schedule:
+    - cron: "0 6 15-21 * 2" # Tue 06:00 UTC, day 15-21
+  workflow_dispatch:
+    inputs:
+      zip_url:
+        description: "Override ZIP URL (default: current month auto-detect)"
+        required: false
+      limit:
+        description: "Max accepted rows (default 500000)"
+        required: false
+        default: "500000"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PROLIO_RUN_NPPES_BULK: "true"
+      PROLIO_NPPES_BULK_LIMIT: ${{ github.event.inputs.limit || '500000' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Resolve + download + unzip NPI archive
+        run: |
+          set -e
+          mkdir -p /tmp/nppes
+          # If caller provided an explicit URL, use it. Otherwise scrape
+          # NPI_Files.html for the latest monthly V2 archive.
+          if [ -n "${{ github.event.inputs.zip_url }}" ]; then
+            ZIP_URL="${{ github.event.inputs.zip_url }}"
+          else
+            ZIP_URL=$(curl -sSL https://download.cms.gov/nppes/NPI_Files.html \
+              | grep -oE "href='[^']*NPPES_Data_Dissemination_[A-Z][a-z]+_[0-9]{4}_V2\.zip'" \
+              | head -1 | sed -E "s|href='./|https://download.cms.gov/nppes/|; s|'$||")
+          fi
+          echo "Downloading $ZIP_URL"
+          curl -sSL --fail -o /tmp/nppes/npi.zip "$ZIP_URL"
+          ls -lh /tmp/nppes/npi.zip
+          unzip -o /tmp/nppes/npi.zip -d /tmp/nppes/ | tail -5
+          # Find the main data CSV (filename pattern: npidata_pfile_*.csv).
+          # The zip also contains *FileHeader.csv (schema) — exclude it.
+          CSV=$(find /tmp/nppes -maxdepth 1 -name 'npidata_pfile_*.csv' ! -name '*FileHeader*' | head -1)
+          if [ -z "$CSV" ]; then
+            echo "::error::No npidata_pfile_*.csv found in zip"
+            ls -la /tmp/nppes
+            exit 1
+          fi
+          echo "PROLIO_NPPES_BULK_URL=$CSV" >> "$GITHUB_ENV"
+          echo "Extracted: $CSV ($(stat -c%s "$CSV" | numfmt --to=iec))"
+          rm -f /tmp/nppes/npi.zip
+
+      - name: NPI bulk ingest
+        run: pnpm --filter @prolio/scraper nppes-bulk

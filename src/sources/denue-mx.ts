@@ -135,6 +135,13 @@ const SCIAN_TO_CATEGORY: Record<string, CategoryKey> = {
   // Sector 48-49 — Transporte (added 2026-05-07). 488410 covers
   // Mexican vehicle inspection centres (equivalent to Spanish ITV).
   "488410": "itv",             // Servicios de centros de verificación vehicular
+
+  // Sector 46 — Comercio retail (added 2026-05-18). DENUE doesn't list
+  // independent farmacéuticos as a separate SCIAN, but every farmacia
+  // retail unit is here — ~22k in MX. Classify the establishment as
+  // `farmacia`; the owner's name + address comes from the row.
+  "464111": "farmacia",        // Farmacias sin minisúper
+  "464112": "farmacia",        // Farmacias con minisúper
 };
 
 /**
