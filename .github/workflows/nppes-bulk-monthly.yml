@@ -32,19 +32,16 @@ jobs:
       PROLIO_NPPES_BULK_LIMIT: ${{ github.event.inputs.limit || '500000' }}
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          cache: npm
+      - run: npm ci
 
       - name: Resolve + download + unzip NPI archive
         run: |
           set -e
           mkdir -p /tmp/nppes
-          # If caller provided an explicit URL, use it. Otherwise scrape
-          # NPI_Files.html for the latest monthly V2 archive.
           if [ -n "${{ github.event.inputs.zip_url }}" ]; then
             ZIP_URL="${{ github.event.inputs.zip_url }}"
           else
@@ -56,8 +53,6 @@ jobs:
           curl -sSL --fail -o /tmp/nppes/npi.zip "$ZIP_URL"
           ls -lh /tmp/nppes/npi.zip
           unzip -o /tmp/nppes/npi.zip -d /tmp/nppes/ | tail -5
-          # Find the main data CSV (filename pattern: npidata_pfile_*.csv).
-          # The zip also contains *FileHeader.csv (schema) — exclude it.
           CSV=$(find /tmp/nppes -maxdepth 1 -name 'npidata_pfile_*.csv' ! -name '*FileHeader*' | head -1)
           if [ -z "$CSV" ]; then
             echo "::error::No npidata_pfile_*.csv found in zip"
@@ -69,4 +64,4 @@ jobs:
           rm -f /tmp/nppes/npi.zip
 
       - name: NPI bulk ingest
-        run: pnpm --filter @prolio/scraper nppes-bulk
+        run: npm run nppes-bulk
