@@ -1,0 +1,12 @@
+name: Scrape · COIIM Ingenieros Industriales (España fan-out)
+on:
+  schedule:
+    - cron: "30 5 * * 4"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: coiim-ingenieros
+      timeout_minutes: 90

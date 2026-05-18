@@ -189,7 +189,13 @@ export type ScrapeSource =
   | "ada-find-a-dentist"
   | "usda-aphis-vets"
   | "state-bars-bulk"
-  | "foursquare-trades";
+  | "foursquare-trades"
+  // 2026-05-18: ES wave → 500k — enfermería, farmacia, ingeniería caminos
+  // + ingeniería industrial superior (4 federaciones Ventanilla Única).
+  | "cge-enfermeria"
+  | "cgcof-farmacia"
+  | "ciccp-ingenieros"
+  | "coiim-ingenieros";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
