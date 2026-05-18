@@ -1,0 +1,17 @@
+name: Scrape · State Bars Bulk (US attorneys — CA + TX + NY)
+
+# STUB — CA Bar (Drupal CSRF), TX Bar (rate-limited HTML, paid OCA feed
+# for bulk), NY OCA (Akamai 403) all reject cloud egress for bulk. Slug
+# wired so a future paid-feed / residential-proxy adapter can land
+# without runner edits. Manual dispatch only.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: state-bars-bulk
+      timeout_minutes: 30

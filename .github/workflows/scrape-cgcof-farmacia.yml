@@ -1,0 +1,12 @@
+name: Scrape · CGCOF Farmacia (España fan-out)
+on:
+  schedule:
+    - cron: "30 4 * * 2"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cgcof-farmacia
+      timeout_minutes: 120

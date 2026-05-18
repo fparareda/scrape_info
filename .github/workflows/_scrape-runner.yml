@@ -193,6 +193,12 @@ jobs:
       PROLIO_RUN_GEOMETRES_FR:          ${{ inputs.source == 'geometres-fr' && 'true' || 'false' }}
       PROLIO_RUN_CNOP_PHARMACIENS:      ${{ inputs.source == 'cnop-pharmaciens' && 'true' || 'false' }}
 
+      # 2026-05-18 wave: FR → 500k (Ordres + Chambres)
+      PROLIO_RUN_ORDRE_INFIRMIERS_FR:   ${{ inputs.source == 'ordre-infirmiers-fr' && 'true' || 'false' }}
+      PROLIO_RUN_ORDRE_PHARMACIENS_FR:  ${{ inputs.source == 'ordre-pharmaciens-fr' && 'true' || 'false' }}
+      PROLIO_RUN_CHAMBRE_METIERS_FR:    ${{ inputs.source == 'chambre-metiers-fr' && 'true' || 'false' }}
+      PROLIO_CHAMBRE_METIERS_FR_CATEGORY: ${{ inputs.category }}
+
       # Mexico (added 2026-05-07).
       PROLIO_RUN_DOCTORALIA_MX:         ${{ inputs.source == 'doctoralia-mx' && 'true' || 'false' }}
       PROLIO_RUN_SENASICA_MX_VET:       ${{ inputs.source == 'senasica-mx-vet' && 'true' || 'false' }}
@@ -263,6 +269,28 @@ jobs:
       PROLIO_RUN_COMB_BARCELONA:             ${{ inputs.source == 'comb-barcelona' && 'true' || 'false' }}
       PROLIO_COMB_BARCELONA_LIMIT:           "40000"
 
+<<<<<<< HEAD
+      # 2026-05-18 wave MX → 500k: 8 new sources (largest MX gap closure).
+      # 7 honest stubs documenting blockers; `denue-mx-trades` is live.
+      PROLIO_RUN_SIC_SS_MEDICINA:        ${{ inputs.source == 'sic-ss-medicina' && 'true' || 'false' }}
+      PROLIO_SIC_SS_MEDICINA_LIMIT:      "350000"
+      PROLIO_RUN_CECM_DENTISTAS:         ${{ inputs.source == 'cecm-dentistas' && 'true' || 'false' }}
+      PROLIO_CECM_DENTISTAS_LIMIT:       "96000"
+      PROLIO_RUN_CENADI_ENFERMERIA:      ${{ inputs.source == 'cenadi-enfermeria' && 'true' || 'false' }}
+      PROLIO_CENADI_ENFERMERIA_LIMIT:    "250000"
+      PROLIO_RUN_COFEPRIS_FARMACEUTICOS: ${{ inputs.source == 'cofepris-farmaceuticos' && 'true' || 'false' }}
+      PROLIO_COFEPRIS_FARMACEUTICOS_LIMIT: "80000"
+      PROLIO_RUN_PADRON_ABOGADOS_MX:     ${{ inputs.source == 'padron-abogados-mx' && 'true' || 'false' }}
+      PROLIO_PADRON_ABOGADOS_MX_LIMIT:   "250000"
+      PROLIO_RUN_FED_ARQUITECTOS_MX:     ${{ inputs.source == 'fed-arquitectos-mx' && 'true' || 'false' }}
+      PROLIO_FED_ARQUITECTOS_MX_LIMIT:   "30000"
+      PROLIO_RUN_FED_PSICOLOGOS_MX:      ${{ inputs.source == 'fed-psicologos-mx' && 'true' || 'false' }}
+      PROLIO_FED_PSICOLOGOS_MX_LIMIT:    "50000"
+      PROLIO_RUN_DENUE_MX_TRADES:        ${{ inputs.source == 'denue-mx-trades' && 'true' || 'false' }}
+      PROLIO_DENUE_MX_TRADES_LIMIT:      "50000"
+
+=======
+>>>>>>> origin/main
       # 2026-05-14 wave: MX small clean directories
       PROLIO_RUN_DRO_CDMX:                       ${{ inputs.source == 'dro-cdmx' && 'true' || 'false' }}
       PROLIO_RUN_PROFEPA_VERIFICENTROS_EDOMEX:   ${{ inputs.source == 'profepa-verificentros-edomex' && 'true' || 'false' }}
@@ -287,6 +315,21 @@ jobs:
       PROLIO_RUN_SVMA_SK_VETS:        ${{ inputs.source == 'svma-sk-vets' && 'true' || 'false' }}
       PROLIO_RUN_CPSNS_NS_PHYSICIANS: ${{ inputs.source == 'cpsns-ns-physicians' && 'true' || 'false' }}
       PROLIO_RUN_LSNB_BAR:            ${{ inputs.source == 'lsnb-bar' && 'true' || 'false' }}
+<<<<<<< HEAD
+
+      # 2026-05-18 wave CA → 500k: 8 new CA sources (mostly nursing).
+      # All ship as honest stubs today; wiring complete for residential-IP
+      # / Playwright drop-ins later.
+      PROLIO_RUN_CNO_ONTARIO:         ${{ inputs.source == 'cno-ontario' && 'true' || 'false' }}
+      PROLIO_RUN_OIIQ_QUEBEC:         ${{ inputs.source == 'oiiq-quebec' && 'true' || 'false' }}
+      PROLIO_RUN_BCCNM_BC:            ${{ inputs.source == 'bccnm-bc' && 'true' || 'false' }}
+      PROLIO_RUN_ALBERTA_CRNA:        ${{ inputs.source == 'alberta-crna' && 'true' || 'false' }}
+      PROLIO_RUN_OCP_PHARMACY:        ${{ inputs.source == 'ocp-pharmacy' && 'true' || 'false' }}
+      PROLIO_RUN_LSO_BAR_ONTARIO:     ${{ inputs.source == 'lso-bar-ontario' && 'true' || 'false' }}
+      PROLIO_RUN_OPPQ_QUEBEC_PHYSIO:  ${{ inputs.source == 'oppq-quebec-physio' && 'true' || 'false' }}
+      PROLIO_RUN_CVO_VETS_ONTARIO:    ${{ inputs.source == 'cvo-vets-ontario' && 'true' || 'false' }}
+=======
+>>>>>>> origin/main
 
       # 2026-05 wave: CA — Alinity/Thentia hosted + provincial regulators
       PROLIO_RUN_TSASK:               ${{ inputs.source == 'tsask' && 'true' || 'false' }}
@@ -330,9 +373,44 @@ jobs:
       PROLIO_RUN_VUCOLVET:       ${{ inputs.source == 'vucolvet' && 'true' || 'false' }}
       PROLIO_RUN_CGCOO_OPTICOS:  ${{ inputs.source == 'cgcoo-opticos' && 'true' || 'false' }}
 
+<<<<<<< HEAD
+      # 2026-05-18 ES wave → 500k. 4 federaciones VU adicionales (Ley
+      # 17/2009): enfermería (~320k), farmacia (~78k farmacéuticos), ICCP
+      # (~28k ingeniería caminos), COIIM-rama (~50k ing. industrial sup).
+      PROLIO_RUN_CGE_ENFERMERIA:    ${{ inputs.source == 'cge-enfermeria' && 'true' || 'false' }}
+      PROLIO_RUN_CGCOF_FARMACIA:    ${{ inputs.source == 'cgcof-farmacia' && 'true' || 'false' }}
+      PROLIO_RUN_CICCP_INGENIEROS:  ${{ inputs.source == 'ciccp-ingenieros' && 'true' || 'false' }}
+      PROLIO_RUN_COIIM_INGENIEROS:  ${{ inputs.source == 'coiim-ingenieros' && 'true' || 'false' }}
+
+=======
+>>>>>>> origin/main
       # ES national notariado (CGN) — Consejo General del Notariado.
       # Bulk HTML scrape of ~3,200 notaries, monthly cadence.
       PROLIO_RUN_CGN_NOTARIADO: ${{ inputs.source == 'cgn-notariado' && 'true' || 'false' }}
+
+      # 2026-05-18 wave US → 500k:
+      #   - npi-bulk-stream: opt-in monthly full NPPES ZIP (1 GB / 7M rows,
+      #     streamed). Wraps `npi.ts`; cap 1M/run.
+      #   - npi-nurses / npi-pharmacists: NPI V2 API by taxonomy_description
+      #     (enfermeria / farmacia categories).
+      #   - foursquare-trades: Foursquare Places v3 (1k/day free; category
+      #     parameter selects which trade to fan out across US cities).
+      #   - ada-find-a-dentist / usda-aphis-vets / state-bars-bulk: honest
+      #     STUBS — datacenter IPs blocked (WAF / 403 / CSRF). Slugs wired
+      #     so a future residential-proxy adapter can land without runner
+      #     edits.
+      PROLIO_RUN_NPI_BULK_STREAM:   ${{ inputs.source == 'npi-bulk-stream' && 'true' || 'false' }}
+      PROLIO_RUN_NPI_NURSES:        ${{ inputs.source == 'npi-nurses' && 'true' || 'false' }}
+      PROLIO_NPI_NURSES_LIMIT:      "150000"
+      PROLIO_RUN_NPI_PHARMACISTS:   ${{ inputs.source == 'npi-pharmacists' && 'true' || 'false' }}
+      PROLIO_NPI_PHARMACISTS_LIMIT: "100000"
+      PROLIO_RUN_ADA_FIND_A_DENTIST: ${{ inputs.source == 'ada-find-a-dentist' && 'true' || 'false' }}
+      PROLIO_RUN_USDA_APHIS_VETS:   ${{ inputs.source == 'usda-aphis-vets' && 'true' || 'false' }}
+      PROLIO_RUN_STATE_BARS_BULK:   ${{ inputs.source == 'state-bars-bulk' && 'true' || 'false' }}
+      PROLIO_RUN_FOURSQUARE_TRADES: ${{ inputs.source == 'foursquare-trades' && 'true' || 'false' }}
+      PROLIO_FOURSQUARE_CATEGORY:   ${{ inputs.category }}
+      PROLIO_FOURSQUARE_REQUESTS_PER_RUN: "800"
+      FOURSQUARE_API_KEY:           ${{ secrets.FOURSQUARE_API_KEY }}
 
       # Default budget knobs — per-source workflows can override via
       # GH Actions vars or by setting an `env:` block before `uses:`.

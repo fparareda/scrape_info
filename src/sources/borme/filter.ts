@@ -166,14 +166,34 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
     "estacion itv",
     "itv",
   ],
-  enfermeria: ["enfermeria","servicios de enfermeria"],
-  farmacia: ["farmacia","oficina de farmacia","venta al por menor de productos farmaceuticos"],
-  abogado: ["actividades juridicas","servicios juridicos","abogados","bufete"],
   ingenieria: [
     "ingenieria",
     "ingeniero",
     "ingenieria civil",
     "ingenieria industrial",
+  ],
+  enfermeria: [
+    "enfermeria",
+    "servicios de enfermeria",
+    "atencion de enfermeria",
+    "cuidados de enfermeria",
+    "venta al por menor de productos farmaceuticos",
+  ],
+  farmacia: [
+    "farmacia",
+    "oficina de farmacia",
+    "servicios farmaceuticos",
+    "farmaceutico",
+    "venta al por menor de productos farmaceuticos",
+  ],
+  abogado: [
+    "abogados",
+    "abogacia",
+    "actividades juridicas",
+    "servicios juridicos",
+    "asesoramiento juridico",
+    "despacho de abogados",
+    "bufete",
   ],
 };
 

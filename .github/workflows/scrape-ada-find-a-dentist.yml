@@ -1,0 +1,16 @@
+name: Scrape · ADA Find-a-Dentist (US dentists)
+
+# STUB — findadentist.ada.org blocks datacenter IPs (HTTP 403, WAF).
+# Workflow is wired so a future residential-proxy adapter can land
+# without runner edits. Manual dispatch only; no cron until unblocked.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ada-find-a-dentist
+      timeout_minutes: 30

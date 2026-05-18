@@ -90,6 +90,17 @@ function categoryFromTaxonomy(code: string | undefined): CategoryKey | null {
   if (c.startsWith("103T")) return "psicologia";
   if (c.startsWith("1041")) return "psicologia";
   if (c.startsWith("2251") || c.startsWith("224P")) return "medicina";
+  // 2026-05-18 wave US 500k: nurses + pharmacists (new Prolio cats).
+  //   163W… Registered Nurse                          → enfermeria
+  //   164W… LPN/LVN                                    → enfermeria
+  //   367500… Nurse Anesthetist / 367H/367A clinical RN→ enfermeria
+  //   3747… Nurse practitioner roots (cross-mapped here, not under 207)
+  //   183500…/1835… Pharmacist                          → farmacia
+  //   333600… Pharmacy (org)                            → farmacia
+  if (c.startsWith("163W") || c.startsWith("164W") || c.startsWith("367")) {
+    return "enfermeria";
+  }
+  if (c.startsWith("1835") || c.startsWith("3336")) return "farmacia";
   if (c.startsWith("207") || c.startsWith("208") || c.startsWith("261Q")) {
     return "medicina";
   }
