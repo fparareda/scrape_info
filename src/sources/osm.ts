@@ -105,6 +105,16 @@ const OSM_TAGS: Record<CategoryKey, Array<[string, string]>> = {
   itv: [
     ["amenity", "vehicle_inspection"],
   ],
+  enfermeria: [
+    ["healthcare", "nurse"],
+  ],
+  farmacia: [
+    ["amenity", "pharmacy"],
+    ["healthcare", "pharmacy"],
+  ],
+  abogado: [
+    ["office", "lawyer"],
+  ],
   ingenieria: [
     ["office", "engineer"],
   ],
