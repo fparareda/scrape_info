@@ -195,7 +195,20 @@ export type ScrapeSource =
   | "cge-enfermeria"
   | "cgcof-farmacia"
   | "ciccp-ingenieros"
-  | "coiim-ingenieros";
+  | "coiim-ingenieros"
+  // 2026-05-18 wave CA → 500k: 8 new CA sources (mostly nursing — the
+  // big lever). All ship as honest stubs today because the public
+  // registers are gated by Cloudflare / Akamai BMP / stateful JSF
+  // tokens; wiring complete so a residential-IP/Playwright drop-in can
+  // land 500k+ rows.
+  | "cno-ontario"
+  | "oiiq-quebec"
+  | "bccnm-bc"
+  | "alberta-crna"
+  | "ocp-pharmacy"
+  | "lso-bar-ontario"
+  | "oppq-quebec-physio"
+  | "cvo-vets-ontario";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
