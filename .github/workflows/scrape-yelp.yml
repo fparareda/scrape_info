@@ -26,5 +26,5 @@ jobs:
     with:
       source: yelp
       shard: usa
-      timeout_minutes: 60
+      timeout_minutes: 240
       budget: ${{ inputs.budget || '5000' }}
