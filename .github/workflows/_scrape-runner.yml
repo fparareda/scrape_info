@@ -64,6 +64,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+      YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
+      YELP_DAILY_BUDGET: ${{ inputs.source == 'yelp' && inputs.budget || '' }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       PROLIO_SCRAPE_SHARD: ${{ inputs.shard }}
@@ -77,6 +79,7 @@ jobs:
 
       # Map sources / directories
       PROLIO_SCRAPE_GOOGLE:    ${{ inputs.source == 'google' && 'true' || 'false' }}
+      PROLIO_SCRAPE_YELP:      ${{ inputs.source == 'yelp' && 'true' || 'false' }}
       PROLIO_SCRAPE_OSM:       ${{ inputs.source == 'osm' && 'true' || 'false' }}
       PROLIO_SCRAPE_CCAA:      ${{ inputs.source == 'ccaa' && 'true' || 'false' }}
       PROLIO_SCRAPE_WIKIDATA:  ${{ inputs.source == 'wikidata' && 'true' || 'false' }}

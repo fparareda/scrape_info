@@ -173,7 +173,9 @@ export type ScrapeSource =
   | "clues-sinais-mx"
   // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
   | "vucolvet"
-  | "cgcoo-opticos";
+  | "cgcoo-opticos"
+  // 2026-05-18: Yelp Fusion API (per-target search, daily cadence)
+  | "yelp_fusion";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

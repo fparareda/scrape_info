@@ -1,0 +1,29 @@
+name: Scrape · Yelp Fusion (daily)
+
+# Yelp Fusion API — /businesses/search per (category × city) target.
+# Daily cap 5000 (typical Fusion plan limit); halt-on-429 in source as
+# a backstop if the actual ceiling is lower. US-only by default
+# (YELP_COUNTRIES env to widen).
+#
+# Cadence: daily at 06:00 UTC + manual dispatch. The internal budget
+# guard in yelp-fusion.ts halts the run if requests exceed `budget`.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      budget:
+        description: "Max API requests this run (default 5000/day)"
+        required: false
+        default: "5000"
+        type: string
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: yelp
+      timeout_minutes: 60
+      budget: ${{ inputs.budget || '5000' }}
