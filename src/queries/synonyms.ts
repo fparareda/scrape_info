@@ -98,4 +98,19 @@ export const CATEGORY_SYNONYMS: Record<CategoryKey, Record<QueryLocale, string[]
     en: ["engineer", "engineering"],
     fr: ["ingénieur", "ingénierie"],
   },
+  enfermeria: {
+    es: ["enfermero", "enfermera", "DUE", "enfermería"],
+    en: ["nurse", "registered nurse", "RN", "LPN"],
+    fr: ["infirmier", "infirmière", "IDE", "infirmier libéral"],
+  },
+  farmacia: {
+    es: ["farmacéutico", "farmacia", "farmacéutica"],
+    en: ["pharmacist", "pharmacy", "chemist"],
+    fr: ["pharmacien", "pharmacie", "pharmacien d'officine"],
+  },
+  abogado: {
+    es: ["abogado", "abogada", "despacho de abogados", "letrado"],
+    en: ["lawyer", "attorney", "law firm", "barrister"],
+    fr: ["avocat", "avocate", "cabinet d'avocats"],
+  },
 };

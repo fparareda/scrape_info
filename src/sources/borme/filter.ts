@@ -172,6 +172,25 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
     "ingenieria civil",
     "ingenieria industrial",
   ],
+  enfermeria: [
+    "enfermeria",
+    "servicios de enfermeria",
+    "atencion de enfermeria",
+    "cuidados de enfermeria",
+  ],
+  farmacia: [
+    "farmacia",
+    "oficina de farmacia",
+    "servicios farmaceuticos",
+    "farmaceutico",
+  ],
+  abogado: [
+    "abogados",
+    "abogacia",
+    "servicios juridicos",
+    "asesoramiento juridico",
+    "despacho de abogados",
+  ],
 };
 
 /** Strip diacritics, lowercase, collapse whitespace. */

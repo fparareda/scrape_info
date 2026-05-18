@@ -19,7 +19,10 @@ export type CategoryKey =
   | "cerrajero"
   | "mecanica"
   | "itv"
-  | "ingenieria";
+  | "ingenieria"
+  | "enfermeria"
+  | "farmacia"
+  | "abogado";
 
 export type ClaimStatus = "unclaimed" | "claimed" | "verified";
 export type Tier = "free" | "featured";

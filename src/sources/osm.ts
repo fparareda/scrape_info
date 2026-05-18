@@ -108,6 +108,17 @@ const OSM_TAGS: Record<CategoryKey, Array<[string, string]>> = {
   ingenieria: [
     ["office", "engineer"],
   ],
+  enfermeria: [
+    ["healthcare", "nurse"],
+    ["healthcare", "nursing"],
+  ],
+  farmacia: [
+    ["amenity", "pharmacy"],
+    ["shop", "chemist"],
+  ],
+  abogado: [
+    ["office", "lawyer"],
+  ],
 };
 
 interface OverpassElement {

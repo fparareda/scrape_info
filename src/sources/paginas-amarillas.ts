@@ -52,6 +52,9 @@ const PA_CATEGORY_SLUG: Record<CategoryKey, string> = {
   mecanica: "talleres-de-automoviles",
   itv: "itv",
   ingenieria: "ingenieros",
+  enfermeria: "enfermeria",
+  farmacia: "farmacias",
+  abogado: "abogados",
 };
 
 const ENDPOINT = "https://www.paginasamarillas.es";
