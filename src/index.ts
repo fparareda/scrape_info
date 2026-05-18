@@ -208,6 +208,15 @@ import { openDataBcnLocalesSource, runOpenDataBcnLocales } from "./sources/open-
 import { farmaceuticosEsGuardiaSource, runFarmaceuticosEsGuardia } from "./sources/farmaceuticos-es-guardia.js";
 import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
+// 2026-05-18 wave MX → 500k: 8 new sources
+import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
+import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
+import { cenadiEnfermeriaSource, runCenadiEnfermeria } from "./sources/cenadi-enfermeria.js";
+import { cofeprisFarmaceuticosSource, runCofeprisFarmaceuticos } from "./sources/cofepris-farmaceuticos.js";
+import { padronAbogadosMxSource, runPadronAbogadosMx } from "./sources/padron-abogados-mx.js";
+import { fedArquitectosMxSource, runFedArquitectosMx } from "./sources/fed-arquitectos-mx.js";
+import { fedPsicologosMxSource, runFedPsicologosMx } from "./sources/fed-psicologos-mx.js";
+import { denueMxTradesSource, runDenueMxTrades } from "./sources/denue-mx-trades.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -384,6 +393,15 @@ async function main(): Promise<void> {
   const emaAcreditadosOn = emaAcreditadosSource.enabled();
   const imssDirectorioOn = imssDirectorioSource.enabled();
   const iftRpcMxOn = iftRpcMxSource.enabled();
+  // 2026-05-18 wave MX → 500k
+  const sicSsMedicinaOn = sicSsMedicinaSource.enabled();
+  const cecmDentistasOn = cecmDentistasSource.enabled();
+  const cenadiEnfermeriaOn = cenadiEnfermeriaSource.enabled();
+  const cofeprisFarmaceuticosOn = cofeprisFarmaceuticosSource.enabled();
+  const padronAbogadosMxOn = padronAbogadosMxSource.enabled();
+  const fedArquitectosMxOn = fedArquitectosMxSource.enabled();
+  const fedPsicologosMxOn = fedPsicologosMxSource.enabled();
+  const denueMxTradesOn = denueMxTradesSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -533,6 +551,14 @@ async function main(): Promise<void> {
     !openDataBcnLocalesOn &&
     !farmaceuticosEsGuardiaOn &&
     !combBarcelonaOn &&
+    !sicSsMedicinaOn &&
+    !cecmDentistasOn &&
+    !cenadiEnfermeriaOn &&
+    !cofeprisFarmaceuticosOn &&
+    !padronAbogadosMxOn &&
+    !fedArquitectosMxOn &&
+    !fedPsicologosMxOn &&
+    !denueMxTradesOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1260,6 +1286,15 @@ async function main(): Promise<void> {
     [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
+    // 2026-05-18 wave MX → 500k
+    [sicSsMedicinaOn, "sic-ss-medicina", runSicSsMedicina],
+    [cecmDentistasOn, "cecm-dentistas", runCecmDentistas],
+    [cenadiEnfermeriaOn, "cenadi-enfermeria", runCenadiEnfermeria],
+    [cofeprisFarmaceuticosOn, "cofepris-farmaceuticos", runCofeprisFarmaceuticos],
+    [padronAbogadosMxOn, "padron-abogados-mx", runPadronAbogadosMx],
+    [fedArquitectosMxOn, "fed-arquitectos-mx", runFedArquitectosMx],
+    [fedPsicologosMxOn, "fed-psicologos-mx", runFedPsicologosMx],
+    [denueMxTradesOn, "denue-mx-trades", runDenueMxTrades],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

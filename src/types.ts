@@ -173,7 +173,20 @@ export type ScrapeSource =
   | "clues-sinais-mx"
   // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
   | "vucolvet"
-  | "cgcoo-opticos";
+  | "cgcoo-opticos"
+  // 2026-05-18 wave MX → 500k: 8 new sources targeting the largest MX gap
+  // (medicina/dentista/enfermeria/farmacia/abogado/arquitecto/psicologia
+  // + DENUE trades expansion). Most are honest stubs documenting why
+  // each padrón is blocked today; `denue-mx-trades` is a live SCIAN
+  // expansion that re-uses the INEGI bulk archives.
+  | "sic-ss-medicina"
+  | "cecm-dentistas"
+  | "cenadi-enfermeria"
+  | "cofepris-farmaceuticos"
+  | "padron-abogados-mx"
+  | "fed-arquitectos-mx"
+  | "fed-psicologos-mx"
+  | "denue-mx-trades";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
