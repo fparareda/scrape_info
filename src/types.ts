@@ -221,7 +221,14 @@ export type ScrapeSource =
   // 2026-05-18: DENUE BULK — per-state ZIPs, ~5M MX businesses; ~400-700k after SCIAN filter
   | "denue-mx-bulk"
   // 2026-05-18: Yelp Fusion API (per-target search, daily cadence)
-  | "yelp_fusion";
+  | "yelp_fusion"
+  // 2026-05-18 wave CA bulk open-data → 500k:
+  //   - statcan-cbr: StatCan Canadian Business Counts (aggregate, stub).
+  //   - toronto-business-licenses: City of Toronto MLS CKAN CSV.
+  //   - vancouver-business-licenses: City of Vancouver Opendatasoft CSV.
+  | "statcan-cbr"
+  | "toronto-business-licenses"
+  | "vancouver-business-licenses";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

@@ -245,6 +245,9 @@ import { fedArquitectosMxSource, runFedArquitectosMx } from "./sources/fed-arqui
 import { fedPsicologosMxSource, runFedPsicologosMx } from "./sources/fed-psicologos-mx.js";
 import { denueMxTradesSource, runDenueMxTrades } from "./sources/denue-mx-trades.js";
 import { denueMxBulkSource, runDenueMxBulk } from "./sources/denue-mx-bulk.js";
+import { statcanCbrSource, runStatcanCbr } from "./sources/statcan-cbr.js";
+import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sources/toronto-business-licenses.js";
+import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -448,6 +451,9 @@ async function main(): Promise<void> {
   const fedPsicologosMxOn = fedPsicologosMxSource.enabled();
   const denueMxTradesOn = denueMxTradesSource.enabled();
   const denueMxBulkOn = denueMxBulkSource.enabled();
+  const statcanCbrOn = statcanCbrSource.enabled();
+  const torontoBusinessLicensesOn = torontoBusinessLicensesSource.enabled();
+  const vancouverBusinessLicensesOn = vancouverBusinessLicensesSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -635,6 +641,9 @@ async function main(): Promise<void> {
     !fedPsicologosMxOn &&
     !denueMxTradesOn &&
     !denueMxBulkOn &&
+    !statcanCbrOn &&
+    !torontoBusinessLicensesOn &&
+    !vancouverBusinessLicensesOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1382,6 +1391,9 @@ async function main(): Promise<void> {
     [fedPsicologosMxOn, "fed-psicologos-mx", runFedPsicologosMx],
     [denueMxTradesOn, "denue-mx-trades", runDenueMxTrades],
     [denueMxBulkOn, "denue-mx-bulk", runDenueMxBulk],
+    [statcanCbrOn, "statcan-cbr", runStatcanCbr],
+    [torontoBusinessLicensesOn, "toronto-business-licenses", runTorontoBusinessLicenses],
+    [vancouverBusinessLicensesOn, "vancouver-business-licenses", runVancouverBusinessLicenses],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
