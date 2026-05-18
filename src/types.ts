@@ -208,7 +208,16 @@ export type ScrapeSource =
   | "ocp-pharmacy"
   | "lso-bar-ontario"
   | "oppq-quebec-physio"
-  | "cvo-vets-ontario";
+  | "cvo-vets-ontario"
+  // 2026-05-18 wave MX → 500k: 8 new sources targeting the largest MX gap.
+  | "sic-ss-medicina"
+  | "cecm-dentistas"
+  | "cenadi-enfermeria"
+  | "cofepris-farmaceuticos"
+  | "padron-abogados-mx"
+  | "fed-arquitectos-mx"
+  | "fed-psicologos-mx"
+  | "denue-mx-trades";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
