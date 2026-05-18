@@ -112,6 +112,12 @@ export async function bulkCsvLoad<TDbRow extends Record<string, unknown>>(
   let written = 0;
   let header: string[] | null = null;
   let buf = "";
+  // Strip a UTF-8 BOM (EF BB BF → ﻿) from the very first chunk if
+  // present. NPPES ships its monthly CSV with a BOM; without this strip,
+  // the first header cell parses as `﻿"NPI"` and every `row["NPI"]`
+  // lookup downstream returns undefined — which is what produced the
+  // `scanned=500001 accepted=0` zero-row run on 2026-05-18.
+  let bomStripped = false;
   const batch: TDbRow[] = [];
 
   async function flush(): Promise<void> {
@@ -133,6 +139,12 @@ export async function bulkCsvLoad<TDbRow extends Record<string, unknown>>(
     if (line.length === 0) return;
     if (header === null) {
       header = parseCsvRow(line, delimiter);
+      // Echo the first 3 header cells so a column-name regression in a
+      // refreshed monthly file is visible without re-running with a
+      // local debugger. Cheap; logged once.
+      console.log(
+        `[bulkCsvLoad] header parsed: ${header.length} cols; first 3 = ${JSON.stringify(header.slice(0, 3))}`,
+      );
       return;
     }
     const cells = parseCsvRow(line, delimiter);
@@ -157,6 +169,10 @@ export async function bulkCsvLoad<TDbRow extends Record<string, unknown>>(
 
   for await (const chunk of nodeStream) {
     buf += typeof chunk === "string" ? chunk : chunk.toString("utf8");
+    if (!bomStripped) {
+      if (buf.charCodeAt(0) === 0xfeff) buf = buf.slice(1);
+      bomStripped = true;
+    }
     // Split on LF; preserve CRLF stripping below. Process all but the
     // final fragment (likely incomplete line at chunk boundary).
     let nl: number;
