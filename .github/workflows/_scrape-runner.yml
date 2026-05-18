@@ -327,6 +327,14 @@ jobs:
       PROLIO_RUN_VUCOLVET:       ${{ inputs.source == 'vucolvet' && 'true' || 'false' }}
       PROLIO_RUN_CGCOO_OPTICOS:  ${{ inputs.source == 'cgcoo-opticos' && 'true' || 'false' }}
 
+      # 2026-05-18 ES wave → 500k. 4 federaciones VU adicionales (Ley
+      # 17/2009): enfermería (~320k), farmacia (~78k farmacéuticos), ICCP
+      # (~28k ingeniería caminos), COIIM-rama (~50k ing. industrial sup).
+      PROLIO_RUN_CGE_ENFERMERIA:    ${{ inputs.source == 'cge-enfermeria' && 'true' || 'false' }}
+      PROLIO_RUN_CGCOF_FARMACIA:    ${{ inputs.source == 'cgcof-farmacia' && 'true' || 'false' }}
+      PROLIO_RUN_CICCP_INGENIEROS:  ${{ inputs.source == 'ciccp-ingenieros' && 'true' || 'false' }}
+      PROLIO_RUN_COIIM_INGENIEROS:  ${{ inputs.source == 'coiim-ingenieros' && 'true' || 'false' }}
+
       # ES national notariado (CGN) — Consejo General del Notariado.
       # Bulk HTML scrape of ~3,200 notaries, monthly cadence.
       PROLIO_RUN_CGN_NOTARIADO: ${{ inputs.source == 'cgn-notariado' && 'true' || 'false' }}
