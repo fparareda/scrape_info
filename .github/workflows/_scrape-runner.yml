@@ -190,6 +190,12 @@ jobs:
       PROLIO_RUN_GEOMETRES_FR:          ${{ inputs.source == 'geometres-fr' && 'true' || 'false' }}
       PROLIO_RUN_CNOP_PHARMACIENS:      ${{ inputs.source == 'cnop-pharmaciens' && 'true' || 'false' }}
 
+      # 2026-05-18 wave: FR → 500k (Ordres + Chambres)
+      PROLIO_RUN_ORDRE_INFIRMIERS_FR:   ${{ inputs.source == 'ordre-infirmiers-fr' && 'true' || 'false' }}
+      PROLIO_RUN_ORDRE_PHARMACIENS_FR:  ${{ inputs.source == 'ordre-pharmaciens-fr' && 'true' || 'false' }}
+      PROLIO_RUN_CHAMBRE_METIERS_FR:    ${{ inputs.source == 'chambre-metiers-fr' && 'true' || 'false' }}
+      PROLIO_CHAMBRE_METIERS_FR_CATEGORY: ${{ inputs.category }}
+
       # Mexico (added 2026-05-07).
       PROLIO_RUN_DOCTORALIA_MX:         ${{ inputs.source == 'doctoralia-mx' && 'true' || 'false' }}
       PROLIO_RUN_SENASICA_MX_VET:       ${{ inputs.source == 'senasica-mx-vet' && 'true' || 'false' }}

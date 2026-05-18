@@ -1,0 +1,14 @@
+name: Scrape · Ordre Pharmaciens (France)
+on:
+  schedule:
+    # Weekly Sunday 12:00 UTC. Bulk ZIP (~6 MB) → 75k pharmacists.
+    # ZIP refresh cadence on Ordre side is weekly.
+    - cron: "0 12 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ordre-pharmaciens-fr
+      timeout_minutes: 60
