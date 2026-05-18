@@ -173,7 +173,9 @@ export type ScrapeSource =
   | "clues-sinais-mx"
   // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
   | "vucolvet"
-  | "cgcoo-opticos";
+  | "cgcoo-opticos"
+  // 2026-05-18: ES AEDAF — national tax-advisor association
+  | "aedaf-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

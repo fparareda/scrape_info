@@ -208,6 +208,7 @@ import { openDataBcnLocalesSource, runOpenDataBcnLocales } from "./sources/open-
 import { farmaceuticosEsGuardiaSource, runFarmaceuticosEsGuardia } from "./sources/farmaceuticos-es-guardia.js";
 import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
+import { aedafEsSource, runAedafEs } from "./sources/aedaf-es.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -388,6 +389,7 @@ async function main(): Promise<void> {
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
   const combBarcelonaOn = comBarcelonaSource.enabled();
+  const aedafEsOn = aedafEsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -533,6 +535,7 @@ async function main(): Promise<void> {
     !openDataBcnLocalesOn &&
     !farmaceuticosEsGuardiaOn &&
     !combBarcelonaOn &&
+    !aedafEsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1260,6 +1263,7 @@ async function main(): Promise<void> {
     [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
+    [aedafEsOn, "aedaf-es", runAedafEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
