@@ -472,6 +472,11 @@ function iterateCsvRows(
           .replace(/[^a-z0-9]+/g, "_")
           .replace(/^_+|_+$/g, ""),
       );
+      // Pass the header row to the caller as well so it can build its
+      // own column-index map. Without this, the outer code never sees
+      // the header and tries to derive column names from the first data
+      // row — silently producing index=-1 for every column and 0 kept.
+      handleRow(header);
       row = [];
       return true;
     }
