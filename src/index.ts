@@ -139,6 +139,10 @@ import { prixControleTechniqueSource, runPrixControleTechnique } from "./sources
 import { autoEcolesFrSource, runAutoEcolesFr } from "./sources/auto-ecoles-fr.js";
 import { geometresFrSource, runGeometresFr } from "./sources/geometres-fr.js";
 import { cnopPharmaciensSource, runCnopPharmaciens } from "./sources/cnop-pharmaciens.js";
+// 2026-05-18 wave: FR → 500k (Ordres + Chambres)
+import { ordreInfirmiersFrSource, runOrdreInfirmiersFr } from "./sources/ordre-infirmiers-fr.js";
+import { ordrePharmaciensFrSource, runOrdrePharmaciensFr } from "./sources/ordre-pharmaciens-fr.js";
+import { chambreMetiersFrSource, runChambreMetiersFr } from "./sources/chambre-metiers-fr.js";
 import { tsaskSource, runTsask } from "./sources/tsask.js";
 import { tsbcSource, runTsbc } from "./sources/tsbc.js";
 import { cpsaSource, runCpsa } from "./sources/cpsa.js";
@@ -317,6 +321,10 @@ async function main(): Promise<void> {
   const autoEcolesFrOn = autoEcolesFrSource.enabled();
   const geometresFrOn = geometresFrSource.enabled();
   const cnopPharmaciensOn = cnopPharmaciensSource.enabled();
+  // 2026-05-18 wave: FR → 500k
+  const ordreInfirmiersFrOn = ordreInfirmiersFrSource.enabled();
+  const ordrePharmaciensFrOn = ordrePharmaciensFrSource.enabled();
+  const chambreMetiersFrOn = chambreMetiersFrSource.enabled();
   // 2026-05 wave: CA
   const tsaskOn = tsaskSource.enabled();
   const tsbcOn = tsbcSource.enabled();
@@ -464,6 +472,9 @@ async function main(): Promise<void> {
     !autoEcolesFrOn &&
     !geometresFrOn &&
     !cnopPharmaciensOn &&
+    !ordreInfirmiersFrOn &&
+    !ordrePharmaciensFrOn &&
+    !chambreMetiersFrOn &&
     !tsaskOn &&
     !tsbcOn &&
     !cpsaOn &&
@@ -1187,6 +1198,9 @@ async function main(): Promise<void> {
     [autoEcolesFrOn, "auto-ecoles-fr", runAutoEcolesFr],
     [geometresFrOn, "geometres-fr", runGeometresFr],
     [cnopPharmaciensOn, "cnop-pharmaciens", runCnopPharmaciens],
+    [ordreInfirmiersFrOn, "ordre-infirmiers-fr", runOrdreInfirmiersFr],
+    [ordrePharmaciensFrOn, "ordre-pharmaciens-fr", runOrdrePharmaciensFr],
+    [chambreMetiersFrOn, "chambre-metiers-fr", runChambreMetiersFr],
     [tsaskOn, "tsask", runTsask],
     [tsbcOn, "tsbc", runTsbc],
     [cpsaOn, "cpsa", runCpsa],

@@ -95,6 +95,8 @@ export type ScrapeSource =
   | "apega"
   // 2026-05 wave: FR consolidation + data.gouv bulk sources
   | "annuaire-sante-ans"
+  | "annuaire-sante-ameli"
+  | "rpps-fr"
   | "sirene-insee"
   | "ademe-rge"
   | "finess"
@@ -102,6 +104,10 @@ export type ScrapeSource =
   | "auto-ecoles-fr"
   | "geometres-fr"
   | "cnop-pharmaciens"
+  // 2026-05-18 wave: FR → 500k (Ordres + Chambres)
+  | "ordre-infirmiers-fr"
+  | "ordre-pharmaciens-fr"
+  | "chambre-metiers-fr"
   // 2026-05 wave: MX federal + state directories
   | "notariado-mx"
   | "sedema-verificentros-cdmx"
