@@ -109,8 +109,8 @@ export const CATEGORY_SYNONYMS: Record<CategoryKey, Record<QueryLocale, string[]
     fr: ["pharmacien", "pharmacie", "pharmacien d'officine"],
   },
   abogado: {
-    es: ["abogado", "abogada", "despacho de abogados", "letrado"],
-    en: ["lawyer", "attorney", "law firm", "barrister"],
+    es: ["abogado", "abogada", "despacho de abogados", "letrado", "bufete"],
+    en: ["lawyer", "attorney", "law firm", "barrister", "legal counsel"],
     fr: ["avocat", "avocate", "cabinet d'avocats"],
   },
 };

@@ -217,7 +217,9 @@ export type ScrapeSource =
   | "padron-abogados-mx"
   | "fed-arquitectos-mx"
   | "fed-psicologos-mx"
-  | "denue-mx-trades";
+  | "denue-mx-trades"
+  // 2026-05-18: Yelp Fusion API (per-target search, daily cadence)
+  | "yelp_fusion";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

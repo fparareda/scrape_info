@@ -64,6 +64,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+      YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
+      YELP_DAILY_BUDGET: ${{ inputs.source == 'yelp' && inputs.budget || '' }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       PROLIO_SCRAPE_SHARD: ${{ inputs.shard }}
@@ -77,6 +79,7 @@ jobs:
 
       # Map sources / directories
       PROLIO_SCRAPE_GOOGLE:    ${{ inputs.source == 'google' && 'true' || 'false' }}
+      PROLIO_SCRAPE_YELP:      ${{ inputs.source == 'yelp' && 'true' || 'false' }}
       PROLIO_SCRAPE_OSM:       ${{ inputs.source == 'osm' && 'true' || 'false' }}
       PROLIO_SCRAPE_CCAA:      ${{ inputs.source == 'ccaa' && 'true' || 'false' }}
       PROLIO_SCRAPE_WIKIDATA:  ${{ inputs.source == 'wikidata' && 'true' || 'false' }}
@@ -266,6 +269,7 @@ jobs:
       PROLIO_RUN_COMB_BARCELONA:             ${{ inputs.source == 'comb-barcelona' && 'true' || 'false' }}
       PROLIO_COMB_BARCELONA_LIMIT:           "40000"
 
+<<<<<<< HEAD
       # 2026-05-18 wave MX → 500k: 8 new sources (largest MX gap closure).
       # 7 honest stubs documenting blockers; `denue-mx-trades` is live.
       PROLIO_RUN_SIC_SS_MEDICINA:        ${{ inputs.source == 'sic-ss-medicina' && 'true' || 'false' }}
@@ -285,6 +289,8 @@ jobs:
       PROLIO_RUN_DENUE_MX_TRADES:        ${{ inputs.source == 'denue-mx-trades' && 'true' || 'false' }}
       PROLIO_DENUE_MX_TRADES_LIMIT:      "50000"
 
+=======
+>>>>>>> origin/main
       # 2026-05-14 wave: MX small clean directories
       PROLIO_RUN_DRO_CDMX:                       ${{ inputs.source == 'dro-cdmx' && 'true' || 'false' }}
       PROLIO_RUN_PROFEPA_VERIFICENTROS_EDOMEX:   ${{ inputs.source == 'profepa-verificentros-edomex' && 'true' || 'false' }}
@@ -309,6 +315,7 @@ jobs:
       PROLIO_RUN_SVMA_SK_VETS:        ${{ inputs.source == 'svma-sk-vets' && 'true' || 'false' }}
       PROLIO_RUN_CPSNS_NS_PHYSICIANS: ${{ inputs.source == 'cpsns-ns-physicians' && 'true' || 'false' }}
       PROLIO_RUN_LSNB_BAR:            ${{ inputs.source == 'lsnb-bar' && 'true' || 'false' }}
+<<<<<<< HEAD
 
       # 2026-05-18 wave CA → 500k: 8 new CA sources (mostly nursing).
       # All ship as honest stubs today; wiring complete for residential-IP
@@ -321,6 +328,8 @@ jobs:
       PROLIO_RUN_LSO_BAR_ONTARIO:     ${{ inputs.source == 'lso-bar-ontario' && 'true' || 'false' }}
       PROLIO_RUN_OPPQ_QUEBEC_PHYSIO:  ${{ inputs.source == 'oppq-quebec-physio' && 'true' || 'false' }}
       PROLIO_RUN_CVO_VETS_ONTARIO:    ${{ inputs.source == 'cvo-vets-ontario' && 'true' || 'false' }}
+=======
+>>>>>>> origin/main
 
       # 2026-05 wave: CA — Alinity/Thentia hosted + provincial regulators
       PROLIO_RUN_TSASK:               ${{ inputs.source == 'tsask' && 'true' || 'false' }}
@@ -364,6 +373,7 @@ jobs:
       PROLIO_RUN_VUCOLVET:       ${{ inputs.source == 'vucolvet' && 'true' || 'false' }}
       PROLIO_RUN_CGCOO_OPTICOS:  ${{ inputs.source == 'cgcoo-opticos' && 'true' || 'false' }}
 
+<<<<<<< HEAD
       # 2026-05-18 ES wave → 500k. 4 federaciones VU adicionales (Ley
       # 17/2009): enfermería (~320k), farmacia (~78k farmacéuticos), ICCP
       # (~28k ingeniería caminos), COIIM-rama (~50k ing. industrial sup).
@@ -372,6 +382,8 @@ jobs:
       PROLIO_RUN_CICCP_INGENIEROS:  ${{ inputs.source == 'ciccp-ingenieros' && 'true' || 'false' }}
       PROLIO_RUN_COIIM_INGENIEROS:  ${{ inputs.source == 'coiim-ingenieros' && 'true' || 'false' }}
 
+=======
+>>>>>>> origin/main
       # ES national notariado (CGN) — Consejo General del Notariado.
       # Bulk HTML scrape of ~3,200 notaries, monthly cadence.
       PROLIO_RUN_CGN_NOTARIADO: ${{ inputs.source == 'cgn-notariado' && 'true' || 'false' }}

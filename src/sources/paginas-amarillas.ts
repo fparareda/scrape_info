@@ -52,7 +52,7 @@ const PA_CATEGORY_SLUG: Record<CategoryKey, string> = {
   mecanica: "talleres-de-automoviles",
   itv: "itv",
   ingenieria: "ingenieros",
-  enfermeria: "enfermeria",
+  enfermeria: "enfermeros",
   farmacia: "farmacias",
   abogado: "abogados",
 };

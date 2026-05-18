@@ -21,6 +21,10 @@ import {
   googlePlacesSource,
   getGooglePlacesRequestsUsed,
 } from "./sources/google-places.js";
+import {
+  yelpFusionSource,
+  getYelpFusionRequestsUsed,
+} from "./sources/yelp-fusion.js";
 import { COLEGIO_SOURCES } from "./sources/colegios/index.js";
 import { bormeSource } from "./sources/borme/source.js";
 import { osmSource } from "./sources/osm.js";
@@ -273,6 +277,7 @@ async function main(): Promise<void> {
 
   const sources: ScraperSource[] = [
     googlePlacesSource,
+    yelpFusionSource,
     osmSource,
     paginasAmarillasSource,
     ...COLEGIO_SOURCES,
@@ -1353,18 +1358,6 @@ async function main(): Promise<void> {
     [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
-    [cnoOntarioOn, "cno-ontario", runCnoOntario],
-    [oiiqQuebecOn, "oiiq-quebec", runOiiqQuebec],
-    [bccnmBcOn, "bccnm-bc", runBccnmBc],
-    [albertaCrnaOn, "alberta-crna", runAlbertaCrna],
-    [ocpPharmacyOn, "ocp-pharmacy", runOcpPharmacy],
-    [lsoBarOntarioOn, "lso-bar-ontario", runLsoBarOntario],
-    [oppqQuebecPhysioOn, "oppq-quebec-physio", runOppqQuebecPhysio],
-    [cvoVetsOntarioOn, "cvo-vets-ontario", runCvoVetsOntario],
-    [habitissimoEsOn, "habitissimo-es", runHabitissimoEs],
-    [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
-    [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
-    [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
     [npiNursesOn, "npi-nurses", runNpiNurses],
     [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
@@ -1568,6 +1561,10 @@ async function main(): Promise<void> {
     console.log(
       `[scraper] google_places requests=${placesRequests} est_cost=$${estCost}`,
     );
+  }
+  const yelpRequests = getYelpFusionRequestsUsed();
+  if (yelpRequests > 0) {
+    console.log(`[scraper] yelp_fusion requests=${yelpRequests}`);
   }
   console.log(`[scraper] done — ${total} rows written across ${targets.length} targets`);
 }

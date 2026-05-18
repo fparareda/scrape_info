@@ -114,6 +114,7 @@ const OSM_TAGS: Record<CategoryKey, Array<[string, string]>> = {
   ],
   farmacia: [
     ["amenity", "pharmacy"],
+    ["healthcare", "pharmacy"],
     ["shop", "chemist"],
   ],
   abogado: [

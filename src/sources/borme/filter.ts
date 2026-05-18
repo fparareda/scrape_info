@@ -177,19 +177,23 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
     "servicios de enfermeria",
     "atencion de enfermeria",
     "cuidados de enfermeria",
+    "venta al por menor de productos farmaceuticos",
   ],
   farmacia: [
     "farmacia",
     "oficina de farmacia",
     "servicios farmaceuticos",
     "farmaceutico",
+    "venta al por menor de productos farmaceuticos",
   ],
   abogado: [
     "abogados",
     "abogacia",
+    "actividades juridicas",
     "servicios juridicos",
     "asesoramiento juridico",
     "despacho de abogados",
+    "bufete",
   ],
 };
 
