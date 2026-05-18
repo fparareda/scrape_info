@@ -297,6 +297,8 @@ jobs:
       PROLIO_TORONTO_BUSINESS_LICENSES_LIMIT:  "100000"
       PROLIO_RUN_VANCOUVER_BUSINESS_LICENSES:  ${{ inputs.source == 'vancouver-business-licenses' && 'true' || 'false' }}
       PROLIO_VANCOUVER_BUSINESS_LICENSES_LIMIT: "80000"
+      PROLIO_RUN_CALGARY_BUSINESS_LICENCES:    ${{ inputs.source == 'calgary-business-licences' && 'true' || 'false' }}
+      PROLIO_CALGARY_BUSINESS_LICENCES_LIMIT:  "50000"
 
       # 2026-05-14 wave: MX small clean directories
       PROLIO_RUN_DRO_CDMX:                       ${{ inputs.source == 'dro-cdmx' && 'true' || 'false' }}
