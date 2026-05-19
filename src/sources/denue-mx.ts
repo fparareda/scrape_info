@@ -93,9 +93,13 @@ const SCIAN_TO_CATEGORY: Record<string, CategoryKey> = {
   "238350": "carpinteria",     // Trabajos de carpintería en construcciones
 
   // Sector 54 — Servicios profesionales, científicos y técnicos
-  "541110": "extranjeria",     // Bufetes jurídicos
+  // Bufetes jurídicos and other legal services map to `abogado` — the
+  // dedicated extranjería sub-specialty is rarely SCIAN-coded, so we
+  // emit the parent category and let category-specific scrapers
+  // (immigration bars, CGE) handle the niche.
+  "541110": "abogado",         // Bufetes jurídicos
   "541120": "notario",         // Notarías públicas
-  "541190": "extranjeria",     // Otros servicios legales
+  "541190": "abogado",         // Otros servicios legales
   "541211": "fiscal",          // Servicios de contabilidad y auditoría
   "541219": "fiscal",          // Otros servicios relacionados con contabilidad
   "541310": "arquitecto",      // Servicios de arquitectura

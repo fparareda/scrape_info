@@ -64,7 +64,14 @@ const NAF_TO_CATEGORY: Record<string, CategoryKey> = {
   "43.32C": "cerrajero",
   "69.20Z": "fiscal",
   "71.11Z": "arquitecto",
-  "69.10Z": "extranjeria",
+  // 69.10Z is the umbrella "Activités juridiques". Most entries are
+  // avocats; notaires are a separate profession but France doesn't
+  // distinguish them at the NAF level (CSN annuaire-notaires.fr is the
+  // canonical source for notaires but blocks datacenter IPs). Emitting
+  // abogado here is the closest correct categorization for the avocat
+  // majority. notario gap remains in TYPE_B until a datacenter-friendly
+  // notarial registry is identified.
+  "69.10Z": "abogado",
   "71.12B": "ingenieria",
   "86.21Z": "medicina",
   "86.23Z": "dentista",
