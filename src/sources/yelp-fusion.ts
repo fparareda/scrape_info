@@ -42,6 +42,12 @@ const BUDGET =
 
 let requestsUsed = 0;
 let budgetWarned = false;
+// Module-level halt flag. Once tripped (budget exhausted OR a 429
+// from Yelp), every subsequent `fetch(target)` call returns [] without
+// touching the API. Without this, the orchestrator keeps iterating
+// 4000+ remaining targets and each one fires a fresh request → mass
+// 429 storm and possible IP-level throttling.
+let halted = false;
 
 interface YelpBusiness {
   id: string;
@@ -143,6 +149,7 @@ export const yelpFusionSource: ScraperSource = {
   },
 
   async fetch(target: ScrapeTarget): Promise<ScrapedProfessional[]> {
+    if (halted) return [];
     const apiKey = process.env.YELP_API_KEY;
     if (!apiKey) return [];
     // Yelp coverage outside US/CA is sparse and burns daily quota for
@@ -181,6 +188,7 @@ export const yelpFusionSource: ScraperSource = {
             );
             budgetWarned = true;
           }
+          halted = true;
           return Array.from(byId.values());
         }
         requestsUsed += 1;
@@ -194,6 +202,7 @@ export const yelpFusionSource: ScraperSource = {
           // Halt the whole run on 429 so we don't burn budget on errors.
           if (msg.includes("429")) {
             budgetWarned = true;
+            halted = true;
             return Array.from(byId.values());
           }
           break;
