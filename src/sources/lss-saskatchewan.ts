@@ -55,6 +55,7 @@ export async function runLssSaskatchewan(): Promise<{
     records.push(
       normalise({
         source: "lss-saskatchewan" as ScrapeSource,
+        country: "CA",
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

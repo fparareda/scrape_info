@@ -179,6 +179,7 @@ function mapElement(
 
   return normalise({
     source: "osm",
+    country: target.country,
     sourceId: `${el.type}/${el.id}`,
     name,
     categoryKey: target.categoryKey,

@@ -152,6 +152,7 @@ function mapLicenseRow(
 
   return normalise({
     source: "texas-tdlr",
+    country: "US",
     sourceId: `texas-tdlr:${licence}:${feed.category}`,
     name,
     categoryKey: feed.category,
@@ -210,6 +211,7 @@ function mapCertificateRow(
 
   return normalise({
     source: "texas-tdlr",
+    country: "US",
     sourceId: `texas-tdlr:${certNo}:${feed.category}`,
     name,
     categoryKey: feed.category,

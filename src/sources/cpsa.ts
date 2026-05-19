@@ -99,6 +99,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
         out.push(
           normalise({
             source: "cpsbc" as ScrapeSource, // reuse college type; metadata.authority distinguishes
+            country: "CA",
             sourceId: key,
             name: toTitleCase(name),
             categoryKey: "medicina",

@@ -160,6 +160,7 @@ export async function runCompetitorDoctoraliaMx(): Promise<DoctoraliaMxRunSummar
         all.push(
           normalise({
             source: "doctoralia-mx",
+            country: "MX",
             sourceId: `doctoralia-mx:${parsed.sourceId.replace(/^doctoralia:/, "")}`,
             name: parsed.name,
             categoryKey: cat.category,

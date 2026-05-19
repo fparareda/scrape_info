@@ -203,6 +203,7 @@ export async function fetchFederation(
       out.push(
         normalise({
           source: cfg.sourceName,
+          country: "ES",
           sourceId: `${cfg.federationSlug}:${colegio.slug}:${r.num}`,
           name: toTitleCase(r.name),
           categoryKey: cfg.categoryKey,

@@ -139,6 +139,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "cnb-avocats",
+        country: "FR",
         sourceId: `cnb-avocats:${matricule}`,
         name,
         categoryKey: "extranjeria",

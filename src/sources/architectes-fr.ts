@@ -157,6 +157,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: "architectes-fr",
+          country: "FR",
           sourceId: `architectes-fr:${row.matricule}`,
           name: toTitleCase(row.name),
           categoryKey: "arquitecto",

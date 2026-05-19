@@ -716,6 +716,7 @@ async function fetchAllCslb(limit: number): Promise<ScrapedProfessional[]> {
         .filter((p) => p.length > 0);
       const record = normalise({
         source: "cslb",
+        country: "US",
         sourceId: `cslb:${licence}`,
         name,
         categoryKey: klass.category,

@@ -77,6 +77,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "reniecyt-mx" as ScrapeSource,
+        country: "MX",
         sourceId: `reniecyt-mx:${sourceId}`,
         name: nombre.replace(/\s+/g, " ").trim(),
         categoryKey: "ingenieria",

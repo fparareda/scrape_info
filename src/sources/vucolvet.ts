@@ -249,6 +249,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         out.push(
           normalise({
             source: "vucolvet",
+            country: "ES",
             sourceId: `vucolvet:${prov.id}:${r.num}:${r.id}`,
             name: toTitleCase(r.name),
             categoryKey: "veterinario",

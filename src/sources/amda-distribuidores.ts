@@ -430,6 +430,7 @@ function buildRecords(limit: number): ScrapedProfessional[] {
     out.push(
       normalise({
         source: "amda-distribuidores" as ScrapeSource,
+        country: "MX",
         sourceId,
         name: entry.name,
         categoryKey: CATEGORY,

@@ -111,6 +111,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "profeco-sancionados" as ScrapeSource,
+        country: "MX",
         sourceId: `profeco:${expediente}`,
         name,
         categoryKey: mapGiro(giro, sector),

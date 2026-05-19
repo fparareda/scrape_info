@@ -201,6 +201,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "sat-efos-edos" as ScrapeSource,
+        country: "MX",
         sourceId: `sat-efos:${rfc}`,
         name: sat.nombre,
         categoryKey: CATEGORY,

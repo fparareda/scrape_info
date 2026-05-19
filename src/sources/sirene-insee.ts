@@ -197,6 +197,7 @@ function toRecord(
   const coords = parseCoordinates(siege.coordonnees);
   return normalise({
     source: "sirene-insee" as ScrapeSource,
+    country: "FR",
     sourceId: `sirene:${siren}`,
     name,
     categoryKey: category,

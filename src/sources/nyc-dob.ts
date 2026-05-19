@@ -296,6 +296,7 @@ export async function runNycDob(): Promise<{
         batch.push(
           normalise({
             source: "nyc-dob",
+            country: "US",
             sourceId,
             name,
             categoryKey: licenseEntry.category,

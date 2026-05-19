@@ -153,6 +153,7 @@ export const catalunyaInstaladores: CcaaSource = {
         out.push(
           normalise({
             source: "ccaa_registry",
+            country: "ES",
             sourceId: `cat-instalador:${registro || slugify(nombre)}:${category}`,
             name: nombre,
             categoryKey: category,

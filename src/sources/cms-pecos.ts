@@ -225,6 +225,7 @@ export async function runCmsPecos(): Promise<{
         batch.push(
           normalise({
             source: "cms-pecos" as ScrapeSource,
+            country: "US",
             sourceId,
             name,
             categoryKey: categoryFromSpecialty(r.pri_spec),

@@ -471,6 +471,7 @@ async function fetchCityPage(
     out.push(
       normalise({
         source: "avvo",
+        country: "US",
         sourceId,
         name,
         categoryKey: primary.category,

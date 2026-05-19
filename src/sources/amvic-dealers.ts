@@ -75,6 +75,7 @@ export async function runAmvicDealers(): Promise<{
     records.push(
       normalise({
         source: "amvic-dealers" as ScrapeSource,
+        country: "CA",
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

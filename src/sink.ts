@@ -3,13 +3,13 @@ import type { Category, CategoryKey, Locale } from "./prolio-types.js";
 import type { ScrapedProfessional } from "./types.js";
 import { buildSlug } from "./normalise.js";
 import { generateProfileCopy } from "./seo-copy.js";
-import { SOURCE_COUNTRY } from "./source-country.js";
 
+// `country` is required on ScrapedProfessional (enforced by TS). No
+// fallback map: every scraper has to declare its country explicitly.
 function resolveCountry(
   record: ScrapedProfessional,
-): "ES" | "CA" | "US" | "FR" | "MX" | null {
-  if (record.country) return record.country;
-  return SOURCE_COUNTRY[record.source] ?? null;
+): "ES" | "CA" | "US" | "FR" | "MX" {
+  return record.country;
 }
 
 const SEO_LOCALES: Locale[] = ["es", "en", "fr"];
@@ -120,28 +120,17 @@ export function getSink(): Sink {
   return {
     upsert: async (records) => {
       const validKeys = await loadCityKeys();
-      let droppedCountry = 0;
       let droppedSlug = 0;
       const filtered = records.filter((r) => {
-        const country = resolveCountry(r);
-        if (!country) {
-          droppedCountry += 1;
-          return false;
-        }
         // Empty citySlug = province-granularity row (sink writes
         // city_slug=NULL, populates metadata.province_slug instead).
         if (r.citySlug === "") return true;
-        if (!validKeys.has(`${country}::${r.citySlug}`)) {
+        if (!validKeys.has(`${r.country}::${r.citySlug}`)) {
           droppedSlug += 1;
           return false;
         }
         return true;
       });
-      if (droppedCountry > 0) {
-        console.log(
-          `[sink] dropped ${droppedCountry}/${records.length} rows with unresolvable country (missing SOURCE_COUNTRY entry and no record.country)`,
-        );
-      }
       if (droppedSlug > 0) {
         console.log(
           `[sink] dropped ${droppedSlug}/${records.length} rows with unseeded (country, city_slug)`,

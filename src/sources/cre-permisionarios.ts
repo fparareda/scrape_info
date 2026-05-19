@@ -265,6 +265,7 @@ async function fetchPadron(
     out.push(
       normalise({
         source: "cre-permisionarios" as ScrapeSource,
+        country: "MX",
         sourceId: `cre:${numeroPermiso}`,
         name: razonSocial,
         categoryKey: mapCategory(padron.tipo, modalidad),

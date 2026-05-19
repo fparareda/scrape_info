@@ -375,6 +375,7 @@ async function fetchTssaContractors(
 
       const record = normalise({
         source: "tssa",
+        country: "CA",
         sourceId,
         name: row.name,
         categoryKey: pickTssaCategory(row.name),
@@ -483,6 +484,7 @@ async function fetchHcraBuilders(
     const operating = (raw.OPERATINGNAME ?? "").trim();
     const record = normalise({
       source: "hcra",
+      country: "CA",
       sourceId,
       name: operating || name,
       categoryKey: CATEGORY_CARPINTERO,

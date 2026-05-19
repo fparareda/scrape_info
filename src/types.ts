@@ -187,13 +187,12 @@ export interface ScrapedProfessional {
   sourceId: string;
   name: string;
   categoryKey: CategoryKey;
-  /** ISO country code of the row. Optional because most sources only
-   *  emit rows for a single country and the sink can derive it from
-   *  `SOURCE_COUNTRY[source]`. Multi-country sources (google_places,
-   *  osm, overture, wikidata, paginas-amarillas) MUST set this per
-   *  row, otherwise `guadalajara` from MX silently lands on the ES
-   *  city of the same slug. */
-  country?: "ES" | "CA" | "US" | "FR" | "MX";
+  /** ISO country code of the row. Required so a slug like `guadalajara`
+   *  (which exists as a real city in both ES and MX) is unambiguous.
+   *  Multi-country sources (google_places, osm, overture, wikidata,
+   *  paginas-amarillas, gleif…) must set this per-row from the data
+   *  they are emitting. */
+  country: "ES" | "CA" | "US" | "FR" | "MX";
   /** Slug within `country`. Pass empty string when the source only
    *  resolves to province granularity — the sink writes `city_slug = NULL`
    *  and you should populate `metadata.province_slug`. */

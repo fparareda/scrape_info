@@ -201,6 +201,7 @@ export const riiNational: CcaaSource = {
         out.push(
           normalise({
             source: "ccaa_registry",
+            country: "ES",
             sourceId: `rii:${identificacion}:${category}`,
             name: nombre.replace(/\s+/g, " ").trim(),
             categoryKey: category,

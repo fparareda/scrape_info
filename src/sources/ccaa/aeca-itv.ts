@@ -126,6 +126,7 @@ export const aecaItv: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `aeca-itv:${numEstacion || slugify(`${name}-${municipio}`)}`,
           name: name || entidad,
           categoryKey: "itv",

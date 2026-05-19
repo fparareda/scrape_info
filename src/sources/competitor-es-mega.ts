@@ -791,6 +791,7 @@ export async function runCompetitorEsMega(): Promise<CompetitorEsMegaResult> {
     records.push(
       normalise({
         source: profile.source,
+        country: "ES",
         sourceId: profile.sourceId,
         name: profile.name,
         categoryKey: profile.categoryKey,

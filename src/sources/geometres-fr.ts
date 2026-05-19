@@ -127,6 +127,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "geometres-fr" as ScrapeSource,
+        country: "FR",
         sourceId: `oge:${matricule}`,
         name,
         categoryKey: "arquitecto",

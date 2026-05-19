@@ -146,6 +146,7 @@ export const paisVascoInstaladores: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `pais-vasco-instalador:${cif}:${category}`,
           name: nombre,
           categoryKey: category,

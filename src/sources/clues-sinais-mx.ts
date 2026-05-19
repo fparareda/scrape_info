@@ -536,6 +536,7 @@ async function extract(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "clues-sinais-mx",
+        country: "MX",
         sourceId: `clues-sinais-mx:${clues}`,
         name,
         categoryKey: "medicina",

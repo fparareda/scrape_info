@@ -103,6 +103,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "verificacion-edomex" as ScrapeSource,
+        country: "MX",
         sourceId: sid,
         name: nombre,
         categoryKey: CATEGORY,

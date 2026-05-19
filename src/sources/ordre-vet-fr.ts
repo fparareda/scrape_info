@@ -167,6 +167,7 @@ function recordToScraped(
   const phone = normalisePhone(dpe?.phone ?? null);
   return normalise({
     source: "ordre-vet-fr",
+    country: "FR",
     sourceId: `ordre-vet-fr:${vet.ordinalNumber}`,
     name: fullName || "(Vétérinaire)",
     categoryKey: "veterinario",

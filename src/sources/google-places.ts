@@ -189,6 +189,7 @@ export const googlePlacesSource: ScraperSource = {
             place.id,
             normalise({
               source: "google_places",
+              country: target.country,
               sourceId: place.id,
               name: place.displayName.text,
               categoryKey: target.categoryKey,

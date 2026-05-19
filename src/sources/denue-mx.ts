@@ -414,6 +414,7 @@ async function fetchSector(
     out.push(
       normalise({
         source: "denue-mx",
+        country: "MX",
         sourceId: `denue-mx:${ident}`,
         name,
         categoryKey: category,

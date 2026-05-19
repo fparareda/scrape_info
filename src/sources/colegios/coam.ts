@@ -117,6 +117,7 @@ export const coamSource: ScraperSource = {
           out.push(
             normalise({
               source: "colegio",
+              country: "ES",
               sourceId: `coam:${row.numCol}`,
               name: toTitleCase(row.name),
               categoryKey: "arquitecto",
