@@ -265,6 +265,8 @@ import {
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
+// 2026-05-19 scout: US
+import { indianaPlaSource, runIndianaPla } from "./sources/indiana-pla.js";
 
 function loadLocalEnv(): void {
   const here = dirname(fileURLToPath(import.meta.url));
@@ -471,6 +473,8 @@ async function main(): Promise<void> {
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
+  // 2026-05-19 scout: US
+  const indianaPlaOn = indianaPlaSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -650,7 +654,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !indianaPlaOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -736,7 +741,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CONAHCYT_SNII=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
-        "PROLIO_SCRAPE_OVERTURE=true",
+        "PROLIO_SCRAPE_OVERTURE=true, " +
+        "PROLIO_RUN_INDIANA_PLA=true",
     );
     return;
   }
@@ -1572,6 +1578,21 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] competitor-es-mega crashed:`, (e as Error).message),
+    );
+  }
+
+  // 2026-05-19 scout: US
+  if (indianaPlaOn) {
+    await withScrapeRun("indiana-pla", async () => {
+      const res = await runIndianaPla();
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] indiana-pla crashed:`, (e as Error).message),
     );
   }
 
