@@ -230,7 +230,9 @@ export type ScrapeSource =
   | "toronto-business-licenses"
   | "vancouver-business-licenses"
   // 2026-05-18: Calgary Open Data Socrata licences (~22k AB businesses)
-  | "calgary-business-licences";
+  | "calgary-business-licences"
+  // 2026-05-19 scout: CA — CDSS Saskatchewan dental college
+  | "cdss-sk-dentists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
