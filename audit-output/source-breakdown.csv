@@ -1,0 +1,271 @@
+country,category,source,total,n_cities,top1_city,top1_share_pct
+CA,abogado,cnb-avocats,36,1,Laval,100.0
+CA,arquitecto,oaq,1491,14,Montréal,66.7
+CA,carpinteria,hcra,5280,76,Toronto,27.7
+CA,carpinteria,google_places,1853,20,Vaughan,7.1
+CA,carpinteria,tsask,482,1,Saskatoon,100.0
+CA,carpinteria,tsbc,52,5,Vancouver,65.4
+CA,carpinteria,ademe-rge,1,1,Laval,100.0
+CA,cerrajero,sirene-insee,1,1,Laval,100.0
+CA,dentista,rcdso,1000,10,Toronto,42.2
+CA,dentista,rpps-fr,13,1,Laval,100.0
+CA,dentista,annuaire-sante-ans,6,1,Laval,100.0
+CA,electricidad,tsask,17437,2,Saskatoon,97.8
+CA,electricidad,tsbc,5944,6,Vancouver,73.2
+CA,electricidad,ecra,1585,20,Toronto,25.6
+CA,electricidad,google_places,1038,20,Vaughan,6.8
+CA,electricidad,texas-tdlr,3,1,Stephenville,100.0
+CA,electricidad,ademe-rge,2,1,Laval,100.0
+CA,extranjeria,google_places,1649,20,Vaughan,6.2
+CA,extranjeria,lsnb-bar,1566,1,Halifax,100.0
+CA,extranjeria,lss-saskatchewan,1504,1,Saskatoon,100.0
+CA,farmacia,annuaire-sante-ans,3,1,Laval,100.0
+CA,fiscal,google_places,1889,20,Montréal,6.1
+CA,fiscal,sirene-insee,2,1,Laval,100.0
+CA,fisioterapia,cpm-physio,262,1,Winnipeg,100.0
+CA,fisioterapia,rpps-fr,18,1,Laval,100.0
+CA,fisioterapia,annuaire-sante-ans,2,1,Laval,100.0
+CA,fontaneria,google_places,1266,20,London,7.1
+CA,fontaneria,ademe-rge,1,1,Laval,100.0
+CA,hvac,tsask,24569,2,Saskatoon,98.7
+CA,hvac,tsbc,3848,6,Vancouver,73.5
+CA,hvac,ademe-rge,2,1,Laval,100.0
+CA,ingenieria,apega,71516,2,Calgary,81.8
+CA,itv,prix-controle-technique,6,1,Laval,100.0
+CA,mecanica,amvic-dealers,4974,10,Calgary,63.0
+CA,mecanica,google_places,1864,20,Montréal,7.1
+CA,mecanica,tsbc,177,6,Vancouver,88.1
+CA,mecanica,auto-ecoles-fr,11,1,Laval,100.0
+CA,medicina,cpsns-ns-physicians,6728,1,Halifax,100.0
+CA,medicina,cpsnl,2227,1,Halifax,100.0
+CA,medicina,google_places,2031,20,London,6.8
+CA,medicina,scpp-sk-pharmacists,1989,1,Saskatoon,100.0
+CA,medicina,cpspei,830,1,Halifax,100.0
+CA,medicina,ca-dca-open-data,146,29,Vancouver,28.8
+CA,medicina,rpps-fr,46,1,Laval,100.0
+CA,medicina,annuaire-sante-ans,24,1,Laval,100.0
+CA,medicina,cnop-pharmaciens,16,1,Laval,100.0
+CA,medicina,finess,14,1,Laval,100.0
+CA,psicologia,google_places,2230,20,London,6.3
+CA,psicologia,cap-psychologists,1602,2,Calgary,70.8
+CA,psicologia,annuaire-sante-ans,15,1,Laval,100.0
+CA,veterinario,svma-sk-vets,1818,1,Saskatoon,100.0
+ES,arquitecto,denue-mx,101,1,Guadalajara,100.0
+ES,arquitecto,siem,10,1,Guadalajara,100.0
+ES,carpinteria,google_places,4353,42,Madrid,14.8
+ES,carpinteria,osm,240,70,Madrid,12.9
+ES,carpinteria,ccaa_registry,221,23,Castellón de la Plana,18.1
+ES,carpinteria,borme,29,16,Madrid,20.7
+ES,carpinteria,profeco-sancionados,8,1,Guadalajara,100.0
+ES,carpinteria,denue-mx,4,1,Guadalajara,100.0
+ES,dentista,guiadentistas-es,41996,2,Vitoria-Gasteiz,96.1
+ES,dentista,denue-mx,27,1,Guadalajara,100.0
+ES,dentista,siem,21,1,Guadalajara,100.0
+ES,electricidad,ccaa_registry,4297,59,Barcelona,28.0
+ES,electricidad,google_places,3316,42,Madrid,15.1
+ES,electricidad,osm,221,55,Zaragoza,13.1
+ES,electricidad,denue-mx,50,1,Guadalajara,100.0
+ES,electricidad,borme,23,15,Madrid,17.4
+ES,electricidad,profeco-sancionados,7,1,Guadalajara,100.0
+ES,electricidad,siem,2,1,Guadalajara,100.0
+ES,extranjeria,google_places,2301,44,Madrid,16.7
+ES,extranjeria,osm,919,97,Barcelona,20.9
+ES,extranjeria,denue-mx,575,1,Guadalajara,100.0
+ES,extranjeria,siem,7,1,Guadalajara,100.0
+ES,extranjeria,manual,2,2,Barcelona,50.0
+ES,fiscal,google_places,5874,44,Madrid,18.0
+ES,fiscal,condusef-sipres,582,1,Guadalajara,100.0
+ES,fiscal,osm,437,75,Motril,8.0
+ES,fiscal,denue-mx,396,1,Guadalajara,100.0
+ES,fiscal,profeco-sancionados,81,1,Guadalajara,100.0
+ES,fiscal,siem,37,1,Guadalajara,100.0
+ES,fiscal,borme,17,12,Madrid,23.5
+ES,fiscal,manual,4,2,Barcelona,50.0
+ES,fisioterapia,denue-mx,2,1,Guadalajara,100.0
+ES,fontaneria,ccaa_registry,3601,52,Barcelona,26.9
+ES,fontaneria,google_places,2150,42,Madrid,12.8
+ES,fontaneria,osm,212,56,Madrid,14.2
+ES,fontaneria,borme,29,18,Madrid,13.8
+ES,fontaneria,denue-mx,18,1,Guadalajara,100.0
+ES,hvac,siem,11,1,Guadalajara,100.0
+ES,ingenieria,siem,200,1,Guadalajara,100.0
+ES,ingenieria,reniecyt-mx,88,1,Guadalajara,100.0
+ES,itv,google_places,407,41,Madrid,31.2
+ES,itv,dgt-itv-es,193,107,Madrid,7.3
+ES,itv,ccaa_registry,163,88,Madrid,9.2
+ES,itv,osm,151,85,Madrid,7.9
+ES,itv,siem,1,1,Guadalajara,100.0
+ES,mecanica,ccaa_registry,17662,80,Madrid,17.7
+ES,mecanica,google_places,4932,42,Madrid,18.2
+ES,mecanica,osm,3452,140,Madrid,10.7
+ES,mecanica,rasic-talleres-cat,2373,22,Barcelona,38.1
+ES,mecanica,profeco-sancionados,23,1,Guadalajara,100.0
+ES,mecanica,siem,12,1,Guadalajara,100.0
+ES,mecanica,borme,9,9,Cartagena,11.1
+ES,mecanica,amda-distribuidores,3,1,Guadalajara,100.0
+ES,medicina,com_madrid,40034,1,Madrid,100.0
+ES,medicina,datos-gob-es,11148,13,León,71.0
+ES,medicina,cgcoo-opticos,8000,21,Barcelona,30.1
+ES,medicina,com_gipuzkoa,4958,1,San Sebastián,100.0
+ES,medicina,google_places,4923,42,Madrid,19.3
+ES,medicina,osm,3310,145,Madrid,14.6
+ES,medicina,cofepris-farmacias,2458,1,Guadalajara,100.0
+ES,medicina,doctoralia,716,11,Madrid,63.0
+ES,medicina,wikidata,295,37,Madrid,16.3
+ES,medicina,ca-dca-open-data,187,5,Valencia,90.4
+ES,medicina,siem,167,1,Guadalajara,100.0
+ES,medicina,denue-mx,68,1,Guadalajara,100.0
+ES,medicina,borme,4,3,Burgos,50.0
+ES,medicina,profeco-sancionados,1,1,Guadalajara,100.0
+ES,notario,cgn-notariado,416,111,Barcelona,18.8
+ES,notario,denue-mx,144,1,Guadalajara,100.0
+ES,notario,padron-notarios-fed-mx,86,1,Guadalajara,100.0
+ES,notario,siem,1,1,Guadalajara,100.0
+ES,psicologia,google_places,5512,44,Madrid,17.1
+ES,psicologia,colegio,1330,1,Barcelona,100.0
+ES,psicologia,doctoralia,429,12,Madrid,47.3
+ES,psicologia,osm,199,58,Madrid,17.6
+ES,psicologia,denue-mx,3,1,Guadalajara,100.0
+ES,psicologia,manual,1,1,Madrid,100.0
+ES,psicologia,borme,1,1,Oviedo,100.0
+ES,veterinario,vucolvet,13999,26,Madrid,17.9
+ES,veterinario,senasica-mx-vet,291,1,Guadalajara,100.0
+ES,veterinario,siem,17,1,Guadalajara,100.0
+FR,abogado,cnb-avocats,45446,255,Paris,45.2
+FR,arquitecto,sirene-insee,10000,189,Paris,32.9
+FR,arquitecto,architectes-fr,9296,8,Paris,57.7
+FR,arquitecto,ademe-rge,2707,215,Paris,25.9
+FR,carpinteria,ademe-rge,673,132,Paris,10.4
+FR,cerrajero,sirene-insee,5170,247,Paris,46.3
+FR,dentista,annuaire-sante-ameli,48334,76,Marseille,22.6
+FR,dentista,rpps-fr,12721,291,Paris,21.9
+FR,dentista,annuaire-sante-ans,5477,283,Paris,20.3
+FR,electricidad,sirene-insee,10000,135,Paris,47.5
+FR,electricidad,ademe-rge,389,98,Toulouse,6.7
+FR,electricidad,texas-tdlr,3,1,Paris,100.0
+FR,enfermeria,annuaire-sante-ans,729,111,Paris,18.2
+FR,extranjeria,sirene-insee,10000,167,Marseille,26.9
+FR,extranjeria,cnb-avocats,4018,26,Paris,50.0
+FR,farmacia,annuaire-sante-ans,2357,238,Paris,15.7
+FR,fiscal,sirene-insee,9998,207,Paris,21.3
+FR,fiscal,oec-fr,3676,9,Paris,25.6
+FR,fisioterapia,rpps-fr,21080,291,Paris,14.1
+FR,fisioterapia,annuaire-sante-ans,7437,281,Paris,12.7
+FR,fontaneria,sirene-insee,10000,136,Paris,37.6
+FR,fontaneria,ademe-rge,109,52,Paris,15.6
+FR,hvac,ademe-rge,1241,182,Paris,12.2
+FR,ingenieria,sirene-insee,10000,209,Paris,30.2
+FR,itv,prix-controle-technique,3436,274,Paris,10.9
+FR,mecanica,auto-ecoles-fr,4816,291,Paris,18.3
+FR,mecanica,ccaa_registry,1,1,Pau,100.0
+FR,medicina,rpps-fr,66122,292,Paris,25.3
+FR,medicina,annuaire-sante-ans,32688,289,Paris,26.1
+FR,medicina,annuaire-sante-ameli,29304,84,Marseille,20.1
+FR,medicina,cnop-pharmaciens,9984,202,Paris,12.0
+FR,medicina,finess,4980,143,Marseille,9.1
+FR,medicina,ca-dca-open-data,101,5,Saint-Louis (Réunion),95.0
+FR,psicologia,annuaire-sante-ans,10197,282,Paris,23.2
+FR,veterinario,ordre-vet-fr,2022,67,Marseille,20.3
+MX,arquitecto,denue-mx,2787,225,Ciudad de México,10.6
+MX,arquitecto,re-franchises-mx,677,56,Mérida,12.9
+MX,arquitecto,fcarm-arquitectos,156,2,Hermosillo,75.6
+MX,arquitecto,siem,61,17,Reynosa,13.1
+MX,arquitecto,cmic-constructoras,41,9,León,31.7
+MX,carpinteria,denue-mx,166,84,Mexicali,5.4
+MX,carpinteria,profeco-sancionados,140,21,Ciudad de México,15.7
+MX,carpinteria,siem,31,14,Mazatlán,19.4
+MX,cerrajero,siem,6,5,Mazatlán,33.3
+MX,cerrajero,profeco-sancionados,2,2,Ciudad de México,50.0
+MX,dentista,denue-mx,4198,7,Tijuana,35.1
+MX,dentista,siem,206,26,Tlalnepantla de Baz,15.5
+MX,electricidad,denue-mx,1620,186,Monterrey,5.4
+MX,electricidad,profeco-sancionados,145,17,Ciudad de México,13.8
+MX,electricidad,siem,50,21,Ciudad de México,16.0
+MX,electricidad,cmic-constructoras,3,1,León,100.0
+MX,extranjeria,denue-mx,20571,280,Ciudad de México,9.0
+MX,extranjeria,siem,59,18,Cancún,28.8
+MX,fiscal,sat-efos-edos,14055,1,Ciudad de México,100.0
+MX,fiscal,denue-mx,11762,275,Ciudad de México,9.0
+MX,fiscal,cnsf-agentes,10000,1,Ciudad de México,100.0
+MX,fiscal,condusef-sipres,5407,23,Ciudad de México,46.6
+MX,fiscal,profeco-sancionados,1667,23,Ciudad de México,24.4
+MX,fiscal,cnbv-entidades,550,1,Ciudad de México,100.0
+MX,fiscal,siem,160,21,Cancún,23.1
+MX,fiscal,antad-asociados,2,1,Ciudad de México,100.0
+MX,fisioterapia,denue-mx,354,7,Tijuana,28.8
+MX,fisioterapia,siem,49,10,Irapuato,40.8
+MX,fontaneria,cre-permisionarios,3305,1,Ciudad de México,100.0
+MX,fontaneria,denue-mx,1096,163,Benito Juárez,5.7
+MX,fontaneria,siem,51,16,Mérida,25.5
+MX,fontaneria,cmic-constructoras,3,2,León,66.7
+MX,fontaneria,profeco-sancionados,2,2,Hermosillo,50.0
+MX,hvac,cre-permisionarios,335,1,Ciudad de México,100.0
+MX,hvac,siem,63,22,Reynosa,20.6
+MX,hvac,profeco-sancionados,5,5,Tijuana,20.0
+MX,ingenieria,siem,2054,71,Puebla,22.7
+MX,ingenieria,reniecyt-mx,626,23,Ciudad de México,21.2
+MX,itv,siem,10,5,Irapuato,40.0
+MX,mecanica,profeco-sancionados,328,23,Ciudad de México,18.9
+MX,mecanica,siem,233,31,Puebla,19.3
+MX,mecanica,amda-distribuidores,48,21,Ciudad de México,50.0
+MX,mecanica,ccaa_registry,17,2,Salvatierra,52.9
+MX,medicina,cofepris-farmacias,13249,19,Ciudad de México,28.7
+MX,medicina,denue-mx,4313,8,Tijuana,28.4
+MX,medicina,clues-sinais-mx,1649,23,Tijuana,12.6
+MX,medicina,siem,957,57,Puebla,17.7
+MX,medicina,profeco-sancionados,32,10,Ciudad de México,31.3
+MX,medicina,ca-dca-open-data,3,2,Durango,66.7
+MX,notario,denue-mx,2983,236,Ciudad de México,8.7
+MX,notario,padron-notarios-fed-mx,1275,23,Ciudad de México,17.6
+MX,notario,colegio-notarios-cdmx,120,1,Ciudad de México,100.0
+MX,notario,siem,4,3,Reynosa,50.0
+MX,notario,cgn-notariado,1,1,Lerma,100.0
+MX,psicologia,denue-mx,741,7,Tijuana,32.4
+MX,psicologia,siem,13,9,Puebla,30.8
+MX,veterinario,senasica-mx-vet,3416,27,Ciudad de México,7.6
+MX,veterinario,siem,139,27,Ciudad de México,13.7
+MX,veterinario,fedmvz-colegios-vet,10,1,San Luis Potosí,100.0
+MX,veterinario,profeco-sancionados,1,1,Morelia,100.0
+US,carpinteria,google_places,1760,16,Los Angeles,7.7
+US,carpinteria,yelp_fusion,826,2,New York,50.8
+US,carpinteria,tsbc,2,1,Richmond,100.0
+US,dentista,npi,231,149,San Diego,2.6
+US,dentista,cms-pecos,104,47,Boston,10.6
+US,electricidad,cslb,10090,61,Los Angeles,8.8
+US,electricidad,google_places,919,15,Houston,8.2
+US,electricidad,texas-tdlr,768,77,Houston,22.4
+US,electricidad,yelp_fusion,313,1,New York,100.0
+US,electricidad,tsbc,149,1,Richmond,100.0
+US,electricidad,ecra,32,1,Aurora,100.0
+US,electricidad,ccaa_registry,4,1,Santa Barbara,100.0
+US,enfermeria,npi,740,235,Las Vegas,3.4
+US,extranjeria,google_places,1221,16,New York,7.1
+US,extranjeria,yelp_fusion,885,2,Los Angeles,50.1
+US,farmacia,npi,455,194,Houston,3.1
+US,fiscal,google_places,1651,16,Dallas,6.8
+US,fiscal,yelp_fusion,841,2,New York,50.4
+US,fontaneria,google_places,1210,16,Dallas,7.8
+US,fontaneria,yelp_fusion,726,2,New York,59.5
+US,fontaneria,ccaa_registry,3,1,Santa Barbara,100.0
+US,hvac,tsbc,84,1,Richmond,100.0
+US,itv,ccaa_registry,2,2,El Paso,50.0
+US,itv,dgt-itv-es,2,2,El Paso,50.0
+US,mecanica,google_places,1617,15,Chicago,8.0
+US,mecanica,yelp_fusion,416,1,New York,100.0
+US,mecanica,texas-tdlr,351,58,Houston,18.8
+US,mecanica,ccaa_registry,17,4,Laredo,47.1
+US,mecanica,tsbc,6,1,Richmond,100.0
+US,medicina,cms-pecos,150982,481,New York,4.4
+US,medicina,ca-dca-open-data,55961,463,Los Angeles,12.6
+US,medicina,oig-leie,16015,470,Miami,7.0
+US,medicina,npi,10146,466,Chicago,2.1
+US,medicina,hifld-us,4729,20,Houston,13.7
+US,medicina,google_places,2403,16,Houston,6.9
+US,medicina,yelp_fusion,1083,2,New York,51.4
+US,medicina,wikidata,3,2,San José,66.7
+US,notario,cgn-notariado,1,1,Laredo,100.0
+US,psicologia,google_places,2244,16,Houston,7.0
+US,psicologia,cms-pecos,1944,317,Los Angeles,4.1
+US,psicologia,npi,1138,302,Columbus,4.7
+US,psicologia,yelp_fusion,743,2,Los Angeles,53.8
+US,veterinario,npi,75,62,Sacramento,5.3

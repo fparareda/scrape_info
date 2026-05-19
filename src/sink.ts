@@ -3,6 +3,14 @@ import type { Category, CategoryKey, Locale } from "./prolio-types.js";
 import type { ScrapedProfessional } from "./types.js";
 import { buildSlug } from "./normalise.js";
 import { generateProfileCopy } from "./seo-copy.js";
+import { SOURCE_COUNTRY } from "./source-country.js";
+
+function resolveCountry(
+  record: ScrapedProfessional,
+): "ES" | "CA" | "US" | "FR" | "MX" | null {
+  if (record.country) return record.country;
+  return SOURCE_COUNTRY[record.source] ?? null;
+}
 
 const SEO_LOCALES: Locale[] = ["es", "en", "fr"];
 
@@ -80,40 +88,59 @@ export function getSink(): Sink {
     return lookupsPromise;
   }
 
-  // Lazy-loaded set of valid city slugs. We refuse to insert rows for
-  // cities that aren't seeded — the FK would reject them, causing every
-  // batch containing unknowns to fall back to row-by-row which can blow
-  // past the 45-min CI timeout (observed on the RII national CSV which
-  // covers 8,131 municipios vs. our 91-city catalogue).
-  let citySlugsPromise: Promise<Set<string>> | undefined;
-  async function loadCitySlugs(): Promise<Set<string>> {
-    if (!citySlugsPromise) {
-      citySlugsPromise = (async () => {
-        const slugs = new Set<string>();
-        // Paginate so we're not bitten by PostgREST's 1000-row cap.
+  // Lazy-loaded set of valid (country, slug) pairs. Keyed by
+  // `${country}::${slug}` so a slug present in multiple countries (e.g.
+  // `guadalajara` in ES and MX once both rows are seeded) is a hit only
+  // when the source's declared country matches. Refusing unseeded
+  // (country, slug) pairs keeps the FK happy and avoids row-by-row
+  // fallback that has blown past the 45-min CI timeout in the past.
+  let cityKeysPromise: Promise<Set<string>> | undefined;
+  async function loadCityKeys(): Promise<Set<string>> {
+    if (!cityKeysPromise) {
+      cityKeysPromise = (async () => {
+        const keys = new Set<string>();
         for (let from = 0; from < 10_000; from += 1000) {
           const { data, error } = await client
             .from("cities")
-            .select("slug")
+            .select("country, slug")
             .range(from, from + 999);
           if (error || !data || data.length === 0) break;
-          for (const row of data) slugs.add(row.slug as string);
+          for (const row of data)
+            keys.add(`${row.country as string}::${row.slug as string}`);
           if (data.length < 1000) break;
         }
-        return slugs;
+        return keys;
       })();
     }
-    return citySlugsPromise;
+    return cityKeysPromise;
   }
 
   return {
     upsert: async (records) => {
-      const validSlugs = await loadCitySlugs();
-      const filtered = records.filter((r) => validSlugs.has(r.citySlug));
-      const dropped = records.length - filtered.length;
-      if (dropped > 0) {
+      const validKeys = await loadCityKeys();
+      let droppedCountry = 0;
+      let droppedSlug = 0;
+      const filtered = records.filter((r) => {
+        const country = resolveCountry(r);
+        if (!country) {
+          droppedCountry += 1;
+          return false;
+        }
+        if (r.citySlug === "") return true; // province-granularity row
+        if (!validKeys.has(`${country}::${r.citySlug}`)) {
+          droppedSlug += 1;
+          return false;
+        }
+        return true;
+      });
+      if (droppedCountry > 0) {
         console.log(
-          `[sink] dropped ${dropped}/${records.length} rows with unseeded city_slug`,
+          `[sink] dropped ${droppedCountry}/${records.length} rows with unresolvable country (missing SOURCE_COUNTRY entry and no record.country)`,
+        );
+      }
+      if (droppedSlug > 0) {
+        console.log(
+          `[sink] dropped ${droppedSlug}/${records.length} rows with unseeded (country, city_slug)`,
         );
       }
       const lookups = await loadLookups();
@@ -267,7 +294,8 @@ async function upsertSlice(
       slug,
       name: record.name,
       category_key: record.categoryKey,
-      city_slug: record.citySlug,
+      city_country: resolveCountry(record),
+      city_slug: record.citySlug === "" ? null : record.citySlug,
       headline: record.headline ?? "",
       description: record.description ?? "",
       email: record.email,
@@ -335,7 +363,8 @@ async function upsertSliceRowByRow(
     const payload = {
       name: record.name,
       category_key: record.categoryKey,
-      city_slug: record.citySlug,
+      city_country: resolveCountry(record),
+      city_slug: record.citySlug === "" ? null : record.citySlug,
       headline: record.headline ?? "",
       description: record.description ?? "",
       email: record.email,

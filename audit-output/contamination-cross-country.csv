@@ -1,0 +1,69 @@
+assigned_country,category,source,total,n_cities,top1_city,top1_share_pct,real_origin,notes
+CA,abogado,cnb-avocats,36,1,Laval,100.0,FR,French Bar Council → CA via Laval collision
+CA,cerrajero,sirene-insee,1,1,Laval,100.0,FR,SIRENE FR
+CA,dentista,rpps-fr,13,1,Laval,100.0,FR,French health professionals
+CA,dentista,annuaire-sante-ans,6,1,Laval,100.0,FR,French health
+CA,electricidad,texas-tdlr,3,1,Stephenville,100.0,US,Texas DLR
+CA,electricidad,ademe-rge,2,1,Laval,100.0,FR,ADEME-RGE FR
+CA,farmacia,annuaire-sante-ans,3,1,Laval,100.0,FR,French pharma registry
+CA,fiscal,sirene-insee,2,1,Laval,100.0,FR,SIRENE
+CA,fisioterapia,rpps-fr,18,1,Laval,100.0,FR,French health
+CA,fisioterapia,annuaire-sante-ans,2,1,Laval,100.0,FR,French health
+CA,fontaneria,ademe-rge,1,1,Laval,100.0,FR,ADEME-RGE
+CA,hvac,ademe-rge,2,1,Laval,100.0,FR,ADEME-RGE
+CA,itv,prix-controle-technique,6,1,Laval,100.0,FR,FR vehicle inspection
+CA,mecanica,auto-ecoles-fr,11,1,Laval,100.0,FR,French driving schools
+CA,medicina,rpps-fr,46,1,Laval,100.0,FR,French RPPS
+CA,medicina,annuaire-sante-ans,24,1,Laval,100.0,FR,French health
+CA,medicina,cnop-pharmaciens,16,1,Laval,100.0,FR,French pharmacists
+CA,medicina,finess,14,1,Laval,100.0,FR,French FINESS
+CA,psicologia,annuaire-sante-ans,15,1,Laval,100.0,FR,French health
+CA,carpinteria,ademe-rge,1,1,Laval,100.0,FR,ADEME-RGE
+ES,arquitecto,denue-mx,101,1,Guadalajara,100.0,MX,DENUE-MX
+ES,arquitecto,siem,10,1,Guadalajara,100.0,MX,SIEM-MX
+ES,carpinteria,profeco-sancionados,8,1,Guadalajara,100.0,MX,PROFECO
+ES,carpinteria,denue-mx,4,1,Guadalajara,100.0,MX,DENUE-MX
+ES,dentista,denue-mx,27,1,Guadalajara,100.0,MX,DENUE-MX
+ES,dentista,siem,21,1,Guadalajara,100.0,MX,SIEM-MX
+ES,electricidad,denue-mx,50,1,Guadalajara,100.0,MX,DENUE-MX
+ES,electricidad,profeco-sancionados,7,1,Guadalajara,100.0,MX,PROFECO
+ES,electricidad,siem,2,1,Guadalajara,100.0,MX,SIEM-MX
+ES,extranjeria,denue-mx,575,1,Guadalajara,100.0,MX,DENUE-MX
+ES,extranjeria,siem,7,1,Guadalajara,100.0,MX,SIEM-MX
+ES,fiscal,condusef-sipres,582,1,Guadalajara,100.0,MX,CONDUSEF-MX
+ES,fiscal,denue-mx,396,1,Guadalajara,100.0,MX,DENUE-MX
+ES,fiscal,profeco-sancionados,81,1,Guadalajara,100.0,MX,PROFECO-MX
+ES,fiscal,siem,37,1,Guadalajara,100.0,MX,SIEM-MX
+ES,fisioterapia,denue-mx,2,1,Guadalajara,100.0,MX,DENUE-MX
+ES,fontaneria,denue-mx,18,1,Guadalajara,100.0,MX,DENUE-MX
+ES,hvac,siem,11,1,Guadalajara,100.0,MX,SIEM-MX
+ES,ingenieria,siem,200,1,Guadalajara,100.0,MX,SIEM-MX
+ES,ingenieria,reniecyt-mx,88,1,Guadalajara,100.0,MX,RENIECYT-MX
+ES,itv,siem,1,1,Guadalajara,100.0,MX,SIEM-MX
+ES,mecanica,profeco-sancionados,23,1,Guadalajara,100.0,MX,PROFECO
+ES,mecanica,siem,12,1,Guadalajara,100.0,MX,SIEM-MX
+ES,mecanica,amda-distribuidores,3,1,Guadalajara,100.0,MX,AMDA-MX
+ES,medicina,cofepris-farmacias,2458,1,Guadalajara,100.0,MX,COFEPRIS-MX
+ES,medicina,siem,167,1,Guadalajara,100.0,MX,SIEM-MX
+ES,medicina,denue-mx,68,1,Guadalajara,100.0,MX,DENUE-MX
+ES,medicina,profeco-sancionados,1,1,Guadalajara,100.0,MX,PROFECO
+ES,notario,denue-mx,144,1,Guadalajara,100.0,MX,DENUE-MX
+ES,notario,padron-notarios-fed-mx,86,1,Guadalajara,100.0,MX,Padrón Federal MX
+ES,notario,siem,1,1,Guadalajara,100.0,MX,SIEM-MX
+ES,psicologia,denue-mx,3,1,Guadalajara,100.0,MX,DENUE-MX
+ES,veterinario,senasica-mx-vet,291,1,Guadalajara,100.0,MX,SENASICA-MX
+ES,veterinario,siem,17,1,Guadalajara,100.0,MX,SIEM-MX
+FR,electricidad,texas-tdlr,3,1,Paris,100.0,US,Texas DLR → FR Paris collision
+US,electricidad,tsbc,149,1,Richmond,100.0,CA,BC Technical Safety BC
+US,electricidad,ecra,32,1,Aurora,100.0,CA,Ontario ECRA
+US,electricidad,ccaa_registry,4,1,Santa Barbara,100.0,ES,Spanish CCAA registry
+US,fontaneria,ccaa_registry,3,1,Santa Barbara,100.0,ES,Spanish CCAA registry
+US,hvac,tsbc,84,1,Richmond,100.0,CA,BC TSBC
+US,itv,ccaa_registry,2,2,El Paso,50.0,ES,Spanish CCAA
+US,itv,dgt-itv-es,2,2,El Paso,50.0,ES,Spanish DGT
+US,mecanica,tsbc,6,1,Richmond,100.0,CA,BC TSBC
+US,mecanica,ccaa_registry,17,4,Laredo,47.1,ES,Spanish CCAA
+US,notario,cgn-notariado,1,1,Laredo,100.0,ES,Spanish CGN
+US,carpinteria,tsbc,2,1,Richmond,100.0,CA,BC TSBC
+MX,mecanica,ccaa_registry,17,2,Salvatierra,52.9,ES,Spanish CCAA
+MX,notario,cgn-notariado,1,1,Lerma,100.0,ES,Spanish CGN
