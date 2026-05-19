@@ -55,6 +55,11 @@ on:
         type: string
         required: false
         default: ""
+      state_filter:
+        description: "Optional state CVE list (currently only `denue-mx-bulk` honours this — wired to PROLIO_DENUE_MX_BULK_STATES). E.g. '09,15,14' to shard."
+        type: string
+        required: false
+        default: ""
 
 jobs:
   scrape:
@@ -290,6 +295,7 @@ jobs:
       # DENUE BULK — per-state ZIPs, ~5M MX rows raw, filtered SCIAN subset
       PROLIO_RUN_DENUE_MX_BULK:          ${{ inputs.source == 'denue-mx-bulk' && 'true' || 'false' }}
       PROLIO_DENUE_MX_BULK_LIMIT:        "800000"
+      PROLIO_DENUE_MX_BULK_STATES:       ${{ inputs.source == 'denue-mx-bulk' && inputs.state_filter || '' }}
 
       # 2026-05-18 wave CA bulk open-data → 500k
       PROLIO_RUN_STATCAN_CBR:                  ${{ inputs.source == 'statcan-cbr' && 'true' || 'false' }}
