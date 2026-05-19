@@ -788,30 +788,52 @@ export async function runDenueMxBulk(): Promise<{
   const limit =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
 
-  const records = await extract(limit);
-  if (records.length === 0)
-    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-
-  // Chunked upsert — 800k rows in a single sink.upsert() would blow
-  // memory for the conflict-resolution maps; flush every 25k.
+  // Stream-and-flush per state. This way a timeout/cancellation still
+  // persists whatever was processed. Previously the whole extract had to
+  // finish before any upsert started, so a 3h timeout lost everything.
   const sink = getSink();
   const CHUNK = 25_000;
+  const validSlugs = await ensureMxCitySlugs();
+  const seen = new Set<string>();
+
+  const overrideStates = process.env.PROLIO_DENUE_MX_BULK_STATES?.trim();
+  const stateList = overrideStates
+    ? overrideStates
+        .split(/[,\s]+/)
+        .map((s) => s.padStart(2, "0"))
+        .filter((s) => STATE_CVE_TO_NAME[s])
+    : Object.keys(STATE_CVE_TO_NAME);
+
   let inserted = 0;
   let updated = 0;
   let skipped = 0;
-  for (let i = 0; i < records.length; i += CHUNK) {
-    const slice = records.slice(i, i + CHUNK);
-    const res = await sink.upsert(slice);
-    inserted += res.inserted;
-    updated += res.updated;
-    skipped += res.skipped;
+  let fetched = 0;
+
+  for (const cve of stateList) {
+    if (fetched >= limit) break;
+    const remaining = limit - fetched;
+    const buffer: ScrapedProfessional[] = [];
+    await processState(cve, remaining, validSlugs, seen, (rec) => {
+      buffer.push(rec);
+    });
+    if (buffer.length === 0) continue;
+    // Flush this state's records immediately so partial cancellations
+    // still persist data on a per-state basis.
+    for (let i = 0; i < buffer.length; i += CHUNK) {
+      const slice = buffer.slice(i, i + CHUNK);
+      const res = await sink.upsert(slice);
+      inserted += res.inserted;
+      updated += res.updated;
+      skipped += res.skipped;
+    }
+    fetched += buffer.length;
     console.log(
-      `[denue-mx-bulk] flushed ${i + slice.length}/${records.length} — inserted+=${res.inserted} updated+=${res.updated} skipped+=${res.skipped}`,
+      `[denue-mx-bulk] state ${cve} flushed — buffer=${buffer.length} total_inserted=${inserted} total_updated=${updated} total_skipped=${skipped}`,
     );
   }
 
   console.log(
-    `[denue-mx-bulk] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
+    `[denue-mx-bulk] done — fetched=${fetched} inserted=${inserted} updated=${updated} skipped=${skipped}`,
   );
-  return { fetched: records.length, inserted, updated, skipped };
+  return { fetched, inserted, updated, skipped };
 }

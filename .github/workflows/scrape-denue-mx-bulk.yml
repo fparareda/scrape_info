@@ -4,9 +4,15 @@ on:
     # Monthly on the 7th at 04:00 UTC. INEGI refreshes DENUE every ~6
     # months but smaller deltas land continuously; monthly polling is
     # cheap (sink dedupes on stable CLEE). 32 per-state ZIPs total
-    # ~565 MB compressed; expect 60–120 min wall clock for 800k inserts.
+    # ~565 MB compressed.
     - cron: "0 4 7 * *"
   workflow_dispatch:
+    inputs:
+      states:
+        description: "Comma-separated INEGI state CVEs (e.g. '09,15,14'). Empty = all 32."
+        type: string
+        required: false
+        default: ""
 jobs:
   run:
     uses: ./.github/workflows/_scrape-runner.yml
@@ -14,3 +20,4 @@ jobs:
     with:
       source: denue-mx-bulk
       timeout_minutes: 180
+      state_filter: ${{ inputs.states }}
