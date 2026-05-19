@@ -1,0 +1,12 @@
+name: Scrape · CGE Enfermería (España fan-out)
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cge-enfermeria
+      timeout_minutes: 120

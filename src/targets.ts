@@ -109,5 +109,36 @@ export async function listTargets(): Promise<ScrapeTarget[]> {
       });
     }
   }
+  if (process.env.PROLIO_DAILY_ROTATE === "true") {
+    return seededShuffle(targets, dayOfYearUTC(new Date()));
+  }
   return targets;
+}
+
+// Day-of-year UTC (0..365). Same value for every run within one UTC day
+// so re-runs are deterministic; advances on the next day's cron firing.
+function dayOfYearUTC(d: Date): number {
+  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
+  return Math.floor((d.getTime() - start) / 86_400_000);
+}
+
+// Seeded Fisher-Yates (mulberry32). Used by budget-capped sources like
+// Yelp where a partial sweep would otherwise always cover the same
+// prefix of the target list — rotating the order each day means every
+// city eventually gets a turn.
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  let s = (seed + 1) >>> 0;
+  const next = (): number => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+  };
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }

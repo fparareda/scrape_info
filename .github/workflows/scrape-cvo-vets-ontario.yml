@@ -1,0 +1,12 @@
+name: Scrape · cvo-vets-ontario
+on:
+  schedule:
+    - cron: "0 7 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cvo-vets-ontario
+      timeout_minutes: 60

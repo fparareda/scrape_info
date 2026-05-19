@@ -1,0 +1,12 @@
+name: Scrape · City of Toronto Business Licences
+on:
+  schedule:
+    - cron: "20 5 22 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: toronto-business-licenses
+      timeout_minutes: 90

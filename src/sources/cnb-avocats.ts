@@ -26,7 +26,8 @@ import { parseCsv, frPostalCodeToCitySlug } from "./_bulk-utils.js";
 
 const DATASET_API =
   "https://www.data.gouv.fr/api/1/datasets/annuaire-des-avocats-de-france/";
-const DEFAULT_LIMIT = 5000;
+// Bumped 5k → 100k on 2026-05-18. Full CNB dataset is ~81k.
+const DEFAULT_LIMIT = 100_000;
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 
@@ -136,13 +137,30 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     const street = [row["cbadresse1"], row["cbadresse2"]].filter(Boolean).join(" ");
     const address = [street, cp, city].filter(Boolean).join(", ");
 
+    // Route by specialty: ~29 rows in the 81k CSV have "Droit des
+    // étrangers" — those stay in the `extranjeria` wedge; the
+    // remaining ~80k are general counsel → `abogado` (added 2026-05-16).
+    // Pre-2026-05-18 every CNB row landed in extranjeria, which
+    // inflated that bucket. Now the split matches reality.
+    const specialties = [
+      row["splibelle1"],
+      row["splibelle2"],
+      row["splibelle3"],
+      row["splibelle4"],
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    const isImmigration = /étranger|etranger/.test(specialties);
+    const categoryKey = isImmigration ? "extranjeria" : "abogado";
+
     out.push(
       normalise({
         source: "cnb-avocats",
         country: "FR",
         sourceId: `cnb-avocats:${matricule}`,
         name,
-        categoryKey: "extranjeria",
+        categoryKey,
         citySlug,
         address: address || undefined,
         licenseNumber: matricule,

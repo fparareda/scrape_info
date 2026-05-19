@@ -7,7 +7,8 @@
     "dev": "tsx src/index.ts",
     "scrape": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "ping:telegram": "node scripts/ping-telegram.mjs"
+    "ping:telegram": "node scripts/ping-telegram.mjs",
+    "nppes-bulk": "tsx src/run-nppes-bulk.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

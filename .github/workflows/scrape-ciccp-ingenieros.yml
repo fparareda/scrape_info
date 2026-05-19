@@ -1,0 +1,12 @@
+name: Scrape · CICCP Ingenieros Caminos (España fan-out)
+on:
+  schedule:
+    - cron: "0 5 * * 3"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ciccp-ingenieros
+      timeout_minutes: 90

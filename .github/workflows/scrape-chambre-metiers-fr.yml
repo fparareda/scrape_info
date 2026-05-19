@@ -1,0 +1,29 @@
+name: Scrape · Chambre des Métiers (France)
+on:
+  schedule:
+    # Weekly Sunday 13:00 UTC. SIRENE Recherche d'Entreprises API with
+    # est_artisan=1. Fan-out by NAF × department, default cap 50k rows.
+    # Use workflow_dispatch's `category` input to restrict to a single
+    # Prolio category (fontaneria / hvac / electricidad / carpinteria).
+    - cron: "0 13 * * 0"
+  workflow_dispatch:
+    inputs:
+      category:
+        description: "Optional: restrict to one category"
+        required: false
+        type: choice
+        default: ""
+        options:
+          - ""
+          - fontaneria
+          - hvac
+          - electricidad
+          - carpinteria
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: chambre-metiers-fr
+      category: ${{ inputs.category || '' }}
+      timeout_minutes: 240

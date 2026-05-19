@@ -95,6 +95,8 @@ export type ScrapeSource =
   | "apega"
   // 2026-05 wave: FR consolidation + data.gouv bulk sources
   | "annuaire-sante-ans"
+  | "annuaire-sante-ameli"
+  | "rpps-fr"
   | "sirene-insee"
   | "ademe-rge"
   | "finess"
@@ -102,6 +104,10 @@ export type ScrapeSource =
   | "auto-ecoles-fr"
   | "geometres-fr"
   | "cnop-pharmaciens"
+  // 2026-05-18 wave: FR → 500k (Ordres + Chambres)
+  | "ordre-infirmiers-fr"
+  | "ordre-pharmaciens-fr"
+  | "chambre-metiers-fr"
   // 2026-05 wave: MX federal + state directories
   | "notariado-mx"
   | "sedema-verificentros-cdmx"
@@ -173,7 +179,58 @@ export type ScrapeSource =
   | "clues-sinais-mx"
   // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
   | "vucolvet"
-  | "cgcoo-opticos";
+  | "cgcoo-opticos"
+  // 2026-05-18 wave US → 500k: NPI taxonomy slices + bulk variant + new cats
+  // (enfermeria, farmacia, abogado) + Foursquare trades. Stubs documented
+  // in each source file (ADA + APHIS + state-bars-bulk blocked by WAF).
+  | "npi-bulk-stream"
+  | "npi-nurses"
+  | "npi-pharmacists"
+  | "ada-find-a-dentist"
+  | "usda-aphis-vets"
+  | "state-bars-bulk"
+  | "foursquare-trades"
+  // 2026-05-18: ES wave → 500k — enfermería, farmacia, ingeniería caminos
+  // + ingeniería industrial superior (4 federaciones Ventanilla Única).
+  | "cge-enfermeria"
+  | "cgcof-farmacia"
+  | "ciccp-ingenieros"
+  | "coiim-ingenieros"
+  // 2026-05-18 wave CA → 500k: 8 new CA sources (mostly nursing — the
+  // big lever). All ship as honest stubs today because the public
+  // registers are gated by Cloudflare / Akamai BMP / stateful JSF
+  // tokens; wiring complete so a residential-IP/Playwright drop-in can
+  // land 500k+ rows.
+  | "cno-ontario"
+  | "oiiq-quebec"
+  | "bccnm-bc"
+  | "alberta-crna"
+  | "ocp-pharmacy"
+  | "lso-bar-ontario"
+  | "oppq-quebec-physio"
+  | "cvo-vets-ontario"
+  // 2026-05-18 wave MX → 500k: 8 new sources targeting the largest MX gap.
+  | "sic-ss-medicina"
+  | "cecm-dentistas"
+  | "cenadi-enfermeria"
+  | "cofepris-farmaceuticos"
+  | "padron-abogados-mx"
+  | "fed-arquitectos-mx"
+  | "fed-psicologos-mx"
+  | "denue-mx-trades"
+  // 2026-05-18: DENUE BULK — per-state ZIPs, ~5M MX businesses; ~400-700k after SCIAN filter
+  | "denue-mx-bulk"
+  // 2026-05-18: Yelp Fusion API (per-target search, daily cadence)
+  | "yelp_fusion"
+  // 2026-05-18 wave CA bulk open-data → 500k:
+  //   - statcan-cbr: StatCan Canadian Business Counts (aggregate, stub).
+  //   - toronto-business-licenses: City of Toronto MLS CKAN CSV.
+  //   - vancouver-business-licenses: City of Vancouver Opendatasoft CSV.
+  | "statcan-cbr"
+  | "toronto-business-licenses"
+  | "vancouver-business-licenses"
+  // 2026-05-18: Calgary Open Data Socrata licences (~22k AB businesses)
+  | "calgary-business-licences";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

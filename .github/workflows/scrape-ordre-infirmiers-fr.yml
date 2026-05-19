@@ -1,0 +1,15 @@
+name: Scrape · Ordre Infirmiers (France)
+on:
+  schedule:
+    # Weekly Sunday 11:30 UTC. Honest-stub today (no public nominative
+    # annuaire — ANS covers the cohort). Workflow stays scheduled so a
+    # future Ordre data release auto-activates the source.
+    - cron: "30 11 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ordre-infirmiers-fr
+      timeout_minutes: 15

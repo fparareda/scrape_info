@@ -21,6 +21,10 @@ import {
   googlePlacesSource,
   getGooglePlacesRequestsUsed,
 } from "./sources/google-places.js";
+import {
+  yelpFusionSource,
+  getYelpFusionRequestsUsed,
+} from "./sources/yelp-fusion.js";
 import { COLEGIO_SOURCES } from "./sources/colegios/index.js";
 import { bormeSource } from "./sources/borme/source.js";
 import { osmSource } from "./sources/osm.js";
@@ -104,6 +108,10 @@ import { cogitiIngenierosSource, runCogitiIngenieros } from "./sources/cogiti-in
 import { graduadosSocialesEsSource, runGraduadosSocialesEs } from "./sources/graduados-sociales-es.js";
 import { vucolvetSource, runVucolvet } from "./sources/vucolvet.js";
 import { cgcooOpticosSource, runCgcooOpticos } from "./sources/cgcoo-opticos.js";
+import { cgeEnfermeriaSource, runCgeEnfermeria } from "./sources/cge-enfermeria.js";
+import { cgcofFarmaciaSource, runCgcofFarmacia } from "./sources/cgcof-farmacia.js";
+import { ciccpIngenierosSource, runCiccpIngenieros } from "./sources/ciccp-ingenieros.js";
+import { coiimIngenierosSource, runCoiimIngenieros } from "./sources/coiim-ingenieros.js";
 import { illinoisIdfprSource, runIllinoisIdfpr } from "./sources/illinois-idfpr.js";
 import { newYorkDosSource, runNewYorkDos } from "./sources/new-york-dos.js";
 import { northCarolinaLbcSource, runNorthCarolinaLbc } from "./sources/north-carolina-lbc.js";
@@ -139,6 +147,10 @@ import { prixControleTechniqueSource, runPrixControleTechnique } from "./sources
 import { autoEcolesFrSource, runAutoEcolesFr } from "./sources/auto-ecoles-fr.js";
 import { geometresFrSource, runGeometresFr } from "./sources/geometres-fr.js";
 import { cnopPharmaciensSource, runCnopPharmaciens } from "./sources/cnop-pharmaciens.js";
+// 2026-05-18 wave: FR → 500k (Ordres + Chambres)
+import { ordreInfirmiersFrSource, runOrdreInfirmiersFr } from "./sources/ordre-infirmiers-fr.js";
+import { ordrePharmaciensFrSource, runOrdrePharmaciensFr } from "./sources/ordre-pharmaciens-fr.js";
+import { chambreMetiersFrSource, runChambreMetiersFr } from "./sources/chambre-metiers-fr.js";
 import { tsaskSource, runTsask } from "./sources/tsask.js";
 import { tsbcSource, runTsbc } from "./sources/tsbc.js";
 import { cpsaSource, runCpsa } from "./sources/cpsa.js";
@@ -200,6 +212,14 @@ import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
+import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
+import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
+import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
+import { albertaCrnaSource, runAlbertaCrna } from "./sources/alberta-crna.js";
+import { ocpPharmacySource, runOcpPharmacy } from "./sources/ocp-pharmacy.js";
+import { lsoBarOntarioSource, runLsoBarOntario } from "./sources/lso-bar-ontario.js";
+import { oppqQuebecPhysioSource, runOppqQuebecPhysio } from "./sources/oppq-quebec-physio.js";
+import { cvoVetsOntarioSource, runCvoVetsOntario } from "./sources/cvo-vets-ontario.js";
 import { antadAsociadosSource, runAntadAsociados } from "./sources/antad-asociados.js";
 import { emaAcreditadosSource, runEmaAcreditados } from "./sources/ema-acreditados.js";
 import { imssDirectorioSource, runImssDirectorio } from "./sources/imss-directorio.js";
@@ -207,7 +227,28 @@ import { habitissimoEsSource, runHabitissimoEs } from "./sources/habitissimo-es.
 import { openDataBcnLocalesSource, runOpenDataBcnLocales } from "./sources/open-data-bcn-locales.js";
 import { farmaceuticosEsGuardiaSource, runFarmaceuticosEsGuardia } from "./sources/farmaceuticos-es-guardia.js";
 import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.js";
+import { npiBulkStreamSource, runNpiBulkStream } from "./sources/npi-bulk-stream.js";
+import { npiNursesSource, runNpiNurses } from "./sources/npi-nurses.js";
+import { npiPharmacistsSource, runNpiPharmacists } from "./sources/npi-pharmacists.js";
+import { adaFindADentistSource, runAdaFindADentist } from "./sources/ada-find-a-dentist.js";
+import { usdaAphisVetsSource, runUsdaAphisVets } from "./sources/usda-aphis-vets.js";
+import { stateBarsBulkSource, runStateBarsBulk } from "./sources/state-bars-bulk.js";
+import { foursquareTradesSource, runFoursquareTrades } from "./sources/foursquare-trades.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
+// 2026-05-18 wave MX → 500k: 8 new sources
+import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
+import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
+import { cenadiEnfermeriaSource, runCenadiEnfermeria } from "./sources/cenadi-enfermeria.js";
+import { cofeprisFarmaceuticosSource, runCofeprisFarmaceuticos } from "./sources/cofepris-farmaceuticos.js";
+import { padronAbogadosMxSource, runPadronAbogadosMx } from "./sources/padron-abogados-mx.js";
+import { fedArquitectosMxSource, runFedArquitectosMx } from "./sources/fed-arquitectos-mx.js";
+import { fedPsicologosMxSource, runFedPsicologosMx } from "./sources/fed-psicologos-mx.js";
+import { denueMxTradesSource, runDenueMxTrades } from "./sources/denue-mx-trades.js";
+import { denueMxBulkSource, runDenueMxBulk } from "./sources/denue-mx-bulk.js";
+import { statcanCbrSource, runStatcanCbr } from "./sources/statcan-cbr.js";
+import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sources/toronto-business-licenses.js";
+import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
+import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -241,6 +282,7 @@ async function main(): Promise<void> {
 
   const sources: ScraperSource[] = [
     googlePlacesSource,
+    yelpFusionSource,
     osmSource,
     paginasAmarillasSource,
     ...COLEGIO_SOURCES,
@@ -285,6 +327,10 @@ async function main(): Promise<void> {
   const graduadosSocialesEsOn = graduadosSocialesEsSource.enabled();
   const vucolvetOn = vucolvetSource.enabled();
   const cgcooOpticosOn = cgcooOpticosSource.enabled();
+  const cgeEnfermeriaOn = cgeEnfermeriaSource.enabled();
+  const cgcofFarmaciaOn = cgcofFarmaciaSource.enabled();
+  const ciccpIngenierosOn = ciccpIngenierosSource.enabled();
+  const coiimIngenierosOn = coiimIngenierosSource.enabled();
   const illinoisIdfprOn = illinoisIdfprSource.enabled();
   const newYorkDosOn = newYorkDosSource.enabled();
   const northCarolinaLbcOn = northCarolinaLbcSource.enabled();
@@ -317,6 +363,10 @@ async function main(): Promise<void> {
   const autoEcolesFrOn = autoEcolesFrSource.enabled();
   const geometresFrOn = geometresFrSource.enabled();
   const cnopPharmaciensOn = cnopPharmaciensSource.enabled();
+  // 2026-05-18 wave: FR → 500k
+  const ordreInfirmiersFrOn = ordreInfirmiersFrSource.enabled();
+  const ordrePharmaciensFrOn = ordrePharmaciensFrSource.enabled();
+  const chambreMetiersFrOn = chambreMetiersFrSource.enabled();
   // 2026-05 wave: CA
   const tsaskOn = tsaskSource.enabled();
   const tsbcOn = tsbcSource.enabled();
@@ -380,14 +430,43 @@ async function main(): Promise<void> {
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
+  const cnoOntarioOn = cnoOntarioSource.enabled();
+  const oiiqQuebecOn = oiiqQuebecSource.enabled();
+  const bccnmBcOn = bccnmBcSource.enabled();
+  const albertaCrnaOn = albertaCrnaSource.enabled();
+  const ocpPharmacyOn = ocpPharmacySource.enabled();
+  const lsoBarOntarioOn = lsoBarOntarioSource.enabled();
+  const oppqQuebecPhysioOn = oppqQuebecPhysioSource.enabled();
+  const cvoVetsOntarioOn = cvoVetsOntarioSource.enabled();
   const antadAsociadosOn = antadAsociadosSource.enabled();
   const emaAcreditadosOn = emaAcreditadosSource.enabled();
   const imssDirectorioOn = imssDirectorioSource.enabled();
   const iftRpcMxOn = iftRpcMxSource.enabled();
+  // 2026-05-18 wave MX → 500k
+  const sicSsMedicinaOn = sicSsMedicinaSource.enabled();
+  const cecmDentistasOn = cecmDentistasSource.enabled();
+  const cenadiEnfermeriaOn = cenadiEnfermeriaSource.enabled();
+  const cofeprisFarmaceuticosOn = cofeprisFarmaceuticosSource.enabled();
+  const padronAbogadosMxOn = padronAbogadosMxSource.enabled();
+  const fedArquitectosMxOn = fedArquitectosMxSource.enabled();
+  const fedPsicologosMxOn = fedPsicologosMxSource.enabled();
+  const denueMxTradesOn = denueMxTradesSource.enabled();
+  const denueMxBulkOn = denueMxBulkSource.enabled();
+  const statcanCbrOn = statcanCbrSource.enabled();
+  const torontoBusinessLicensesOn = torontoBusinessLicensesSource.enabled();
+  const vancouverBusinessLicensesOn = vancouverBusinessLicensesSource.enabled();
+  const calgaryBusinessLicencesOn = calgaryBusinessLicencesSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
   const combBarcelonaOn = comBarcelonaSource.enabled();
+  const npiBulkStreamOn = npiBulkStreamSource.enabled();
+  const npiNursesOn = npiNursesSource.enabled();
+  const npiPharmacistsOn = npiPharmacistsSource.enabled();
+  const adaFindADentistOn = adaFindADentistSource.enabled();
+  const usdaAphisVetsOn = usdaAphisVetsSource.enabled();
+  const stateBarsBulkOn = stateBarsBulkSource.enabled();
+  const foursquareTradesOn = foursquareTradesSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -433,6 +512,10 @@ async function main(): Promise<void> {
     !graduadosSocialesEsOn &&
     !vucolvetOn &&
     !cgcooOpticosOn &&
+    !cgeEnfermeriaOn &&
+    !cgcofFarmaciaOn &&
+    !ciccpIngenierosOn &&
+    !coiimIngenierosOn &&
     !illinoisIdfprOn &&
     !newYorkDosOn &&
     !northCarolinaLbcOn &&
@@ -464,6 +547,9 @@ async function main(): Promise<void> {
     !autoEcolesFrOn &&
     !geometresFrOn &&
     !cnopPharmaciensOn &&
+    !ordreInfirmiersFrOn &&
+    !ordrePharmaciensFrOn &&
+    !chambreMetiersFrOn &&
     !tsaskOn &&
     !tsbcOn &&
     !cpsaOn &&
@@ -525,6 +611,14 @@ async function main(): Promise<void> {
     !svmaSkVetsOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
+    !cnoOntarioOn &&
+    !oiiqQuebecOn &&
+    !bccnmBcOn &&
+    !albertaCrnaOn &&
+    !ocpPharmacyOn &&
+    !lsoBarOntarioOn &&
+    !oppqQuebecPhysioOn &&
+    !cvoVetsOntarioOn &&
     !antadAsociadosOn &&
     !emaAcreditadosOn &&
     !imssDirectorioOn &&
@@ -533,6 +627,26 @@ async function main(): Promise<void> {
     !openDataBcnLocalesOn &&
     !farmaceuticosEsGuardiaOn &&
     !combBarcelonaOn &&
+    !npiBulkStreamOn &&
+    !npiNursesOn &&
+    !npiPharmacistsOn &&
+    !adaFindADentistOn &&
+    !usdaAphisVetsOn &&
+    !stateBarsBulkOn &&
+    !foursquareTradesOn &&
+    !sicSsMedicinaOn &&
+    !cecmDentistasOn &&
+    !cenadiEnfermeriaOn &&
+    !cofeprisFarmaceuticosOn &&
+    !padronAbogadosMxOn &&
+    !fedArquitectosMxOn &&
+    !fedPsicologosMxOn &&
+    !denueMxTradesOn &&
+    !denueMxBulkOn &&
+    !statcanCbrOn &&
+    !torontoBusinessLicensesOn &&
+    !vancouverBusinessLicensesOn &&
+    !calgaryBusinessLicencesOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1187,6 +1301,9 @@ async function main(): Promise<void> {
     [autoEcolesFrOn, "auto-ecoles-fr", runAutoEcolesFr],
     [geometresFrOn, "geometres-fr", runGeometresFr],
     [cnopPharmaciensOn, "cnop-pharmaciens", runCnopPharmaciens],
+    [ordreInfirmiersFrOn, "ordre-infirmiers-fr", runOrdreInfirmiersFr],
+    [ordrePharmaciensFrOn, "ordre-pharmaciens-fr", runOrdrePharmaciensFr],
+    [chambreMetiersFrOn, "chambre-metiers-fr", runChambreMetiersFr],
     [tsaskOn, "tsask", runTsask],
     [tsbcOn, "tsbc", runTsbc],
     [cpsaOn, "cpsa", runCpsa],
@@ -1256,10 +1373,31 @@ async function main(): Promise<void> {
     [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
-    [habitissimoEsOn, "habitissimo-es", runHabitissimoEs],
-    [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
-    [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
-    [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
+    [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
+    [npiNursesOn, "npi-nurses", runNpiNurses],
+    [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
+    [adaFindADentistOn, "ada-find-a-dentist", runAdaFindADentist],
+    [usdaAphisVetsOn, "usda-aphis-vets", runUsdaAphisVets],
+    [stateBarsBulkOn, "state-bars-bulk", runStateBarsBulk],
+    [foursquareTradesOn, "foursquare-trades", runFoursquareTrades],
+    [cgeEnfermeriaOn, "cge-enfermeria", runCgeEnfermeria],
+    [cgcofFarmaciaOn, "cgcof-farmacia", runCgcofFarmacia],
+    [ciccpIngenierosOn, "ciccp-ingenieros", runCiccpIngenieros],
+    [coiimIngenierosOn, "coiim-ingenieros", runCoiimIngenieros],
+    // 2026-05-18 wave MX → 500k
+    [sicSsMedicinaOn, "sic-ss-medicina", runSicSsMedicina],
+    [cecmDentistasOn, "cecm-dentistas", runCecmDentistas],
+    [cenadiEnfermeriaOn, "cenadi-enfermeria", runCenadiEnfermeria],
+    [cofeprisFarmaceuticosOn, "cofepris-farmaceuticos", runCofeprisFarmaceuticos],
+    [padronAbogadosMxOn, "padron-abogados-mx", runPadronAbogadosMx],
+    [fedArquitectosMxOn, "fed-arquitectos-mx", runFedArquitectosMx],
+    [fedPsicologosMxOn, "fed-psicologos-mx", runFedPsicologosMx],
+    [denueMxTradesOn, "denue-mx-trades", runDenueMxTrades],
+    [denueMxBulkOn, "denue-mx-bulk", runDenueMxBulk],
+    [statcanCbrOn, "statcan-cbr", runStatcanCbr],
+    [torontoBusinessLicensesOn, "toronto-business-licenses", runTorontoBusinessLicenses],
+    [vancouverBusinessLicensesOn, "vancouver-business-licenses", runVancouverBusinessLicenses],
+    [calgaryBusinessLicencesOn, "calgary-business-licences", runCalgaryBusinessLicences],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
@@ -1443,6 +1581,10 @@ async function main(): Promise<void> {
     console.log(
       `[scraper] google_places requests=${placesRequests} est_cost=$${estCost}`,
     );
+  }
+  const yelpRequests = getYelpFusionRequestsUsed();
+  if (yelpRequests > 0) {
+    console.log(`[scraper] yelp_fusion requests=${yelpRequests}`);
   }
   console.log(`[scraper] done — ${total} rows written across ${targets.length} targets`);
 }

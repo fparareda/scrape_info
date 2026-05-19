@@ -1,0 +1,16 @@
+name: Scrape · USDA APHIS Accredited Vets (US veterinarians)
+
+# STUB — aphis.usda.gov unreachable from cloud egress (H2 reset / time-out
+# probed 2026-05-18). Slug wired so a future FOIA-CSV / residential-proxy
+# adapter can land without runner edits. Manual dispatch only.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: usda-aphis-vets
+      timeout_minutes: 30
