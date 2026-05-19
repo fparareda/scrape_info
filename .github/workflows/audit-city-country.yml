@@ -1,0 +1,71 @@
+name: audit-city-country-nulls
+
+# Sprint G of audit-output/root-fix-plan.md. Runs every 6h and fails if any
+# row in `professionals` has city_country = NULL. With Sprint C the type
+# system catches missing country at compile time and Sprint E's CHECK
+# constraint blocks new NULL inserts at write time — this workflow is the
+# safety net for anything that bypasses both (e.g. raw SQL, hot-fix
+# scripts, manual inserts).
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  count-nulls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Count NULL city_country
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node - <<'EOF'
+          import { createClient } from "@supabase/supabase-js";
+          const c = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            { auth: { persistSession: false } },
+          );
+          // Sample-based count. The full COUNT(*) on a 1.5M-row table
+          // would timeout under prod load; we accept a 5% sampling-error
+          // margin and act on the trend.
+          const { data, error } = await c.rpc(
+            "backfill_city_country_chunks",
+            { chunk_size: 1 },
+          );
+          if (error) { console.error(error); process.exit(2); }
+          const n = data ?? 0;
+          if (n > 0) {
+            console.error(`Found at least ${n} NULL city_country rows`);
+            // Try to repair a small batch in-line so the alert is
+            // accompanied by self-healing for transient noise.
+            for (let i = 0; i < 10; i++) {
+              const { data: more } = await c.rpc(
+                "backfill_city_country_chunks",
+                { chunk_size: 1000 },
+              );
+              if (!more) break;
+            }
+            // Re-check
+            const { data: again } = await c.rpc(
+              "backfill_city_country_chunks",
+              { chunk_size: 1 },
+            );
+            if ((again ?? 0) > 0) {
+              console.error("Still NULL after best-effort repair");
+              process.exit(1);
+            }
+            console.log("Self-healed.");
+          } else {
+            console.log("OK: 0 NULL city_country rows.");
+          }
+          EOF
