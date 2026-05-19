@@ -88,17 +88,19 @@ export function getSink(): Sink {
     return lookupsPromise;
   }
 
-  // Lazy-loaded set of valid (country, slug) pairs. Keyed by
-  // `${country}::${slug}` so a slug present in multiple countries (e.g.
-  // `guadalajara` in ES and MX once both rows are seeded) is a hit only
-  // when the source's declared country matches. Refusing unseeded
-  // (country, slug) pairs keeps the FK happy and avoids row-by-row
-  // fallback that has blown past the 45-min CI timeout in the past.
+  // Lazy-loaded set of valid (country, slug) keys. Keyed by
+  // `${country}::${slug}` so a slug present in multiple countries (eg
+  // `guadalajara` in both ES and MX once both rows are seeded) is a hit
+  // only when the source's declared country matches. Without this check
+  // ~5,500 rows from MX/FR sources were silently landing on ES/CA rows
+  // with the same slug. Migration 0084-0088 + `source-country.ts` made
+  // the country dimension authoritative.
   let cityKeysPromise: Promise<Set<string>> | undefined;
   async function loadCityKeys(): Promise<Set<string>> {
     if (!cityKeysPromise) {
       cityKeysPromise = (async () => {
         const keys = new Set<string>();
+        // Paginate so we're not bitten by PostgREST's 1000-row cap.
         for (let from = 0; from < 10_000; from += 1000) {
           const { data, error } = await client
             .from("cities")
@@ -126,7 +128,9 @@ export function getSink(): Sink {
           droppedCountry += 1;
           return false;
         }
-        if (r.citySlug === "") return true; // province-granularity row
+        // Empty citySlug = province-granularity row (sink writes
+        // city_slug=NULL, populates metadata.province_slug instead).
+        if (r.citySlug === "") return true;
         if (!validKeys.has(`${country}::${r.citySlug}`)) {
           droppedSlug += 1;
           return false;
@@ -193,9 +197,12 @@ function seoCopyFields(
 // the network round-trip dominates, so larger slices = fewer
 // round-trips = much faster total. Supabase tolerates up to ~5k rows
 // per upsert before URL size issues.
-const BATCH_SIZE = Number(process.env.PROLIO_SINK_BATCH ?? "2000");
+// `||` (not `??`) so empty-string env vars passed by GH Actions when
+// the source-specific override is unset fall through to the default
+// instead of becoming Number("") = 0 → instant empty-batch loop.
+const BATCH_SIZE = Number(process.env.PROLIO_SINK_BATCH || "2000");
 const EXISTING_LOOKUP_CHUNK = Number(
-  process.env.PROLIO_SINK_LOOKUP_CHUNK ?? "500",
+  process.env.PROLIO_SINK_LOOKUP_CHUNK || "500",
 );
 
 /**
@@ -250,6 +257,16 @@ async function upsertSlice(
   let inserted = 0;
   let updated = 0;
   let skipped = 0;
+  // FAST-PATH (PROLIO_SINK_SKIP_LOOKUP=true): skip the SELECT-existing
+  // round-trips entirely and just rely on the (source,source_id) unique
+  // index + ON CONFLICT DO NOTHING. Use this for bulk-ingest sources
+  // where we know rows are brand new (e.g. denue-mx-bulk first import).
+  // Loses the "skip claimed rows" guarantee, but the brand-new source
+  // can't have claimed anything yet, so it's safe. Reduces 50+ select
+  // round-trips per slice to 0 → unblocks parallel shards.
+  if (process.env.PROLIO_SINK_SKIP_LOOKUP === "true") {
+    return upsertSliceFastPath(client, slice, lookups);
+  }
   // 1. Fetch every (source, source_id) already in DB for this slice.
   //    We OR the filter across sources in a single request — PostgREST
   //    handles this via .or() with a list of and() clauses.
@@ -343,6 +360,61 @@ async function upsertSlice(
     else inserted += 1;
   }
   return { inserted, updated, skipped };
+}
+
+/**
+ * Fast path for first-time bulk ingest. No SELECT lookup — relies on
+ * the (source,source_id) unique index + onConflict to dedupe. Doesn't
+ * touch already-claimed rows by design (you should NEVER use this for
+ * a source that may already have rows in the DB).
+ */
+async function upsertSliceFastPath(
+  client: SupabaseClient,
+  slice: ScrapedProfessional[],
+  lookups: SeoLookups,
+): Promise<{ inserted: number; updated: number; skipped: number }> {
+  const payloads: Array<Record<string, unknown>> = [];
+  for (const record of slice) {
+    payloads.push({
+      slug: buildSlug(record.name, record.citySlug),
+      name: record.name,
+      category_key: record.categoryKey,
+      city_country: resolveCountry(record),
+      city_slug: record.citySlug === "" ? null : record.citySlug,
+      headline: record.headline ?? "",
+      description: record.description ?? "",
+      email: record.email,
+      phone: record.phone,
+      website: record.website,
+      address: record.address,
+      lat: record.lat,
+      lng: record.lng,
+      license_number: record.licenseNumber,
+      rating: record.rating,
+      review_count: record.reviewCount,
+      photo_url: record.photoUrl,
+      opening_hours: record.openingHours ?? null,
+      source: record.source,
+      source_id: record.sourceId,
+      metadata: record.metadata ?? {},
+      ...seoCopyFields(record, lookups),
+    });
+  }
+  if (payloads.length === 0) return { inserted: 0, updated: 0, skipped: 0 };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (client.from("professionals") as any).upsert(
+    payloads,
+    { onConflict: "source,source_id", ignoreDuplicates: true },
+  );
+  if (error) {
+    // Slug collision: degrade to row-by-row (rare on first import).
+    if (error.code === "23505") {
+      return upsertSliceRowByRow(client, slice, lookups);
+    }
+    console.error("[sink] fast-path upsert error:", error.message);
+    return { inserted: 0, updated: 0, skipped: payloads.length };
+  }
+  return { inserted: payloads.length, updated: 0, skipped: 0 };
 }
 
 /**
