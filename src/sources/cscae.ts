@@ -326,6 +326,7 @@ async function fetchColegio(
           out.push(
             normalise({
               source: "colegio",
+              country: "ES",
               sourceId: `cscae:${colegio.code.toLowerCase()}:${city.slug}:${r.num}`,
               name: toTitleCase(r.name),
               categoryKey: "arquitecto",

@@ -212,6 +212,7 @@ async function fetchCity(
       out.push(
         normalise({
           source: "oec-fr",
+          country: "FR",
           sourceId: `oec-fr:${row.id}`,
           name,
           categoryKey: "fiscal",

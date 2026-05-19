@@ -366,6 +366,7 @@ async function fetchBoard(
     out.push(
       normalise({
         source: "ca-dca-open-data",
+        country: "US",
         sourceId: `ca-dca-open-data:${board.slug}:${licence}`,
         name,
         categoryKey: cat,

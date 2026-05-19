@@ -130,6 +130,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
           out.push(
             normalise({
               source: "colegio",
+              country: "ES",
               sourceId: `cgpe:${city.slug}:${r.num}`,
               name: toTitleCase(r.name),
               categoryKey: "extranjeria",

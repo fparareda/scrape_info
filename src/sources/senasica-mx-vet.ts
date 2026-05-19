@@ -91,6 +91,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "senasica-mx-vet",
+        country: "MX",
         sourceId: `senasica-mx-vet:${clave}`,
         name: nombre,
         categoryKey: "veterinario",

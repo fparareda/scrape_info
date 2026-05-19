@@ -132,6 +132,7 @@ async function fetchAgentesCkan(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "cnsf-agentes" as ScrapeSource,
+        country: "MX",
         sourceId: `cnsf-agentes:${String(clave).trim()}`,
         name: nombre,
         categoryKey: CATEGORY,
@@ -203,6 +204,7 @@ async function fetchAjustadores(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "cnsf-agentes" as ScrapeSource,
+        country: "MX",
         sourceId: `cnsf-ajustador:${key}`,
         name: nombre,
         categoryKey: CATEGORY,
@@ -298,6 +300,7 @@ async function fetchPersonaMoral(limit: number): Promise<ScrapedProfessional[]> 
     out.push(
       normalise({
         source: "cnsf-agentes" as ScrapeSource,
+        country: "MX",
         sourceId: `cnsf-pm:${key}`,
         name: nombre,
         categoryKey: CATEGORY,

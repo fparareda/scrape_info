@@ -232,6 +232,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "padron-ganadero-nacional" as ScrapeSource,
+        country: "MX",
         sourceId: `pgn:${claveMvz || dedupKey}`,
         name: responsable,
         categoryKey: "veterinario",

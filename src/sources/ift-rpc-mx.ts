@@ -417,6 +417,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "ift-rpc-mx" as ScrapeSource,
+        country: "MX",
         sourceId: `ift-rpc-mx:${opKey}`,
         name: agg.nombreOperador,
         categoryKey: CATEGORY,

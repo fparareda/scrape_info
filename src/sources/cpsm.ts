@@ -57,6 +57,7 @@ export async function runCpsm(): Promise<{
     records.push(
       normalise({
         source: "cpsbc" as ScrapeSource,
+        country: "CA",
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

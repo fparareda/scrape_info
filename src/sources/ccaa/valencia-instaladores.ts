@@ -163,6 +163,7 @@ export const valenciaInstaladores: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `valencia-instalador:${cif}:${category}`,
           name: nombre,
           categoryKey: category,

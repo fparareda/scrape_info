@@ -239,6 +239,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         out.push(
           normalise({
             source: "fedmvz-colegios-vet" as ScrapeSource,
+            country: "MX",
             sourceId: sid,
             name: member.name,
             categoryKey: CATEGORY,
@@ -272,6 +273,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: "fedmvz-colegios-vet" as ScrapeSource,
+          country: "MX",
           sourceId: sid,
           name: member.name,
           categoryKey: CATEGORY,

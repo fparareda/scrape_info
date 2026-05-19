@@ -123,6 +123,7 @@ export const catalunyaTalleres: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `cat-taller:${registro || slugify(nombre)}`,
           name: nombre,
           categoryKey: "mecanica",

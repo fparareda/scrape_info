@@ -157,6 +157,7 @@ function resultToScraped(
 
   return normalise({
     source: "npi-nurses",
+    country: "US",
     sourceId: `npi-nurses:${npi}`,
     name,
     categoryKey: CATEGORY,

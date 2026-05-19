@@ -165,6 +165,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         out.push(
           normalise({
             source: "tsbc" as ScrapeSource,
+            country: "CA",
             sourceId: key,
             name: c.company_name,
             categoryKey: category as never,

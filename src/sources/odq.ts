@@ -81,6 +81,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
           out.push(
             normalise({
               source: "odq",
+              country: "CA",
               sourceId: `odq:${r.num}`,
               name: toTitleCase(r.name),
               categoryKey: "dentista",

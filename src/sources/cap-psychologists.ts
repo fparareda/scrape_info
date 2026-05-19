@@ -55,6 +55,7 @@ export async function runCapPsychologists(): Promise<{
     records.push(
       normalise({
         source: "cap-psychologists" as ScrapeSource,
+        country: "CA",
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

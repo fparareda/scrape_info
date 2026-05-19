@@ -331,6 +331,7 @@ async function fetchCategoryCityPage(
     out.push(
       normalise({
         source: "doctoralia",
+        country: "ES",
         sourceId: parsed.sourceId,
         name: parsed.name,
         categoryKey,

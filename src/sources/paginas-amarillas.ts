@@ -204,6 +204,7 @@ export const paginasAmarillasSource: ScraperSource = {
       for (const listing of listings) {
         const record: ScrapedProfessional = normalise({
           source: "paginas_amarillas",
+          country: target.country,
           sourceId: listing.sourceId,
           name: listing.name,
           categoryKey: target.categoryKey,

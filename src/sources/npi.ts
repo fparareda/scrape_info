@@ -323,6 +323,7 @@ function rowToScraped(
 
   return normalise({
     source: "npi",
+    country: "US",
     sourceId: `npi:${npi}`,
     name,
     categoryKey: category,

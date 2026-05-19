@@ -458,6 +458,7 @@ async function fetchAllNotarios(
         out.push(
           normalise({
             source: "cgn-notariado",
+            country: "ES",
             sourceId: r.sourceId,
             name: r.name,
             categoryKey: CATEGORY,
@@ -516,6 +517,7 @@ async function fetchAllNotarios(
       out.push(
         normalise({
           source: "cgn-notariado",
+          country: "ES",
           sourceId: r.sourceId,
           name: r.name,
           categoryKey: CATEGORY,

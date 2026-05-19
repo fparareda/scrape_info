@@ -410,6 +410,7 @@ function comzRowToProfessional(row: ComzRow): ScrapedProfessional | undefined {
   const specialty = row.titulo?.trim() || undefined;
   return normalise({
     source: "com_zaragoza",
+    country: "ES",
     sourceId: row.numeroColegiado,
     name: fullName,
     categoryKey: "medicina" satisfies CategoryKey,
@@ -528,6 +529,7 @@ function icomemRowToProfessional(
   if (!fullName) return undefined;
   return normalise({
     source: "com_madrid",
+    country: "ES",
     sourceId: r.numColegiado,
     name: fullName,
     categoryKey: "medicina" satisfies CategoryKey,
@@ -681,6 +683,7 @@ function comgiRowToProfessional(r: {
   const specialty = r.especialidad ? titleCase(r.especialidad) : undefined;
   return normalise({
     source: "com_gipuzkoa",
+    country: "ES",
     sourceId: r.num,
     name: fullName,
     categoryKey: "medicina" satisfies CategoryKey,

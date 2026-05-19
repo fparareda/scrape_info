@@ -135,6 +135,7 @@ export const galiciaTalleres: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `galicia-taller:${matricula}`,
           name: nombre,
           categoryKey: "mecanica",

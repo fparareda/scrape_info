@@ -321,6 +321,7 @@ export async function runFlDohMqa(): Promise<{
       batch.push(
         normalise({
           source: "fl-doh-mqa",
+          country: "US",
           sourceId,
           name: displayName,
           categoryKey: entry.category,

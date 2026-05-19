@@ -227,6 +227,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: "condusef-sipres" as ScrapeSource,
+          country: "MX",
           sourceId: `condusef-sipres:${id}`,
           name: row.denominacion,
           categoryKey: CATEGORY,

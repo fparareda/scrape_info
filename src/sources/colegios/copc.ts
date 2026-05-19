@@ -102,6 +102,7 @@ export const copcSource: ScraperSource = {
           out.push(
             normalise({
               source: "colegio",
+              country: "ES",
               sourceId: `copc:${row.numCol}`,
               name: toTitleCase(row.name),
               categoryKey: "psicologia",

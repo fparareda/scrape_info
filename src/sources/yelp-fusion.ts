@@ -220,6 +220,7 @@ export const yelpFusionSource: ScraperSource = {
             biz.id,
             normalise({
               source: "yelp_fusion",
+              country: target.country,
               sourceId: biz.id,
               name: biz.name,
               categoryKey: target.categoryKey,

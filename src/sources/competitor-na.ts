@@ -435,6 +435,7 @@ const homeAdvisorAdapter: SiteAdapter = {
       out.push(
         normalise({
           source: "homeadvisor",
+          country: "US",
           sourceId,
           name,
           categoryKey: CATEGORY_MAP[category],
@@ -485,6 +486,7 @@ const thumbtackAdapter: SiteAdapter = {
           out.push(
             normalise({
               source: "thumbtack",
+              country: "US",
               sourceId: p.sourceId,
               name: p.name,
               categoryKey: CATEGORY_MAP[category],
@@ -510,6 +512,7 @@ const thumbtackAdapter: SiteAdapter = {
         out.push(
           normalise({
             source: "thumbtack",
+            country: "US",
             sourceId: `name:${name.toLowerCase().replace(/\s+/g, "-")}-${cityUs.slug}`,
             name,
             categoryKey: CATEGORY_MAP[category],
@@ -613,6 +616,7 @@ const homeStarsAdapter: SiteAdapter = {
       out.push(
         normalise({
           source: "homestars",
+          country: "CA",
           sourceId: `hs:${slug}`,
           name,
           categoryKey: CATEGORY_MAP[category],
@@ -665,6 +669,7 @@ const trustedProsAdapter: SiteAdapter = {
       out.push(
         normalise({
           source: "trustedpros",
+          country: "CA",
           sourceId: `tp:${slug}-${cityCa.slug}`,
           name,
           categoryKey: CATEGORY_MAP[category],

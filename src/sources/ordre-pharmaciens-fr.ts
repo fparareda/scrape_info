@@ -334,6 +334,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "ordre-pharmaciens-fr" as ScrapeSource,
+        country: "FR",
         sourceId: `ordre-pharm-fr:${p.rpps}`,
         name: displayName || `${p.titre} ${p.nom}`.trim(),
         categoryKey: "farmacia",

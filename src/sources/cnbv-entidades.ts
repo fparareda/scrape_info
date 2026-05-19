@@ -328,6 +328,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     out.push(
       normalise({
         source: "cnbv-entidades" as ScrapeSource,
+        country: "MX",
         sourceId: `cnbv:${sourceKey}`,
         name: razonSocial,
         categoryKey: CATEGORY,

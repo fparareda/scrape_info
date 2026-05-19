@@ -190,6 +190,7 @@ function toRecord(
   const coords = parseCoords(siege.coordonnees);
   return normalise({
     source: "chambre-metiers-fr" as ScrapeSource,
+    country: "FR",
     sourceId: `cma-fr:${siren}`,
     name,
     categoryKey: category,

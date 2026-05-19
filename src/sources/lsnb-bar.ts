@@ -70,6 +70,7 @@ export async function runLsnbBar(): Promise<{
     records.push(
       normalise({
         source: "lsnb-bar" as ScrapeSource,
+        country: "CA",
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

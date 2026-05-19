@@ -214,6 +214,7 @@ export async function runVancouverBusinessLicenses(): Promise<{
     out.push(
       normalise({
         source: "vancouver-business-licenses",
+        country: "CA",
         sourceId: `vancouver-business-licenses:${licence}`,
         name,
         categoryKey: cat,

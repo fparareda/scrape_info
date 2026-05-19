@@ -55,6 +55,7 @@ export async function runCpspei(): Promise<{
     records.push(
       normalise({
         source: "cpspei" as ScrapeSource,
+        country: "CA",
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

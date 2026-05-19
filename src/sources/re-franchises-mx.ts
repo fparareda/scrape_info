@@ -272,6 +272,7 @@ async function fetchPincaliAll(limit: number): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: SOURCE_NAME,
+          country: "MX",
           sourceId: `pincali:${row.slug}`,
           name: row.name,
           categoryKey: CATEGORY,

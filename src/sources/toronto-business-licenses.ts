@@ -209,6 +209,7 @@ export async function runTorontoBusinessLicenses(): Promise<{
     out.push(
       normalise({
         source: "toronto-business-licenses",
+        country: "CA",
         sourceId: `toronto-business-licenses:${licence}`,
         name,
         categoryKey: cat,

@@ -467,6 +467,7 @@ async function fetchAll(limitPerColegio: number): Promise<ScrapedProfessional[]>
       out.push(
         normalise({
           source: "colegio",
+          country: "ES",
           sourceId: `cgae:${colegio.slug}:${r.num}`,
           name: toTitleCase(r.name),
           categoryKey: "extranjeria",

@@ -106,6 +106,7 @@ export async function runWikidataEnrichment(): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: "wikidata",
+          country: "ES", // SPARQL is hardcoded to wd:Q29 (Spain)
           sourceId: qid,
           name,
           categoryKey: q.category,

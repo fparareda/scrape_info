@@ -122,6 +122,7 @@ function toRecord(row: SvmaRow): ScrapedProfessional | null {
   const sourceId = `svma-sk-vets:${name}|${row.category}|${row.licenseType}`;
   return normalise({
     source: "svma-sk-vets" as ScrapeSource,
+    country: "CA",
     sourceId,
     name,
     categoryKey: CATEGORY,

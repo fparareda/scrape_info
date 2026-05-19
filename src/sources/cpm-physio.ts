@@ -55,6 +55,7 @@ export async function runCpmPhysio(): Promise<{
     records.push(
       normalise({
         source: "cpm-physio" as ScrapeSource,
+        country: "CA",
         sourceId: key,
         name: toTitleCase(rec.name),
         categoryKey: CATEGORY,

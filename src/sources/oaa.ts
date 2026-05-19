@@ -193,6 +193,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: "oaa",
+          country: "CA",
           sourceId: `oaa:${r.slug}`,
           name: toTitleCase(flipped),
           categoryKey: "arquitecto",

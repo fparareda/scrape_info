@@ -444,6 +444,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: "cmic-constructoras" as ScrapeSource,
+          country: "MX",
           sourceId: sid,
           name: parsed.razonSocial,
           categoryKey,

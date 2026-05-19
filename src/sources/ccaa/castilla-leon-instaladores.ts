@@ -137,6 +137,7 @@ export const castillaLeonInstaladores: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `cyl-instalador:${cif}:${category}`,
           name: nombre,
           categoryKey: category,

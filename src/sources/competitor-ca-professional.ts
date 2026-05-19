@@ -332,6 +332,7 @@ async function fetchRcdsoDentists(
     );
     const record = normalise({
       source: "rcdso",
+      country: "CA",
       sourceId,
       name: r.name,
       categoryKey: CATEGORY_DENTISTA,

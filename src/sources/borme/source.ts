@@ -105,6 +105,7 @@ function entryToProfessional(
 
   return normalise({
     source: "borme",
+    country: "ES",
     sourceId,
     name: entry.companyName,
     categoryKey,

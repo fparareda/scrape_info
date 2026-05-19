@@ -336,6 +336,7 @@ async function fetchPdfRecords(
     out.push(
       normalise({
         source: "cofepris-farmacias" as ScrapeSource,
+        country: "MX",
         sourceId: `cofepris:${row.licencia}`,
         name: parts.name,
         categoryKey: "medicina",

@@ -384,6 +384,7 @@ export async function runHifldUs(): Promise<{
         batch.push(
           normalise({
             source: "hifld-us" as ScrapeSource,
+            country: "US",
             sourceId,
             name: name
               .split(" ")

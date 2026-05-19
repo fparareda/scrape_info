@@ -131,6 +131,7 @@ export const aragonInstaladores: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `aragon-instalador:${cif}:${category}`,
           name: nombre,
           categoryKey: category,

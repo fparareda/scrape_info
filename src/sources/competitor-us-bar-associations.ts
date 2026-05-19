@@ -393,6 +393,7 @@ async function runCalBar(
       all.push(
         normalise({
           source: "bar-ca",
+          country: "US",
           sourceId: `bar-ca:${item.barNumber}`,
           name: reorderName(detail.name),
           categoryKey: category,

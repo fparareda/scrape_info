@@ -342,6 +342,7 @@ async function fetchEcraContractors(): Promise<ScrapedProfessional[]> {
     );
     const record = normalise({
       source: "ecra",
+      country: "CA",
       sourceId,
       name,
       categoryKey: CATEGORY_ELECTRICIAN,

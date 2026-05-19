@@ -696,6 +696,7 @@ async function processState(
       emit(
         normalise({
           source: "denue-mx-bulk",
+          country: "MX",
           sourceId: sourceKey,
           name,
           categoryKey: category,

@@ -232,6 +232,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           out.push(
             normalise({
               source: "guiadentistas-es" as ScrapeSource,
+              country: "ES",
               sourceId: `guiadentistas-es:${numcol}`,
               name,
               categoryKey: "dentista",

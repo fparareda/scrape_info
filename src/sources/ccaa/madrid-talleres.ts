@@ -120,6 +120,7 @@ export const madridTalleres: CcaaSource = {
       out.push(
         normalise({
           source: "ccaa_registry",
+          country: "ES",
           sourceId: `madrid-taller:${matricula}`,
           name: nombre,
           categoryKey: "mecanica",

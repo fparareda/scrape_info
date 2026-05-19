@@ -170,6 +170,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         out.push(
           normalise({
             source: "pa-pals",
+            country: "US",
             sourceId: `pa-pals:${licence}:${board.category}`,
             name,
             categoryKey: board.category,

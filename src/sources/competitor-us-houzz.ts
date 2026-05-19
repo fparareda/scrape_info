@@ -363,6 +363,7 @@ async function fetchCategoryCityPage(
     out.push(
       normalise({
         source: "houzz",
+        country: "US",
         sourceId,
         name,
         categoryKey,

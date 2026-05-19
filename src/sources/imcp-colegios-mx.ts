@@ -249,6 +249,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       out.push(
         normalise({
           source: "imcp-colegios-mx" as ScrapeSource,
+          country: "MX",
           sourceId: sid,
           name: member.name,
           categoryKey: CATEGORY,

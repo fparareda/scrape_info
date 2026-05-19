@@ -317,6 +317,7 @@ async function fetchSector(
     out.push(
       normalise({
         source: "denue-mx-trades" as ScrapeSource,
+        country: "MX",
         // Same id-namespace as denue-mx so the sink dedup catches it if
         // somehow we extract the same SCIAN twice across the two sources.
         sourceId: `denue-mx:${ident}`,

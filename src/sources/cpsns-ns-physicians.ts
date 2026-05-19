@@ -244,6 +244,7 @@ function toRecord(row: CpsnsRow): ScrapedProfessional | null {
   if (!name) return null;
   return normalise({
     source: "cpsns-ns-physicians" as ScrapeSource,
+    country: "CA",
     sourceId: `cpsns-ns-physicians:${row.licenceNumber}`,
     name,
     categoryKey: CATEGORY,

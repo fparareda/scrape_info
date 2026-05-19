@@ -169,6 +169,7 @@ function toRecord(m: OaqMember): ScrapedProfessional | null {
   const phone = phoneRaw ? phoneRaw : undefined;
   return normalise({
     source: "oaq",
+    country: "CA",
     sourceId: `oaq:${num}`,
     name,
     categoryKey: "arquitecto",

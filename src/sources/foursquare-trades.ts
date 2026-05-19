@@ -137,6 +137,7 @@ function placeToScraped(
     .filter((p) => p && p.length > 0);
   return normalise({
     source: "foursquare-trades",
+    country: "US",
     sourceId: `foursquare-trades:${place.fsq_id}`,
     name,
     categoryKey: category,

@@ -367,6 +367,7 @@ export async function runSiem(): Promise<{
     out.push(
       normalise({
         source: "siem" as ScrapeSource,
+        country: "MX",
         sourceId: `siem:${dedupeKey}`,
         name,
         categoryKey: category,
