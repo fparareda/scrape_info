@@ -115,6 +115,7 @@ export type ScrapeSource =
   | "verificacion-jalisco"
   | "cnsf-agentes"
   | "colegio-notarios-cdmx"
+  | "csn-notaires-fr"
   | "fcarm-arquitectos"
   | "fedmvz-colegios-vet"
   | "conahcyt-snii"
