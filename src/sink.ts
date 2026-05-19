@@ -223,6 +223,16 @@ async function upsertSlice(
   let inserted = 0;
   let updated = 0;
   let skipped = 0;
+  // FAST-PATH (PROLIO_SINK_SKIP_LOOKUP=true): skip the SELECT-existing
+  // round-trips entirely and just rely on the (source,source_id) unique
+  // index + ON CONFLICT DO NOTHING. Use this for bulk-ingest sources
+  // where we know rows are brand new (e.g. denue-mx-bulk first import).
+  // Loses the "skip claimed rows" guarantee, but the brand-new source
+  // can't have claimed anything yet, so it's safe. Reduces 50+ select
+  // round-trips per slice to 0 → unblocks parallel shards.
+  if (process.env.PROLIO_SINK_SKIP_LOOKUP === "true") {
+    return upsertSliceFastPath(client, slice, lookups);
+  }
   // 1. Fetch every (source, source_id) already in DB for this slice.
   //    We OR the filter across sources in a single request — PostgREST
   //    handles this via .or() with a list of and() clauses.
@@ -315,6 +325,60 @@ async function upsertSlice(
     else inserted += 1;
   }
   return { inserted, updated, skipped };
+}
+
+/**
+ * Fast path for first-time bulk ingest. No SELECT lookup — relies on
+ * the (source,source_id) unique index + onConflict to dedupe. Doesn't
+ * touch already-claimed rows by design (you should NEVER use this for
+ * a source that may already have rows in the DB).
+ */
+async function upsertSliceFastPath(
+  client: SupabaseClient,
+  slice: ScrapedProfessional[],
+  lookups: SeoLookups,
+): Promise<{ inserted: number; updated: number; skipped: number }> {
+  const payloads: Array<Record<string, unknown>> = [];
+  for (const record of slice) {
+    payloads.push({
+      slug: buildSlug(record.name, record.citySlug),
+      name: record.name,
+      category_key: record.categoryKey,
+      city_slug: record.citySlug,
+      headline: record.headline ?? "",
+      description: record.description ?? "",
+      email: record.email,
+      phone: record.phone,
+      website: record.website,
+      address: record.address,
+      lat: record.lat,
+      lng: record.lng,
+      license_number: record.licenseNumber,
+      rating: record.rating,
+      review_count: record.reviewCount,
+      photo_url: record.photoUrl,
+      opening_hours: record.openingHours ?? null,
+      source: record.source,
+      source_id: record.sourceId,
+      metadata: record.metadata ?? {},
+      ...seoCopyFields(record, lookups),
+    });
+  }
+  if (payloads.length === 0) return { inserted: 0, updated: 0, skipped: 0 };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (client.from("professionals") as any).upsert(
+    payloads,
+    { onConflict: "source,source_id", ignoreDuplicates: true },
+  );
+  if (error) {
+    // Slug collision: degrade to row-by-row (rare on first import).
+    if (error.code === "23505") {
+      return upsertSliceRowByRow(client, slice, lookups);
+    }
+    console.error("[sink] fast-path upsert error:", error.message);
+    return { inserted: 0, updated: 0, skipped: payloads.length };
+  }
+  return { inserted: payloads.length, updated: 0, skipped: 0 };
 }
 
 /**
