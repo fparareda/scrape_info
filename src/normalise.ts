@@ -32,6 +32,26 @@ export function buildSlug(name: string, citySlug: string): string {
   return base.length <= 80 ? base : base.slice(0, 80);
 }
 
+/**
+ * Build a (citySlug) pair from a raw city name. Returns empty string when
+ * the source only knows the province — the sink writes `city_slug = NULL`
+ * and the caller should populate `metadata.province_slug` instead.
+ *
+ * Scrapers that resolve to a real city should use this in place of bare
+ * `slugify(cityName)` so the convention is uniform and the
+ * province-fallback case is explicit. The country is part of the API
+ * surface even though the slugification itself is country-agnostic —
+ * callers must pass it so the sink validates `(country, slug)` against
+ * `cities`. See audit-output/root-fix-plan.md Sprint D.
+ */
+export function buildCitySlug(
+  _country: "ES" | "CA" | "US" | "FR" | "MX",
+  cityName: string | null | undefined,
+): { citySlug: string; provinceFallback: boolean } {
+  if (!cityName?.trim()) return { citySlug: "", provinceFallback: true };
+  return { citySlug: slugify(cityName), provinceFallback: false };
+}
+
 export function normalise(
   raw: ScrapedProfessional,
 ): ScrapedProfessional {
