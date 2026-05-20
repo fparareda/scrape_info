@@ -44,6 +44,16 @@ function professionToCategory(p: string): CategoryKey | undefined {
   if (d.includes("psycholog")) return "psicologia";
   if (d.includes("veterinar")) return "veterinario";
   if (d.includes("architect")) return "arquitecto";
+  // Engineers — NCEES has no public API so each state's PE board is
+  // the canonical source. NY-SED uses "Professional Engineering".
+  if (d.includes("engineer")) return "ingenieria";
+  // Public Accountancy (CPA). NY-SED lists "Certified Public Accountancy".
+  if (d.includes("accountan") || d.includes("cpa")) return "fiscal";
+  // Nursing — NY-SED has "Registered Professional Nursing", "Licensed
+  // Practical Nursing", "Nurse Practitioner".
+  if (d.includes("nurs")) return "enfermeria";
+  // Pharmacy
+  if (d.includes("pharmac")) return "farmacia";
   return undefined;
 }
 

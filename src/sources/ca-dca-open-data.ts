@@ -112,7 +112,7 @@ const BOARDS: Board[] = [
     folderId: "72555304900",
     dataFileId: "2216160304329",
     authority: "California State Board of Pharmacy",
-    category: "medicina",
+    category: "farmacia",
   },
   {
     slug: "acupuncture",
@@ -193,13 +193,13 @@ const BOARDS: Board[] = [
     slug: "registered-nursing",
     folderId: "72555308989",
     authority: "California Board of Registered Nursing",
-    category: "medicina",
+    category: "enfermeria",
   },
   {
     slug: "vocational-nursing-psych-tech",
     folderId: "72555022691",
     authority: "Board of Vocational Nursing and Psychiatric Technicians",
-    category: "medicina",
+    category: "enfermeria",
   },
   {
     slug: "speech-language",
