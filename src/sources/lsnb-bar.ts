@@ -29,7 +29,7 @@ import { fetchAlinityDirectory } from "./_alinity-utils.js";
 const TENANT = "lsbnb";
 const AUTHORITY = "LSNB";
 const PROVINCE = "NB";
-const CATEGORY: CategoryKey = "extranjeria";
+const CATEGORY: CategoryKey = "abogado";
 const DEFAULT_CITY = "halifax";
 const DEFAULT_LIMIT = 5000;
 const CITY_MAP: Record<string, string> = {};
