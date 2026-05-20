@@ -34,7 +34,10 @@ import { delay, toTitleCase } from "./_bulk-utils.js";
  * `PROLIO_CGAE_LIMIT_PER_COLEGIO` (default 1000). Filter to specific
  * colegios with `PROLIO_CGAE_ONLY=icam,icab` for debugging.
  *
- * Routed to `extranjeria` (Prolio's lawyer category).
+ * Routed to `abogado` (Prolio's general lawyer category). Pre-2026-05
+ * this was `extranjeria` as a stopgap; with `abogado` now a real
+ * category and the type system enforcing country (see #50/#53), the
+ * abogado lane is finally where the rows belong.
  */
 
 const USER_AGENT =
@@ -470,7 +473,7 @@ async function fetchAll(limitPerColegio: number): Promise<ScrapedProfessional[]>
           country: "ES",
           sourceId: `cgae:${colegio.slug}:${r.num}`,
           name: toTitleCase(r.name),
-          categoryKey: "extranjeria",
+          categoryKey: "abogado",
           citySlug: colegio.citySlug,
           licenseNumber: r.num,
           metadata: {
