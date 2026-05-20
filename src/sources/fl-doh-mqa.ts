@@ -87,10 +87,10 @@ const PROFESSIONS: readonly ProfessionEntry[] = [
   // Board of Psychology (27) / School Psychology (41)
   { code: "2701", label: "Psychologist",            category: "psicologia" },
   { code: "4101", label: "School Psychologist",     category: "psicologia" },
-  // Board of Nursing (17) — RN / LPN / APRN bucketed under medicina
-  { code: "1701", label: "Registered Nurse",        category: "medicina" },
-  { code: "1702", label: "Licensed Practical Nurse",category: "medicina" },
-  { code: "1711", label: "Advanced Practice Registered Nurse", category: "medicina" },
+  // Board of Nursing (17)
+  { code: "1701", label: "Registered Nurse",        category: "enfermeria" },
+  { code: "1702", label: "Licensed Practical Nurse",category: "enfermeria" },
+  { code: "1711", label: "Advanced Practice Registered Nurse", category: "enfermeria" },
   // Board of Chiropractic Medicine (05) — under medicina
   { code: "501",  label: "Chiropractic Physician",  category: "medicina" },
   // Board of Optometry (18) — under medicina
