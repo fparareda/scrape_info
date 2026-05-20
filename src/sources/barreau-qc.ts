@@ -87,7 +87,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
               country: "CA",
               sourceId: `barreau-qc:${r.num}`,
               name: toTitleCase(r.name),
-              categoryKey: "extranjeria",
+              categoryKey: "abogado",
               citySlug: city.slug,
               licenseNumber: r.num,
               metadata: {

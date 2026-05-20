@@ -100,7 +100,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
             country: "CA",
             sourceId: `nsbs-ns:${key}`,
             name: toTitleCase(r.name),
-            categoryKey: "extranjeria",
+            categoryKey: "abogado",
             citySlug: r.city ? toCitySlug(r.city) : "unknown",
             metadata: {
               country: "CA",
