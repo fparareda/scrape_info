@@ -136,15 +136,19 @@ async function main() {
     // gosom-generated UUID on child rows that escape attribution) is
     // skipped.
     const parts = inputId?.split("|") ?? [];
-    let country: string | undefined;
+    let country: "ES" | "CA" | "US" | "FR" | "MX" | undefined;
     let citySlug: string | undefined;
     let categoryKey: string | undefined;
-    if (parts.length === 3) {
-      [country, citySlug, categoryKey] = parts;
-    } else if (parts.length === 2) {
-      [citySlug, categoryKey] = parts;
+    const VALID_COUNTRIES = new Set(["ES", "CA", "US", "FR", "MX"]);
+    if (parts.length === 3 && VALID_COUNTRIES.has(parts[0])) {
+      country = parts[0] as "ES" | "CA" | "US" | "FR" | "MX";
+      citySlug = parts[1];
+      categoryKey = parts[2];
     }
-    if (!citySlug || !categoryKey) {
+    // Legacy 2-part tags ({slug}|{cat}) and any malformed line are
+    // dropped — without a country we can't disambiguate cross-country
+    // slug collisions like guadalajara (ES vs MX).
+    if (!country || !citySlug || !categoryKey) {
       stats.skippedNoTag++;
       continue;
     }
@@ -154,6 +158,7 @@ async function main() {
       sourceId: placeId,
       name: title,
       categoryKey: categoryKey as CategoryKey,
+      country,
       citySlug,
       phone: cols[colIdx.phone] || undefined,
       website: cols[colIdx.website] || undefined,
@@ -165,7 +170,6 @@ async function main() {
       reviewCount: num(cols[colIdx.review_count]) ?? undefined,
       photoUrl: cols[colIdx.thumbnail] || undefined,
       metadata: {
-        gmaps_country: country,
         gmaps_category: cols[colIdx.category] || undefined,
         gmaps_link: cols[colIdx.link] || undefined,
         gmaps_plus_code: cols[colIdx.plus_code] || undefined,
