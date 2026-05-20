@@ -249,6 +249,8 @@ import { statcanCbrSource, runStatcanCbr } from "./sources/statcan-cbr.js";
 import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sources/toronto-business-licenses.js";
 import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
 import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
+// 2026-05-20: CA Manitoba dentists (MDA)
+import { mdaMbDentistsSource, runMdaMbDentists } from "./sources/mda-mb-dentists.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -456,6 +458,7 @@ async function main(): Promise<void> {
   const torontoBusinessLicensesOn = torontoBusinessLicensesSource.enabled();
   const vancouverBusinessLicensesOn = vancouverBusinessLicensesSource.enabled();
   const calgaryBusinessLicencesOn = calgaryBusinessLicencesSource.enabled();
+  const mdaMbDentistsOn = mdaMbDentistsSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -650,7 +653,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !mdaMbDentistsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1398,6 +1402,8 @@ async function main(): Promise<void> {
     [torontoBusinessLicensesOn, "toronto-business-licenses", runTorontoBusinessLicenses],
     [vancouverBusinessLicensesOn, "vancouver-business-licenses", runVancouverBusinessLicenses],
     [calgaryBusinessLicencesOn, "calgary-business-licences", runCalgaryBusinessLicences],
+    // 2026-05-20: CA Manitoba Dental Association dentists (MB)
+    [mdaMbDentistsOn, "mda-mb-dentists", runMdaMbDentists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
