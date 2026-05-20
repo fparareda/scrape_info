@@ -1,0 +1,74 @@
+name: audit-stale-scrapers
+
+# Twice a week, list scrape sources that haven't successfully run in 14+
+# days. Opens (or updates) a single GitHub issue with the list so it
+# stays visible. Sources off-by-default (no PROLIO_RUN_*=true) are
+# excluded automatically because they never produce scrape_runs rows.
+
+on:
+  schedule:
+    - cron: "0 12 * * 1,4"  # Mon + Thu, 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Detect stale sources
+        id: detect
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node - <<'EOF' > stale.md
+          import { createClient } from "@supabase/supabase-js";
+          const c = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            { auth: { persistSession: false } },
+          );
+          const { data, error } = await c
+            .from("source_health")
+            .select("source, last_finished_at, days_since_last_run, last_status, rows_30d, errors_7d")
+            .gt("days_since_last_run", 14)
+            .order("days_since_last_run", { ascending: false });
+          if (error) { console.error(error); process.exit(1); }
+          if (!data || data.length === 0) {
+            console.log("# Stale scraper audit\n\nAll sources fresh ✅");
+          } else {
+            console.log("# Stale scraper audit\n");
+            console.log(`${data.length} source(s) haven't run in 14+ days.\n`);
+            console.log("| source | days idle | last status | rows in 30d | errors 7d |");
+            console.log("|---|---:|---|---:|---:|");
+            for (const r of data) {
+              const days = Math.floor(r.days_since_last_run);
+              console.log(`| \`${r.source}\` | ${days} | ${r.last_status ?? "—"} | ${r.rows_30d ?? 0} | ${r.errors_7d ?? 0} |`);
+            }
+          }
+          EOF
+          cat stale.md
+          echo "count=$(grep -c '^| \`' stale.md || echo 0)" >> "$GITHUB_OUTPUT"
+      - name: Open or update issue
+        if: steps.detect.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          body=$(cat stale.md)
+          existing=$(gh issue list --search "Stale scraper audit in:title" --state open --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body "$body"
+            echo "Updated issue #$existing"
+          else
+            gh issue create --title "Stale scraper audit" --body "$body" --label "scrape-health"
+          fi
