@@ -14,7 +14,7 @@ import { fetchAlinityDirectory } from "./_alinity-utils.js";
 const TENANT = "lss";
 const AUTHORITY = "LSS";
 const PROVINCE = "SK";
-const CATEGORY: CategoryKey = "extranjeria";
+const CATEGORY: CategoryKey = "abogado";
 const DEFAULT_CITY = "saskatoon";
 const DEFAULT_LIMIT = 5000;
 const CITY_MAP: Record<string, string> = {"saskatoon":"saskatoon","regina":"saskatoon"};

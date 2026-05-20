@@ -1,0 +1,39 @@
+name: refresh-coverage-matrix
+
+# Refreshes the `coverage_matrix` materialized view daily. The view
+# aggregates (country, category) → coverage stats and is used by
+# /admin/coverage in the web app. CONCURRENTLY keeps reads non-blocking.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # 06:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Refresh
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node - <<'EOF'
+          import { createClient } from "@supabase/supabase-js";
+          const c = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            { auth: { persistSession: false } },
+          );
+          const t0 = Date.now();
+          const { error } = await c.rpc("refresh_coverage_matrix");
+          if (error) { console.error(error); process.exit(1); }
+          console.log(`coverage_matrix refreshed in ${((Date.now()-t0)/1000).toFixed(1)}s`);
+          EOF
