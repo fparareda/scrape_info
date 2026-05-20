@@ -186,7 +186,7 @@ async function main() {
       if (have?.has(cat)) continue;
       const syn = CATEGORY_SYNONYMS[cat]?.[locale]?.[0];
       if (!syn) continue;
-      lines.push(`${syn} ${connector} ${name}#!#${slug}|${cat}`);
+      lines.push(`${syn} ${connector} ${name}#!#${args.country}|${slug}|${cat}`);
       stats.queries++;
     }
   }
