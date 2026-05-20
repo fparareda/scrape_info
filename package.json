@@ -8,7 +8,8 @@
     "scrape": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "ping:telegram": "node scripts/ping-telegram.mjs",
-    "nppes-bulk": "tsx src/run-nppes-bulk.ts"
+    "nppes-bulk": "tsx src/run-nppes-bulk.ts",
+    "gmaps-gaps": "tsx src/run-gmaps-gaps-queries.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
