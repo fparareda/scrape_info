@@ -14,9 +14,11 @@ import { delay, toTitleCase } from "./_bulk-utils.js";
  * Pre-flight: robots.txt under cgpe.es is permissive (no blanket
  * Disallow). Respectful UA + low concurrency (2s between requests).
  *
- * Routed to `extranjeria` (jurídico) per the same convention used for
- * CGAE — procuradores are jurídico-adjacent and the closest existing
- * category. Off by default; `PROLIO_RUN_CGPE=true` to enable. Cap via
+ * Routed to `abogado` because procurador is a legal-profession sibling
+ * of abogado in Spain (separate colegio, but legal practice all the
+ * same). Pre-2026-05 this was `extranjeria` as a stopgap. If we ever
+ * add a dedicated `procurador` category, switch here. Off by default;
+ * `PROLIO_RUN_CGPE=true` to enable. Cap via
  * `PROLIO_CGPE_LIMIT_PER_CITY` (default 1000).
  *
  * Scrapeability classification (verify on first run):
@@ -133,7 +135,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
               country: "ES",
               sourceId: `cgpe:${city.slug}:${r.num}`,
               name: toTitleCase(r.name),
-              categoryKey: "extranjeria",
+              categoryKey: "abogado",
               citySlug: city.slug,
               licenseNumber: r.num,
               metadata: {

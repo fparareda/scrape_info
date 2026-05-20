@@ -113,24 +113,24 @@ interface PracticeAreaSpec {
 const PRACTICE_AREAS: PracticeAreaSpec[] = [
   // Wedge — drives CategoryKey="extranjeria" and the wedge tag.
   { key: "immigration", needles: ["immigration"], category: "extranjeria", wedge: true },
-  // Other practice areas — bucket to "fiscal" (our closest professional-
-  // services key today). Real practice area is preserved in metadata so
-  // we can re-bucket once we add a legal CategoryKey.
-  { key: "family", needles: ["family", "divorce", "child custody"], category: "fiscal" },
+  // Other practice areas → `abogado` (added 2026; pre-2026 was stuffed
+  // into `fiscal` because the legal CategoryKey didn't exist yet). The
+  // specific area stays in metadata.practice_area for future re-bucketing.
+  { key: "family", needles: ["family", "divorce", "child custody"], category: "abogado" },
   {
     key: "personal-injury",
     needles: ["personal injury", "injury", "wrongful death"],
-    category: "fiscal",
+    category: "abogado",
   },
   {
     key: "criminal",
     needles: ["criminal", "dui", "dwi", "traffic"],
-    category: "fiscal",
+    category: "abogado",
   },
   {
     key: "business",
     needles: ["business", "corporate", "commercial"],
-    category: "fiscal",
+    category: "abogado",
   },
 ];
 
