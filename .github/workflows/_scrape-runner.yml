@@ -349,6 +349,7 @@ jobs:
       # physicians (ASP.NET WebForms POST) + LSNB NB bar (Alinity reuse).
       PROLIO_RUN_SVMA_SK_VETS:        ${{ inputs.source == 'svma-sk-vets' && 'true' || 'false' }}
       PROLIO_RUN_ABVMA_AB_VETS:       ${{ inputs.source == 'abvma-ab-vets' && 'true' || 'false' }}
+      PROLIO_RUN_MVMA_MB_VETS:        ${{ inputs.source == 'mvma-mb-vets' && 'true' || 'false' }}
       PROLIO_RUN_CPSNS_NS_PHYSICIANS: ${{ inputs.source == 'cpsns-ns-physicians' && 'true' || 'false' }}
       PROLIO_RUN_LSNB_BAR:            ${{ inputs.source == 'lsnb-bar' && 'true' || 'false' }}
 

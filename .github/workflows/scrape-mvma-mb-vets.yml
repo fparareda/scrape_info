@@ -1,0 +1,12 @@
+name: Scrape · MVMA (MB vets)
+on:
+  schedule:
+    - cron: "15 8 * * 0"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: mvma-mb-vets
+      timeout_minutes: 30
