@@ -22,11 +22,15 @@ import { withScrapeRun } from "../telemetry.js";
  *   Record fields — name, address (street, CP, city, province), 1-2
  *     phones, fax, two emails (corporate `@correonotarial.org` per Ley
  *     24/2001 + public `@notariado.org`), and optional languages.
- *   Record count — live HTML reports `totalNotarios = 833` for
- *     comunidad=0&idioma=0 (2026-05-14). The `comunidad` query param
- *     is effectively ignored by the current portlet (every value 0..19
- *     returns the same 833-row roster) but is preserved for future
- *     compatibility. Coverage spans all 50 provinces.
+ *   Record count — the all-Spain view (comunidad=0&idioma=0) only
+ *     surfaces ~833 of the ~3000-notary roster because the portlet
+ *     caps the rendered list. To recover the full census we iterate
+ *     the `provincia` query parameter across all 52 INE province
+ *     codes (50 provinces + Ceuta + Melilla); each per-provincia
+ *     page returns the unrestricted list for that province. Results
+ *     are deduplicated by sourceId (name + postal code + city) since
+ *     a notary appears in exactly one provincia. Coverage spans all
+ *     50 provinces + 2 autonomous cities.
  *   Auth / WAF — no login required, no Cloudflare, no captcha detected
  *     in test fetch from CI-class IP.
  *
@@ -48,7 +52,7 @@ const FALLBACK_UA =
 const REQUEST_TIMEOUT_MS = 30_000;
 /** Honour robots.txt Crawl-delay: 5 */
 const REQUEST_DELAY_MS = 5_500;
-const DEFAULT_LIMIT = 2000;
+const DEFAULT_LIMIT = 5000;
 
 const CATEGORY: CategoryKey = "notario";
 
@@ -142,7 +146,6 @@ interface NotarioRecord {
  */
 function parseNotarios(html: string): NotarioRecord[] {
   const out: NotarioRecord[] = [];
-  const seen = new Set<string>();
 
   // Split the page on each btn-title span; chunks[0] is the page header.
   const chunks = html.split(/<span[^>]*class="[^"]*\bbtn-title\b[^"]*"[^>]*>/i);
@@ -230,17 +233,28 @@ function parseNotarios(html: string): NotarioRecord[] {
 
     const fullAddress = [rawAddr, cpProv].filter(Boolean).join(", ") || undefined;
 
-    // Stable sourceId: slug of the full name
-    const slug = rawName
+    // Stable sourceId: slug of (name + postal code + city). Same-name
+    // notarios are common in Spain — including the postal code (which
+    // pins down the exact notarial office) keeps them distinguishable
+    // across iterations. Falls back to province if no CP is available.
+    const nameSlug = rawName
       .toLowerCase()
       .normalize("NFD")
       .replace(/[̀-ͯ]/g, "")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
-    if (!slug) continue;
-    const sourceId = `cgn:${slug}`;
-    if (seen.has(sourceId)) continue;
-    seen.add(sourceId);
+    if (!nameSlug) continue;
+    const idSuffix = postalCode
+      ? `-${postalCode}`
+      : city
+        ? `-${city
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "")}`
+        : "";
+    const sourceId = `cgn:${nameSlug}${idSuffix}`;
 
     out.push({
       sourceId,
@@ -417,13 +431,34 @@ function citySlugFromAddress(address: string | undefined): string | undefined {
   return undefined;
 }
 
-// --- Community IDs for the directory (autonomous communities) -----------
-// comunidad=0 returns all Spain; individual CCAA IDs allow chunked fetches
-// if needed. We try comunidad=0 first (single full-census request) and fall
-// back to per-CCAA if the page is empty (server may enforce a filter).
-const COMUNIDAD_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+// --- INE province codes for full-census iteration ----------------------
+// The CGN portlet caps the all-Spain (comunidad=0) view at ~833 entries
+// even though the real notarial roster is ~3000. Per-province requests
+// return the unrestricted list for each province. INE codes 1..52 cover
+// all 50 Spanish provinces plus Ceuta (51) and Melilla (52).
+const PROVINCIA_IDS: number[] = Array.from({ length: 52 }, (_, i) => i + 1);
 
 // --- Scrape logic ---------------------------------------------------------
+
+/**
+ * Resolve a citySlug from a parsed record. Tries (in order):
+ *   1. PROVINCE_TO_CITY lookup against the province (handles
+ *      "Bizkaia" → "bilbao" type renames).
+ *   2. Slugified city name as-is (e.g. "Vilanova i la Geltrú"
+ *      → "vilanova-i-la-geltru").
+ *   3. Slugified province as-is.
+ *   4. PROVINCE_TO_CITY scan against the address blob.
+ * Returns undefined only when no city/province text exists at all.
+ */
+function resolveCitySlug(r: NotarioRecord): string | undefined {
+  const provKey = r.province?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  if (provKey && PROVINCE_TO_CITY[provKey]) return PROVINCE_TO_CITY[provKey];
+  const fromCity = slugifyCity(r.city);
+  if (fromCity) return fromCity;
+  const fromProv = slugifyCity(r.province);
+  if (fromProv) return fromProv;
+  return citySlugFromAddress(r.address);
+}
 
 async function fetchAllNotarios(
   limit: number,
@@ -431,119 +466,106 @@ async function fetchAllNotarios(
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
 
-  /**
-   * Try fetching all Spain first (comunidad=0).
-   * If the result seems empty or too small, fall back to per-CCAA.
-   */
+  const pushRecord = (r: NotarioRecord, provincia?: number): boolean => {
+    if (seen.has(r.sourceId)) return false;
+    const citySlug = resolveCitySlug(r);
+    if (!citySlug) {
+      // Last-resort: don't silently drop — keep with a generic "spain"
+      // marker so the row still lands. Sink can flag for manual review.
+      console.warn(
+        `[cgn_notariado] could not derive citySlug for ${r.sourceId} (city=${r.city ?? ""} prov=${r.province ?? ""}) — skipping`,
+      );
+      return false;
+    }
+    seen.add(r.sourceId);
+    out.push(
+      normalise({
+        source: "cgn-notariado",
+        sourceId: r.sourceId,
+        name: r.name,
+        categoryKey: CATEGORY,
+        citySlug,
+        address: r.address,
+        phone: r.phone,
+        email: r.email,
+        metadata: {
+          country: "ES",
+          authority: "CGN",
+          verified_by_authority: true,
+          ...(provincia !== undefined ? { provincia } : {}),
+          city: r.city,
+          province: r.province,
+          postal_code: r.postalCode,
+          phone_alt: r.phoneAlt,
+          fax: r.fax,
+          email_corporate: r.emailCorporate,
+          languages: r.languages,
+        },
+      }),
+    );
+    return true;
+  };
+
+  // Seed with the all-Spain view first (cheap, covers most provinces in
+  // one request). The portlet caps this view at ~833 rows; the per-
+  // provincia loop below recovers the rest.
   const allSpainUrl = `${BASE_URL}?comunidad=0&idioma=0`;
-  console.log(`[cgn_notariado] fetching all-Spain URL: ${allSpainUrl}`);
+  console.log(`[cgn_notariado] fetching all-Spain seed URL: ${allSpainUrl}`);
   const allSpainResponse = await politeFetch(allSpainUrl);
-  if (!allSpainResponse || !allSpainResponse.body) {
-    console.warn(
-      `[cgn_notariado] all-Spain fetch failed (status=${allSpainResponse?.status ?? "network"}), trying per-CCAA`,
+  if (allSpainResponse?.body) {
+    const records = parseNotarios(allSpainResponse.body);
+    let added = 0;
+    for (const r of records) {
+      if (out.length >= limit) break;
+      if (pushRecord(r)) added += 1;
+    }
+    console.log(
+      `[cgn_notariado] all-Spain seed parsed=${records.length} added=${added} total=${out.length}`,
     );
   } else {
-    const records = parseNotarios(allSpainResponse.body);
-    console.log(`[cgn_notariado] all-Spain parsed ${records.length} notarios`);
-    if (records.length >= 400) {
-      // Looks like a full census — use it directly.
-      for (const r of records) {
-        if (seen.has(r.sourceId)) continue;
-        seen.add(r.sourceId);
-        const citySlug =
-          slugifyCity(r.city) ??
-          slugifyCity(r.province) ??
-          citySlugFromAddress(r.address);
-        if (!citySlug) continue;
-        out.push(
-          normalise({
-            source: "cgn-notariado",
-            sourceId: r.sourceId,
-            name: r.name,
-            categoryKey: CATEGORY,
-            citySlug,
-            address: r.address,
-            phone: r.phone,
-            email: r.email,
-            metadata: {
-              country: "ES",
-              authority: "CGN",
-              verified_by_authority: true,
-              city: r.city,
-              province: r.province,
-              postal_code: r.postalCode,
-              phone_alt: r.phoneAlt,
-              fax: r.fax,
-              email_corporate: r.emailCorporate,
-              languages: r.languages,
-            },
-          }),
-        );
-        if (out.length >= limit) break;
-      }
-      console.log(
-        `[cgn_notariado] all-Spain strategy yielded ${out.length} records (after city filter)`,
-      );
-      return out;
-    }
     console.warn(
-      `[cgn_notariado] all-Spain returned only ${records.length} records — falling back to per-CCAA`,
+      `[cgn_notariado] all-Spain seed failed (status=${allSpainResponse?.status ?? "network"})`,
     );
   }
 
-  // Per-CCAA fallback — iterate community IDs 1..19 with polite delay.
-  for (const comunidad of COMUNIDAD_IDS.filter((c) => c > 0)) {
+  // Iterate every Spanish provincia (INE codes 1..52) to recover entries
+  // missing from the capped all-Spain view. Each request is rate-limited
+  // to honour the site's Crawl-delay: 5.
+  let consecutiveEmpty = 0;
+  for (const provincia of PROVINCIA_IDS) {
     if (out.length >= limit) break;
-    const url = `${BASE_URL}?comunidad=${comunidad}&idioma=0`;
+    const url = `${BASE_URL}?comunidad=0&provincia=${provincia}&idioma=0`;
     await sleep(REQUEST_DELAY_MS);
     const response = await politeFetch(url);
     if (!response || !response.body) {
       console.warn(
-        `[cgn_notariado] comunidad=${comunidad} fetch failed`,
+        `[cgn_notariado] provincia=${provincia} fetch failed (status=${response?.status ?? "network"})`,
       );
       continue;
     }
     const records = parseNotarios(response.body);
     let added = 0;
     for (const r of records) {
-      if (seen.has(r.sourceId)) continue;
-      seen.add(r.sourceId);
-      const citySlug =
-        slugifyCity(r.city) ??
-        slugifyCity(r.province) ??
-        citySlugFromAddress(r.address);
-      if (!citySlug) continue;
-      out.push(
-        normalise({
-          source: "cgn-notariado",
-          sourceId: r.sourceId,
-          name: r.name,
-          categoryKey: CATEGORY,
-          citySlug,
-          address: r.address,
-          phone: r.phone,
-          email: r.email,
-          metadata: {
-            country: "ES",
-            authority: "CGN",
-            verified_by_authority: true,
-            comunidad,
-            city: r.city,
-            province: r.province,
-            postal_code: r.postalCode,
-            phone_alt: r.phoneAlt,
-            fax: r.fax,
-            email_corporate: r.emailCorporate,
-            languages: r.languages,
-          },
-        }),
-      );
-      added += 1;
       if (out.length >= limit) break;
+      if (pushRecord(r, provincia)) added += 1;
     }
     console.log(
-      `[cgn_notariado] comunidad=${comunidad} parsed=${records.length} added=${added} total=${out.length}`,
+      `[cgn_notariado] provincia=${provincia} parsed=${records.length} added=${added} total=${out.length}`,
     );
+    // Defensive: if many provinces in a row return zero records, the
+    // server is probably ignoring the `provincia` param — bail out
+    // rather than hammering it for nothing. We keep what we've got.
+    if (records.length === 0) {
+      consecutiveEmpty += 1;
+      if (consecutiveEmpty >= 8) {
+        console.warn(
+          `[cgn_notariado] ${consecutiveEmpty} consecutive empty provincia responses — stopping per-provincia loop`,
+        );
+        break;
+      }
+    } else {
+      consecutiveEmpty = 0;
+    }
   }
 
   return out;
