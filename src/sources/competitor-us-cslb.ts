@@ -34,7 +34,7 @@ import { getSink } from "../sink.js";
  *
  *   C-10 (Electrical)             → electricidad
  *   C-36 (Plumbing)               → fontaneria
- *   C-20 (Warm-Air Heating, A/C)  → electricidad   (HVAC bucket)
+ *   C-20 (Warm-Air Heating, A/C)  → hvac
  *   C-6  (Cabinet, Millwork,
  *         Finish Carpentry)       → carpinteria
  *
@@ -62,6 +62,7 @@ const FORM_URL =
 const CATEGORY_ELECTRICIAN: CategoryKey = "electricidad";
 const CATEGORY_PLUMBER: CategoryKey = "fontaneria";
 const CATEGORY_CARPENTER: CategoryKey = "carpinteria";
+const CATEGORY_HVAC: CategoryKey = "hvac";
 
 interface ClassMap {
   code: string;
@@ -82,7 +83,7 @@ interface ClassMap {
 const TARGET_CLASSIFICATIONS: ClassMap[] = [
   { code: "C-10", category: CATEGORY_ELECTRICIAN, description: "Electrical" },
   { code: "C-36", category: CATEGORY_PLUMBER, description: "Plumbing" },
-  { code: "C-20", category: CATEGORY_ELECTRICIAN, description: "HVAC" },
+  { code: "C-20", category: CATEGORY_HVAC, description: "HVAC" },
   { code: "C-6", category: CATEGORY_CARPENTER, description: "Carpentry" },
 ];
 

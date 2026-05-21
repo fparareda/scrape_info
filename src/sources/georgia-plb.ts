@@ -24,8 +24,9 @@ const USER_AGENT =
 function boardToCategory(b: string): CategoryKey | undefined {
   const d = b.toLowerCase();
   if (d.includes("electric")) return "electricidad";
-  if (d.includes("plumb") || d.includes("hvac") || d.includes("conditioned air"))
-    return "fontaneria";
+  if (d.includes("hvac") || d.includes("conditioned air") || d.includes("air condition") || d.includes("refrigerat") || d.includes("heating"))
+    return "hvac";
+  if (d.includes("plumb")) return "fontaneria";
   if (d.includes("architect")) return "arquitecto";
   if (d.includes("dent")) return "dentista";
   if (d.includes("physical therap")) return "fisioterapia";
