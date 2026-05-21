@@ -206,8 +206,13 @@ jobs:
             echo "city_offset=$offset" >> "$GITHUB_OUTPUT"
             echo "depth=1" >> "$GITHUB_OUTPUT"
             echo "concurrency=2" >> "$GITHUB_OUTPUT"
-            echo "max_queries=0" >> "$GITHUB_OUTPUT"
-            echo "::notice::Cron mode — country=$country top_n=200 city_offset=$offset (hour $hour UTC)"
+            # Cap each cron shard at 3500 queries to fit under the 5h30m
+            # GA timeout. PR #81 emits up to 3 synonyms per (city, cat) so
+            # ES top-200 day 1 could hit ~4,200 queries (~7h). Truncating
+            # leaves coverage gaps that the next day's run picks up via
+            # the live matview — net zero waste, predictable run length.
+            echo "max_queries=3500" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cron mode — country=$country top_n=200 city_offset=$offset max=3500 (hour $hour UTC)"
           else
             echo "country=${{ inputs.country }}" >> "$GITHUB_OUTPUT"
             echo "top_n=${{ inputs.top_n }}" >> "$GITHUB_OUTPUT"
