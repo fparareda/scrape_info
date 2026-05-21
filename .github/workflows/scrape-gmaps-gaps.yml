@@ -6,11 +6,47 @@ name: scrape-gmaps-gaps
 # Two modes:
 #   1. Manual (workflow_dispatch) — pick country, top_n, offset. Useful
 #      for one-off shards.
-#   2. Cron (5 schedules/day, 02:00–06:00 UTC) — slices ES top-1000
-#      into 5 chunks of 200 cities each, each within the 5.5h GA cap.
-#      Each chunk is ~2.5h (build + scrape + load), leaving slack for
-#      GA queueing. The cron uses the run's UTC hour to compute
-#      `city-offset = (hour - 2) * 200`.
+#   2. Cron — five countries (ES, FR, MX, US, CA) sharded across the
+#      UTC day. Each shard processes 200 cities (~2.5h), well under
+#      the 5.5h GA cap. Country + city_offset are derived from the
+#      run's UTC hour (see the `shard` step).
+#
+# Schedule rationale
+# ------------------
+# We need 5 countries × 5 shards = 25 cron slots, but a day has 24
+# hours. So four countries get the full top-1000 (5 shards each) and
+# CA gets top-800 (4 shards). CA is the smallest pro market of the
+# five so taking the haircut there is the least painful trade-off.
+# We use 1h spacing between same-country shards (matching the
+# original ES setup) and keep ≥1h gaps between different countries
+# so a delayed run can't collide with the next country's first shard.
+#
+#   UTC hour | country | shard | city_offset
+#   ---------+---------+-------+------------
+#       02   |   ES    |   1   |      0
+#       03   |   ES    |   2   |    200
+#       04   |   ES    |   3   |    400
+#       05   |   ES    |   4   |    600
+#       06   |   ES    |   5   |    800
+#       08   |   FR    |   1   |      0
+#       09   |   FR    |   2   |    200
+#       10   |   FR    |   3   |    400
+#       11   |   FR    |   4   |    600
+#       12   |   FR    |   5   |    800
+#       14   |   MX    |   1   |      0
+#       15   |   MX    |   2   |    200
+#       16   |   MX    |   3   |    400
+#       17   |   MX    |   4   |    600
+#       18   |   MX    |   5   |    800
+#       19   |   US    |   1   |      0
+#       20   |   US    |   2   |    200
+#       21   |   US    |   3   |    400
+#       22   |   US    |   4   |    600
+#       23   |   US    |   5   |    800
+#       00   |   CA    |   1   |      0
+#       01   |   CA    |   2   |    200
+#       07   |   CA    |   3   |    400
+#       13   |   CA    |   4   |    600
 #
 # Free-tier guard: `-c 2`, no proxies. Bump if you wire proxies in.
 
@@ -49,14 +85,35 @@ on:
         required: true
         default: "0"
   schedule:
-    # ES top-1000 split into 5 nightly shards. Stagger by 1h so a
-    # delayed run can't collide with the next one. (Each run is ~2.5h
-    # but GA queueing can add 30–60 min on busy hours.)
-    - cron: "0 2 * * *"   # offset 0   → cities 0–199
-    - cron: "0 3 * * *"   # offset 200 → cities 200–399
-    - cron: "0 4 * * *"   # offset 400 → cities 400–599
-    - cron: "0 5 * * *"   # offset 600 → cities 600–799
-    - cron: "0 6 * * *"   # offset 800 → cities 800–999
+    # ES top-1000 (offsets 0, 200, 400, 600, 800)
+    - cron: "0 2 * * *"
+    - cron: "0 3 * * *"
+    - cron: "0 4 * * *"
+    - cron: "0 5 * * *"
+    - cron: "0 6 * * *"
+    # FR top-1000
+    - cron: "0 8 * * *"
+    - cron: "0 9 * * *"
+    - cron: "0 10 * * *"
+    - cron: "0 11 * * *"
+    - cron: "0 12 * * *"
+    # MX top-1000
+    - cron: "0 14 * * *"
+    - cron: "0 15 * * *"
+    - cron: "0 16 * * *"
+    - cron: "0 17 * * *"
+    - cron: "0 18 * * *"
+    # US top-1000
+    - cron: "0 19 * * *"
+    - cron: "0 20 * * *"
+    - cron: "0 21 * * *"
+    - cron: "0 22 * * *"
+    - cron: "0 23 * * *"
+    # CA top-800 (only 4 free hour slots remain: 00, 01, 07, 13)
+    - cron: "0 0 * * *"
+    - cron: "0 1 * * *"
+    - cron: "0 7 * * *"
+    - cron: "0 13 * * *"
 
 jobs:
   scrape:
@@ -85,14 +142,45 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
             hour=$(date -u +%-H)
-            offset=$(( (hour - 2) * 200 ))
-            echo "country=ES" >> "$GITHUB_OUTPUT"
+            country=""
+            offset=""
+            case "$hour" in
+              2)  country="ES"; offset=0   ;;
+              3)  country="ES"; offset=200 ;;
+              4)  country="ES"; offset=400 ;;
+              5)  country="ES"; offset=600 ;;
+              6)  country="ES"; offset=800 ;;
+              8)  country="FR"; offset=0   ;;
+              9)  country="FR"; offset=200 ;;
+              10) country="FR"; offset=400 ;;
+              11) country="FR"; offset=600 ;;
+              12) country="FR"; offset=800 ;;
+              14) country="MX"; offset=0   ;;
+              15) country="MX"; offset=200 ;;
+              16) country="MX"; offset=400 ;;
+              17) country="MX"; offset=600 ;;
+              18) country="MX"; offset=800 ;;
+              19) country="US"; offset=0   ;;
+              20) country="US"; offset=200 ;;
+              21) country="US"; offset=400 ;;
+              22) country="US"; offset=600 ;;
+              23) country="US"; offset=800 ;;
+              0)  country="CA"; offset=0   ;;
+              1)  country="CA"; offset=200 ;;
+              7)  country="CA"; offset=400 ;;
+              13) country="CA"; offset=600 ;;
+              *)
+                echo "::error::Cron fired at unmapped UTC hour=$hour — refusing to scrape with unknown country/offset"
+                exit 1
+                ;;
+            esac
+            echo "country=$country" >> "$GITHUB_OUTPUT"
             echo "top_n=200" >> "$GITHUB_OUTPUT"
             echo "city_offset=$offset" >> "$GITHUB_OUTPUT"
             echo "depth=1" >> "$GITHUB_OUTPUT"
             echo "concurrency=2" >> "$GITHUB_OUTPUT"
             echo "max_queries=0" >> "$GITHUB_OUTPUT"
-            echo "::notice::Cron mode — country=ES top_n=200 city_offset=$offset (hour $hour UTC)"
+            echo "::notice::Cron mode — country=$country top_n=200 city_offset=$offset (hour $hour UTC)"
           else
             echo "country=${{ inputs.country }}" >> "$GITHUB_OUTPUT"
             echo "top_n=${{ inputs.top_n }}" >> "$GITHUB_OUTPUT"
