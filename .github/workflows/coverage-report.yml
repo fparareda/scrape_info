@@ -1,0 +1,30 @@
+name: coverage-report
+
+# Weekly digest of gmaps coverage progress, posted to Telegram every
+# Monday 09:00 UTC. Lets the operator track scraper output without
+# opening SQL. See `src/run-coverage-report.ts` for the query set
+# and message format.
+
+on:
+  schedule:
+    - cron: "0 9 * * MON"
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run weekly coverage report
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: npm run coverage-report
