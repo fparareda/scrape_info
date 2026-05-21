@@ -250,6 +250,10 @@ import { statcanCbrSource, runStatcanCbr } from "./sources/statcan-cbr.js";
 import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sources/toronto-business-licenses.js";
 import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
 import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
+// 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
+import { kentuckyDhbcSource, runKentuckyDhbc } from "./sources/kentucky-dhbc.js";
+// 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
+import { cpbcBcPharmacistsSource, runCpbcBcPharmacists } from "./sources/cpbc-bc-pharmacists.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -458,6 +462,8 @@ async function main(): Promise<void> {
   const torontoBusinessLicensesOn = torontoBusinessLicensesSource.enabled();
   const vancouverBusinessLicensesOn = vancouverBusinessLicensesSource.enabled();
   const calgaryBusinessLicencesOn = calgaryBusinessLicencesSource.enabled();
+  const kentuckyDhbcOn = kentuckyDhbcSource.enabled();
+  const cpbcBcPharmacistsOn = cpbcBcPharmacistsSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -650,6 +656,8 @@ async function main(): Promise<void> {
     !torontoBusinessLicensesOn &&
     !vancouverBusinessLicensesOn &&
     !calgaryBusinessLicencesOn &&
+    !kentuckyDhbcOn &&
+    !cpbcBcPharmacistsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1403,6 +1411,10 @@ async function main(): Promise<void> {
     [torontoBusinessLicensesOn, "toronto-business-licenses", runTorontoBusinessLicenses],
     [vancouverBusinessLicensesOn, "vancouver-business-licenses", runVancouverBusinessLicenses],
     [calgaryBusinessLicencesOn, "calgary-business-licences", runCalgaryBusinessLicences],
+    // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
+    [kentuckyDhbcOn, "kentucky-dhbc", runKentuckyDhbc],
+    // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
+    [cpbcBcPharmacistsOn, "cpbc-bc-pharmacists", runCpbcBcPharmacists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

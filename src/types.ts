@@ -232,7 +232,11 @@ export type ScrapeSource =
   // 2026-05-18: Calgary Open Data Socrata licences (~22k AB businesses)
   | "calgary-business-licences"
   // 2026-05-21 wave: ES electricidad + hvac — RII División B national installer registry
-  | "rii-div-b-es";
+  | "rii-div-b-es"
+  // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
+  | "kentucky-dhbc"
+  // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
+  | "cpbc-bc-pharmacists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
