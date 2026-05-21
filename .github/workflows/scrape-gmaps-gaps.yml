@@ -14,39 +14,49 @@ name: scrape-gmaps-gaps
 # Schedule rationale
 # ------------------
 # We need 5 countries × 5 shards = 25 cron slots, but a day has 24
-# hours. So four countries get the full top-1000 (5 shards each) and
-# CA gets top-800 (4 shards). CA is the smallest pro market of the
-# five so taking the haircut there is the least painful trade-off.
-# We use 1h spacing between same-country shards (matching the
-# original ES setup) and keep ≥1h gaps between different countries
-# so a delayed run can't collide with the next country's first shard.
+# minute-0 hour slots. Four countries get the full top-1000 every
+# day (5 shards each); CA gets 4 shards (top-800) on most days and
+# a 5th shard (top-1000) once a week on Saturdays via an extra slot
+# at 06:30 UTC — slotted between ES's last shard (06:00) and FR's
+# first (08:00) so it can't collide with another country.
 #
-#   UTC hour | country | shard | city_offset
-#   ---------+---------+-------+------------
-#       02   |   ES    |   1   |      0
-#       03   |   ES    |   2   |    200
-#       04   |   ES    |   3   |    400
-#       05   |   ES    |   4   |    600
-#       06   |   ES    |   5   |    800
-#       08   |   FR    |   1   |      0
-#       09   |   FR    |   2   |    200
-#       10   |   FR    |   3   |    400
-#       11   |   FR    |   4   |    600
-#       12   |   FR    |   5   |    800
-#       14   |   MX    |   1   |      0
-#       15   |   MX    |   2   |    200
-#       16   |   MX    |   3   |    400
-#       17   |   MX    |   4   |    600
-#       18   |   MX    |   5   |    800
-#       19   |   US    |   1   |      0
-#       20   |   US    |   2   |    200
-#       21   |   US    |   3   |    400
-#       22   |   US    |   4   |    600
-#       23   |   US    |   5   |    800
-#       00   |   CA    |   1   |      0
-#       01   |   CA    |   2   |    200
-#       07   |   CA    |   3   |    400
-#       13   |   CA    |   4   |    600
+# Why this option: dropping CA's 5th shard outright capped CA at
+# top-800 forever. Stealing a slot from another country (e.g. US
+# runs only 4 shards on Sundays) penalises a bigger market. A
+# single weekly minute-30 slot leaves the other 24 cron entries
+# untouched, adds just one workflow run/week, and is trivial to
+# revert. Trade-off: CA cities 800–999 are refreshed weekly, not
+# daily — still a big improvement over "never".
+#
+#   UTC h:m  | day-of-week | country | shard | city_offset
+#   ---------+-------------+---------+-------+------------
+#    02:00   |  daily      |   ES    |   1   |      0
+#    03:00   |  daily      |   ES    |   2   |    200
+#    04:00   |  daily      |   ES    |   3   |    400
+#    05:00   |  daily      |   ES    |   4   |    600
+#    06:00   |  daily      |   ES    |   5   |    800
+#    06:30   |  SAT only   |   CA    |   5   |    800
+#    08:00   |  daily      |   FR    |   1   |      0
+#    09:00   |  daily      |   FR    |   2   |    200
+#    10:00   |  daily      |   FR    |   3   |    400
+#    11:00   |  daily      |   FR    |   4   |    600
+#    12:00   |  daily      |   FR    |   5   |    800
+#    14:00   |  daily      |   MX    |   1   |      0
+#    15:00   |  daily      |   MX    |   2   |    200
+#    16:00   |  daily      |   MX    |   3   |    400
+#    17:00   |  daily      |   MX    |   4   |    600
+#    18:00   |  daily      |   MX    |   5   |    800
+#    19:00   |  daily      |   US    |   1   |      0
+#    20:00   |  daily      |   US    |   2   |    200
+#    21:00   |  daily      |   US    |   3   |    400
+#    22:00   |  daily      |   US    |   4   |    600
+#    23:00   |  daily      |   US    |   5   |    800
+#    00:00   |  daily      |   CA    |   1   |      0
+#    01:00   |  daily      |   CA    |   2   |    200
+#    07:00   |  daily      |   CA    |   3   |    400
+#    13:00   |  daily      |   CA    |   4   |    600
+#
+# Total: 24 runs/day + 1 extra on Saturdays = 169 runs/week.
 #
 # Free-tier guard: `-c 2`, no proxies. Bump if you wire proxies in.
 
@@ -109,11 +119,16 @@ on:
     - cron: "0 21 * * *"
     - cron: "0 22 * * *"
     - cron: "0 23 * * *"
-    # CA top-800 (only 4 free hour slots remain: 00, 01, 07, 13)
+    # CA top-800 daily (4 free hour slots: 00, 01, 07, 13)
     - cron: "0 0 * * *"
     - cron: "0 1 * * *"
     - cron: "0 7 * * *"
     - cron: "0 13 * * *"
+    # CA 5th shard (offset 800) — Saturdays only, at 06:30 UTC,
+    # squeezed between ES's last shard (06:00) and FR's first (08:00).
+    # The `shard` step disambiguates this from ES offset=800 by also
+    # inspecting the UTC minute.
+    - cron: "30 6 * * SAT"
 
 jobs:
   scrape:
@@ -142,38 +157,50 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then
             hour=$(date -u +%-H)
+            minute=$(date -u +%-M)
             country=""
             offset=""
-            case "$hour" in
-              2)  country="ES"; offset=0   ;;
-              3)  country="ES"; offset=200 ;;
-              4)  country="ES"; offset=400 ;;
-              5)  country="ES"; offset=600 ;;
-              6)  country="ES"; offset=800 ;;
-              8)  country="FR"; offset=0   ;;
-              9)  country="FR"; offset=200 ;;
-              10) country="FR"; offset=400 ;;
-              11) country="FR"; offset=600 ;;
-              12) country="FR"; offset=800 ;;
-              14) country="MX"; offset=0   ;;
-              15) country="MX"; offset=200 ;;
-              16) country="MX"; offset=400 ;;
-              17) country="MX"; offset=600 ;;
-              18) country="MX"; offset=800 ;;
-              19) country="US"; offset=0   ;;
-              20) country="US"; offset=200 ;;
-              21) country="US"; offset=400 ;;
-              22) country="US"; offset=600 ;;
-              23) country="US"; offset=800 ;;
-              0)  country="CA"; offset=0   ;;
-              1)  country="CA"; offset=200 ;;
-              7)  country="CA"; offset=400 ;;
-              13) country="CA"; offset=600 ;;
-              *)
-                echo "::error::Cron fired at unmapped UTC hour=$hour — refusing to scrape with unknown country/offset"
-                exit 1
-                ;;
-            esac
+            # All daily crons fire at minute 0; the CA 5th-shard
+            # Saturday slot fires at 06:30. A non-zero minute at
+            # hour 6 unambiguously means "CA Sat slot", not ES
+            # offset=800. The cron schedule restricts this to SAT,
+            # but we sanity-check anyway.
+            if [ "$hour" = "6" ] && [ "$minute" -ge 15 ]; then
+              country="CA"
+              offset=800
+              echo "::notice::Saturday CA 5th shard — hour=$hour minute=$minute"
+            else
+              case "$hour" in
+                2)  country="ES"; offset=0   ;;
+                3)  country="ES"; offset=200 ;;
+                4)  country="ES"; offset=400 ;;
+                5)  country="ES"; offset=600 ;;
+                6)  country="ES"; offset=800 ;;
+                8)  country="FR"; offset=0   ;;
+                9)  country="FR"; offset=200 ;;
+                10) country="FR"; offset=400 ;;
+                11) country="FR"; offset=600 ;;
+                12) country="FR"; offset=800 ;;
+                14) country="MX"; offset=0   ;;
+                15) country="MX"; offset=200 ;;
+                16) country="MX"; offset=400 ;;
+                17) country="MX"; offset=600 ;;
+                18) country="MX"; offset=800 ;;
+                19) country="US"; offset=0   ;;
+                20) country="US"; offset=200 ;;
+                21) country="US"; offset=400 ;;
+                22) country="US"; offset=600 ;;
+                23) country="US"; offset=800 ;;
+                0)  country="CA"; offset=0   ;;
+                1)  country="CA"; offset=200 ;;
+                7)  country="CA"; offset=400 ;;
+                13) country="CA"; offset=600 ;;
+                *)
+                  echo "::error::Cron fired at unmapped UTC hour=$hour — refusing to scrape with unknown country/offset"
+                  exit 1
+                  ;;
+              esac
+            fi
             echo "country=$country" >> "$GITHUB_OUTPUT"
             echo "top_n=200" >> "$GITHUB_OUTPUT"
             echo "city_offset=$offset" >> "$GITHUB_OUTPUT"
