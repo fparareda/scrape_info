@@ -231,3 +231,54 @@ jobs:
       - name: Load into Supabase
         if: always() && hashFiles('out/results.csv') != ''
         run: npx tsx src/run-gmaps-loader.ts --input out/results.csv
+
+      - name: Notify Telegram on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "::warning::Telegram secrets not configured — skipping failure notification"
+            exit 0
+          fi
+          COUNTRY="${{ steps.shard.outputs.country }}"
+          OFFSET="${{ steps.shard.outputs.city_offset }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MSG="❌ gmaps-gaps cron failed
+          country=${COUNTRY:-?} offset=${OFFSET:-?} event=${{ github.event_name }}
+          run=${RUN_URL}"
+          curl -sS -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MSG}" \
+            -d "disable_web_page_preview=true"
+          echo
+
+      - name: Notify Telegram on success (opt-in)
+        # Opt-in heartbeat: set repo/org variable GMAPS_NOTIFY_ON_SUCCESS=1
+        # to receive a Telegram message on every successful shard. Off by
+        # default — 24 cron shards/day would otherwise spam the channel.
+        if: success() && vars.GMAPS_NOTIFY_ON_SUCCESS == '1'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "::warning::Telegram secrets not configured — skipping success notification"
+            exit 0
+          fi
+          COUNTRY="${{ steps.shard.outputs.country }}"
+          OFFSET="${{ steps.shard.outputs.city_offset }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MSG="✅ gmaps-gaps cron ok
+          country=${COUNTRY:-?} offset=${OFFSET:-?}
+          run=${RUN_URL}"
+          curl -sS -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MSG}" \
+            -d "disable_web_page_preview=true"
+          echo
