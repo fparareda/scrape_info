@@ -118,6 +118,7 @@ interface NpiProfessionalRow extends Record<string, unknown> {
   name: string;
   category_key: CategoryKey;
   city_slug: string;
+  city_country: "US";
   headline: string;
   description: string;
   phone: string | null;
@@ -232,6 +233,7 @@ export async function runNppesBulk(
         name,
         category_key: categoryKey,
         city_slug: cityMatch.slug,
+        city_country: "US",
         headline: `${categoryKey} en ${cityMatch.name}`,
         description: `${name} — registro NPI #${npi}. Datos públicos NPPES (CMS).`,
         phone,

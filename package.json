@@ -8,7 +8,9 @@
     "scrape": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "ping:telegram": "node scripts/ping-telegram.mjs",
-    "nppes-bulk": "tsx src/run-nppes-bulk.ts"
+    "nppes-bulk": "tsx src/run-nppes-bulk.ts",
+    "sam-gov-bulk": "tsx src/run-sam-gov-bulk.ts",
+    "irs-bmf-bulk": "tsx src/run-irs-bmf-bulk.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
