@@ -32,6 +32,7 @@ interface CliArgs {
   offset: number;
   max: number;
   topN: number;
+  cityOffset: number;
   includeZero: boolean;
   includeOneOnly: boolean;
 }
@@ -49,6 +50,7 @@ function parseArgs(argv: string[]): CliArgs {
     offset: Number(arg("offset", "0")),
     max: Number(arg("max", "0")), // 0 = no cap
     topN: Number(arg("top-n", "0")), // 0 = no ranking; emit all matching cities
+    cityOffset: Number(arg("city-offset", "0")), // skip N highest-ranked cities
     includeZero: arg("zero", "true") !== "false",
     includeOneOnly: arg("one-only", "true") !== "false",
   };
@@ -158,10 +160,14 @@ async function main() {
   // sink to the bottom of the ranking; --top-n therefore favours
   // 1-oficio cities with substantial existing presence (= real cities).
   let orderedCities = Array.from(cities.entries());
-  if (args.topN > 0) {
+  if (args.topN > 0 || args.cityOffset > 0) {
     orderedCities.sort(([a], [b]) => (totalByCity.get(b) ?? 0) - (totalByCity.get(a) ?? 0));
-    orderedCities = orderedCities.slice(0, args.topN);
-    console.error(`  → ranking by existing-pro count, took top ${orderedCities.length}`);
+    const start = args.cityOffset;
+    const end = args.topN > 0 ? start + args.topN : orderedCities.length;
+    orderedCities = orderedCities.slice(start, end);
+    console.error(
+      `  → ranking by existing-pro count, slice [${start}..${end}) = ${orderedCities.length} cities`,
+    );
   }
 
   const lines: string[] = [];
