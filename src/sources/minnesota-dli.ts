@@ -25,8 +25,9 @@ const USER_AGENT =
 function licTypeToCategory(t: string): CategoryKey | undefined {
   const d = t.toLowerCase();
   if (d.includes("electric")) return "electricidad";
-  if (d.includes("plumb") || d.includes("hvac") || d.includes("mechanical"))
-    return "fontaneria";
+  if (d.includes("hvac") || d.includes("mechanical") || d.includes("air condition") || d.includes("refrigerat") || d.includes("heating"))
+    return "hvac";
+  if (d.includes("plumb")) return "fontaneria";
   if (d.includes("carpent")) return "carpinteria";
   return undefined;
 }

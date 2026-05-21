@@ -26,8 +26,9 @@ const USER_AGENT =
 function specialtyToCategory(s: string): CategoryKey | undefined {
   const d = s.toLowerCase();
   if (d.includes("electric")) return "electricidad";
-  if (d.includes("plumb") || d.includes("hvac") || d.includes("mechanical"))
-    return "fontaneria";
+  if (d.includes("hvac") || d.includes("mechanical") || d.includes("heating") || d.includes("air condition") || d.includes("refrigerat"))
+    return "hvac";
+  if (d.includes("plumb")) return "fontaneria";
   if (d.includes("carpent") || d.includes("finish")) return "carpinteria";
   return undefined;
 }

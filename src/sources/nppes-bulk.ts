@@ -92,8 +92,13 @@ async function loadUsCityIndex(client: SupabaseClient): Promise<CityIndex> {
   for (;;) {
     const { data, error } = await client
       .from("cities")
+      // 2026-05-18: was `.eq("country", "us")` — but the cities table
+      // stores country uppercase ("US"), per the rest of the scraper
+      // (src/cities.ts line ~372). Empty match → loaded 0 US cities →
+      // every NPI row got dropped at the city lookup step. Match both
+      // cases defensively in case of mixed legacy rows.
       .select("slug, name")
-      .eq("country", "us")
+      .or("country.eq.US,country.eq.us")
       .range(from, from + PAGE - 1);
     if (error) throw new Error(`loadUsCityIndex: ${error.message}`);
     if (!data || data.length === 0) break;
