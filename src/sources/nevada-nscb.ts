@@ -27,8 +27,9 @@ const USER_AGENT =
 function classToCategory(klass: string): CategoryKey | undefined {
   const k = klass.toLowerCase();
   if (k.includes("electric") || /\bc-?2\b/.test(k)) return "electricidad";
+  if (k.includes("hvac") || k.includes("refrig") || k.includes("air condition") || k.includes("heating") || /\bc-?21\b/.test(k))
+    return "hvac";
   if (k.includes("plumb") || /\bc-?1\b/.test(k)) return "fontaneria";
-  if (k.includes("hvac") || k.includes("refrig")) return "fontaneria";
   if (k.includes("carpent") || k.includes("finish")) return "carpinteria";
   return undefined;
 }
