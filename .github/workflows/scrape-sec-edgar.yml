@@ -1,0 +1,34 @@
+name: Scrape · SEC EDGAR (US public companies)
+
+# SEC EDGAR enrichment + narrow ingest via the public data.sec.gov
+# JSON endpoints. Pre-flight 2026-05-20 confirmed company_tickers.json
+# returns 10,365 entries (~792 KB) and per-CIK submissions JSON
+# (e.g. Apple CIK 0000320193) returns sic / stateOfIncorporation /
+# addresses.business / tickers / exchanges. No auth, no key.
+#
+# Strategy is hybrid:
+#   - Enrichment: any professionals row with metadata.cik or
+#     metadata.sec_ticker gets sec_* fields backfilled.
+#   - Ingest: only CIKs whose SIC maps to a Prolio CategoryKey
+#     (medicina, ingenieria) get upserted. Expected volume per run
+#     is <500 ingests — honesty over volume.
+#
+# Cap: PROLIO_SEC_EDGAR_LIMIT (default 5000) — at SEC's 10 req/s
+# limit and our 150ms throttle, 5000 submissions fetches = ~12.5
+# minutes of CI time, comfortably inside the 60-min budget.
+#
+# Cadence: weekly Sunday 16:00 UTC. SEC publishes filings daily but
+# the issuer master (SIC, address, state of incorporation) changes
+# rarely — weekly is more than enough for enrichment.
+
+on:
+  schedule:
+    - cron: "0 16 * * 0"
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: sec-edgar
