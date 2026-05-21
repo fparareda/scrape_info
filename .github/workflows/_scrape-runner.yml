@@ -109,6 +109,16 @@ jobs:
       # Enrichment
       PROLIO_RUN_CROSSMATCH: ${{ inputs.source == 'crossmatch' && 'true' || 'false' }}
       PROLIO_RUN_GLEIF:      ${{ inputs.source == 'gleif' && 'true' || 'false' }}
+
+      # 2026-05-20 wave: international company registries (hybrid mode —
+      # enrichment-primary; ingest only fires for UK CH when both the
+      # API key AND PROLIO_UK_CH_INGEST=true are set; USPTO ingest is
+      # permanently stubbed to 0 — see uspto-patentsview.ts header).
+      PROLIO_RUN_UK_COMPANIES_HOUSE: ${{ inputs.source == 'uk-companies-house' && 'true' || 'false' }}
+      PROLIO_RUN_SEC_EDGAR:          ${{ inputs.source == 'sec-edgar' && 'true' || 'false' }}
+      PROLIO_RUN_USPTO_PATENTSVIEW:  ${{ inputs.source == 'uspto-patentsview' && 'true' || 'false' }}
+      COMPANIES_HOUSE_API_KEY:       ${{ secrets.COMPANIES_HOUSE_API_KEY }}
+      USPTO_PATENTSVIEW_API_KEY:     ${{ secrets.USPTO_PATENTSVIEW_API_KEY }}
       # industry-ca was killed pre-flight 2026-04-24 (the documented
       # JSON API at /cc/lgcy/api/v2/corporations does not exist). The
       # slug is wired here so a future Playwright-based adapter can

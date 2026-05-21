@@ -1,0 +1,29 @@
+name: Scrape · USPTO PatentsView (US patent assignees)
+
+# USPTO PatentsView assignee enrichment. Pre-flight 2026-05-20 confirmed
+# the legacy patentsview.org now redirects to data.uspto.gov and the
+# replacement search.patentsview.org endpoint requires a FREE API key
+# (X-Api-Key header). Without USPTO_PATENTSVIEW_API_KEY in repo secrets
+# the source skips gracefully — request a key at the USPTO Open Data
+# Portal (linked in src/sources/uspto-patentsview.ts header).
+#
+# Enrichment-only: ingest is intentionally stubbed because assignees
+# lack industry codes and addresses needed for Prolio categorisation.
+# See source file header for the full honest rationale.
+#
+# Per-run cap PROLIO_USPTO_LIMIT (default 5,000 assignees scanned).
+# Cadence: monthly on the 7th at 13:00 UTC. Patent data is slow-moving
+# and Prolio only enriches rows whose metadata.uspto_assignee_id was
+# pre-populated by curation — there's no scan-the-world step.
+
+on:
+  schedule:
+    - cron: "0 13 7 * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: uspto-patentsview

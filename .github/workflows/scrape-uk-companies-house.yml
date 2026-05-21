@@ -1,0 +1,30 @@
+name: Scrape · UK Companies House (enrichment)
+
+# UK Companies House enrichment via the authenticated v1 API. Pre-flight
+# 2026-05-20 confirmed the API requires a free key supplied as HTTP Basic
+# auth (key as username, empty password). Rate limit is 600 req per 5 min
+# per key. Per-run cap PROLIO_UK_CH_LIMIT (default 5,000) keeps the first
+# runs observable; lift for full coverage.
+#
+# Requires repo secret COMPANIES_HOUSE_API_KEY (get one for free at
+# https://developer.company-information.service.gov.uk/). Without it the
+# source logs a single warning and exits cleanly.
+#
+# Ingest path is disabled in this initial drop — the cities table has no
+# UK seeds, so sink.ts would drop every UK row. See file header in
+# src/sources/uk-companies-house.ts for the full rationale.
+#
+# Cadence: weekly Sunday 15:00 UTC, one hour after the GLEIF run so the
+# enrichment passes don't compete for the Supabase update budget.
+
+on:
+  schedule:
+    - cron: "0 15 * * 0"
+  workflow_dispatch:
+
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: uk-companies-house

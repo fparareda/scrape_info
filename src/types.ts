@@ -173,7 +173,13 @@ export type ScrapeSource =
   | "clues-sinais-mx"
   // 2026-05-15: ES Ventanilla Única — vets (OCV) + ópticos (CGCOO)
   | "vucolvet"
-  | "cgcoo-opticos";
+  | "cgcoo-opticos"
+  // 2026-05-20: international company registries (hybrid enrichment + selective ingest)
+  | "uk-companies-house"
+  | "sec-edgar"
+  | "uspto-patentsview"
+  // 2026-05-20: data.gov Socrata sources with auto-city-creation
+  | "data-gov-montgomery-md-electrician";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
@@ -188,6 +194,13 @@ export interface ScrapedProfessional {
   name: string;
   categoryKey: CategoryKey;
   citySlug: string;
+  /**
+   * ISO country code that pairs with citySlug to satisfy the composite
+   * FK `professionals.(city_country, city_slug) → cities.(country, slug)`.
+   * Older sources omitted it and relied on a backfill; new sources
+   * (data.gov path 2026-05-20+) populate it directly.
+   */
+  cityCountry?: "ES" | "CA" | "US" | "FR" | "MX";
   headline?: string;
   description?: string;
   email?: string;

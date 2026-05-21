@@ -79,6 +79,15 @@ import {
   runPatternMx,
 } from "./sources/pattern-mx-email.js";
 import { gleifEnabled, runGleifEnrichment } from "./sources/gleif.js";
+import {
+  ukCompaniesHouseSource,
+  runUkCompaniesHouse,
+} from "./sources/uk-companies-house.js";
+import { secEdgarSource, runSecEdgar } from "./sources/sec-edgar.js";
+import {
+  usptoPatentsViewEnabled,
+  runUsptoPatentsView,
+} from "./sources/uspto-patentsview.js";
 import { npiSource, runNpi } from "./sources/npi.js";
 import { floridaDbprSource, runFloridaDbpr } from "./sources/florida-dbpr.js";
 import { flDohMqaSource, runFlDohMqa } from "./sources/fl-doh-mqa.js";
@@ -263,6 +272,9 @@ async function main(): Promise<void> {
   const doctoraliaEnabled = competitorDoctoraliaSource.enabled();
   const patternMxOn = patternMxEnabled();
   const gleifOn = gleifEnabled();
+  const ukCompaniesHouseOn = ukCompaniesHouseSource.enabled();
+  const secEdgarOn = secEdgarSource.enabled();
+  const usptoPatentsViewOn = usptoPatentsViewEnabled();
   const npiOn = npiSource.enabled();
   const floridaDbprOn = floridaDbprSource.enabled();
   const flDohMqaOn = flDohMqaSource.enabled();
@@ -411,6 +423,9 @@ async function main(): Promise<void> {
     !doctoraliaEnabled &&
     !patternMxOn &&
     !gleifOn &&
+    !ukCompaniesHouseOn &&
+    !secEdgarOn &&
+    !usptoPatentsViewOn &&
     !npiOn &&
     !floridaDbprOn &&
     !flDohMqaOn &&
@@ -1260,6 +1275,10 @@ async function main(): Promise<void> {
     [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
+    // 2026-05-20: international company registries
+    [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
+    [secEdgarOn, "sec-edgar", runSecEdgar],
+    [usptoPatentsViewOn, "uspto-patentsview", runUsptoPatentsView],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
