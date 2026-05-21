@@ -290,10 +290,16 @@ async function main() {
     for (const cat of cats) {
       if (!eligibleCats.has(cat)) continue;
       if (have?.has(cat)) continue;
-      const syn = CATEGORY_SYNONYMS[cat]?.[locale]?.[0];
-      if (!syn) continue;
-      lines.push(`${syn} ${connector} ${name}#!#${args.country}|${slug}|${cat}`);
-      stats.queries++;
+      // Emit up to 3 synonym variants per (city, category) to widen
+      // Maps coverage for the same scrape budget — the loader dedups
+      // by place_id so duplicate hits across synonyms just refresh
+      // the same row.
+      const syns = (CATEGORY_SYNONYMS[cat]?.[locale] ?? []).slice(0, 3);
+      if (syns.length === 0) continue;
+      for (const syn of syns) {
+        lines.push(`${syn} ${connector} ${name}#!#${args.country}|${slug}|${cat}`);
+        stats.queries++;
+      }
     }
   }
 
