@@ -2,11 +2,17 @@ name: scrape-gmaps-gaps
 
 # Free Google Maps scraper (gosom/google-maps-scraper) — fills the
 # city × category coverage gaps catalogued in `data/coverage.csv`.
-# Manual trigger only: paid Places API still runs on its own cron, and
-# this scraper is bounded by Playwright concurrency, not budget.
 #
-# Default: top 200 ES cities × any missing category = ~1,400 queries
-# at ~2h on ubuntu-latest with -c 2 (single hosted runner, no proxies).
+# Two modes:
+#   1. Manual (workflow_dispatch) — pick country, top_n, offset. Useful
+#      for one-off shards.
+#   2. Cron (5 schedules/day, 02:00–06:00 UTC) — slices ES top-1000
+#      into 5 chunks of 200 cities each, each within the 5.5h GA cap.
+#      Each chunk is ~2.5h (build + scrape + load), leaving slack for
+#      GA queueing. The cron uses the run's UTC hour to compute
+#      `city-offset = (hour - 2) * 200`.
+#
+# Free-tier guard: `-c 2`, no proxies. Bump if you wire proxies in.
 
 on:
   workflow_dispatch:
@@ -22,6 +28,11 @@ on:
         type: string
         required: true
         default: "200"
+      city_offset:
+        description: "Skip the first N highest-ranked cities (sharding)"
+        type: string
+        required: true
+        default: "0"
       depth:
         description: "Google Maps scroll depth"
         type: string
@@ -37,6 +48,15 @@ on:
         type: string
         required: true
         default: "0"
+  schedule:
+    # ES top-1000 split into 5 nightly shards. Stagger by 1h so a
+    # delayed run can't collide with the next one. (Each run is ~2.5h
+    # but GA queueing can add 30–60 min on busy hours.)
+    - cron: "0 2 * * *"   # offset 0   → cities 0–199
+    - cron: "0 3 * * *"   # offset 200 → cities 200–399
+    - cron: "0 4 * * *"   # offset 400 → cities 400–599
+    - cron: "0 5 * * *"   # offset 600 → cities 600–799
+    - cron: "0 6 * * *"   # offset 800 → cities 800–999
 
 jobs:
   scrape:
@@ -60,13 +80,37 @@ jobs:
       - name: Install deps
         run: npm ci || npm install
 
+      - name: Resolve sharding params
+        id: shard
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            hour=$(date -u +%-H)
+            offset=$(( (hour - 2) * 200 ))
+            echo "country=ES" >> "$GITHUB_OUTPUT"
+            echo "top_n=200" >> "$GITHUB_OUTPUT"
+            echo "city_offset=$offset" >> "$GITHUB_OUTPUT"
+            echo "depth=1" >> "$GITHUB_OUTPUT"
+            echo "concurrency=2" >> "$GITHUB_OUTPUT"
+            echo "max_queries=0" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cron mode — country=ES top_n=200 city_offset=$offset (hour $hour UTC)"
+          else
+            echo "country=${{ inputs.country }}" >> "$GITHUB_OUTPUT"
+            echo "top_n=${{ inputs.top_n }}" >> "$GITHUB_OUTPUT"
+            echo "city_offset=${{ inputs.city_offset }}" >> "$GITHUB_OUTPUT"
+            echo "depth=${{ inputs.depth }}" >> "$GITHUB_OUTPUT"
+            echo "concurrency=${{ inputs.concurrency }}" >> "$GITHUB_OUTPUT"
+            echo "max_queries=${{ inputs.max_queries }}" >> "$GITHUB_OUTPUT"
+            echo "::notice::Manual mode — country=${{ inputs.country }} top_n=${{ inputs.top_n }} city_offset=${{ inputs.city_offset }}"
+          fi
+
       - name: Generate queries.txt for gaps
         run: |
           mkdir -p data
           npm run gmaps-gaps -- \
-            --country "${{ inputs.country }}" \
-            --top-n "${{ inputs.top_n }}" \
-            --max "${{ inputs.max_queries }}" \
+            --country "${{ steps.shard.outputs.country }}" \
+            --top-n "${{ steps.shard.outputs.top_n }}" \
+            --city-offset "${{ steps.shard.outputs.city_offset }}" \
+            --max "${{ steps.shard.outputs.max_queries }}" \
             --output "data/queries.txt"
           echo "::notice::Generated $(wc -l < data/queries.txt) queries"
           head -5 data/queries.txt
@@ -83,8 +127,8 @@ jobs:
           /tmp/gmaps/google-maps-scraper \
             -input data/queries.txt \
             -results out/results.csv \
-            -depth "${{ inputs.depth }}" \
-            -c "${{ inputs.concurrency }}" \
+            -depth "${{ steps.shard.outputs.depth }}" \
+            -c "${{ steps.shard.outputs.concurrency }}" \
             -exit-on-inactivity 3m
           echo "::notice::Scraper finished — $(wc -l < out/results.csv) rows"
 
@@ -92,9 +136,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gmaps-results-${{ inputs.country }}-${{ github.run_number }}
+          name: gmaps-results-${{ steps.shard.outputs.country }}-shard${{ steps.shard.outputs.city_offset }}-${{ github.run_number }}
           path: out/results.csv
           if-no-files-found: warn
 
       - name: Load into Supabase
+        if: always() && hashFiles('out/results.csv') != ''
         run: npx tsx src/run-gmaps-loader.ts --input out/results.csv
