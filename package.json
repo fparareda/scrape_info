@@ -10,7 +10,10 @@
     "ping:telegram": "node scripts/ping-telegram.mjs",
     "nppes-bulk": "tsx src/run-nppes-bulk.ts",
     "gmaps-gaps": "tsx src/run-gmaps-gaps-queries.ts",
-    "gmaps-loader": "tsx src/run-gmaps-loader.ts"
+    "gmaps-loader": "tsx src/run-gmaps-loader.ts",
+    "bulk:denue": "node scripts/bulk-ingest/denue-mx-bulk.mjs",
+    "bulk:overture": "node --max-old-space-size=4096 scripts/bulk-ingest/overture.mjs",
+    "bulk:osm": "node scripts/bulk-ingest/osm-pbf.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
