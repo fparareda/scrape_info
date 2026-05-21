@@ -5,13 +5,18 @@ name: Scrape · Yelp Fusion (daily)
 # a backstop if the actual ceiling is lower. US-only by default
 # (YELP_COUNTRIES env to widen).
 #
-# Cadence: daily at 09:00 UTC (= ~01:00–02:00 Pacific, well past Yelp's
-# midnight-PT quota reset) + manual dispatch. The internal budget
-# guard in yelp-fusion.ts halts the run if requests exceed `budget`.
+# Cadence: daily at 18:00 UTC + manual dispatch. 09:00 UTC was too
+# early — the first cron after a 5000-req day still got 429 at 10:11
+# UTC (delayed dispatch), suggesting our plan uses a rolling-24h
+# window from the first request of the prior day rather than a
+# midnight-PT calendar reset. 18:00 UTC clears any rolling window
+# anchored before ~17:59 UTC the previous day, which covers the
+# full daily run window. The internal budget guard in yelp-fusion.ts
+# halts the run if requests exceed `budget`.
 
 on:
   schedule:
-    - cron: "0 9 * * *"
+    - cron: "0 18 * * *"
   workflow_dispatch:
     inputs:
       budget:

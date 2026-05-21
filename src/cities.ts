@@ -343,12 +343,20 @@ async function loadFromDb(): Promise<ScraperCity[]> {
     );
   }
   const out: ScraperCity[] = [];
-  // Paginate; the cities table is ~3k rows but Supabase caps each select
-  // at 1000 by default.
+  // Stable order required for paginated range() — without it PostgREST
+  // returns overlapping windows and we end up with the same row 2-3
+  // times (observed 49559 rows in memory from a 17537-row table on
+  // 2026-05-20, which inflated Yelp's per-day target count by 3×).
+  // Defensive dedup by (country, slug) below catches any residual.
+  const seen = new Set<string>();
+  // Paginate; the cities table is ~17k rows but Supabase caps each
+  // select at 1000 by default.
   for (let from = 0; from < 50_000; from += 1000) {
     const { data, error } = await client
       .from("cities")
       .select("slug, name, country, lat, lng")
+      .order("country", { ascending: true })
+      .order("slug", { ascending: true })
       .range(from, from + 999);
     if (error) {
       throw new Error(`[cities] DB load failed: ${error.message}`);
@@ -376,6 +384,10 @@ async function loadFromDb(): Promise<ScraperCity[]> {
         country !== "MX"
       )
         continue;
+      // Defensive dedup — see comment above the loop.
+      const key = `${country}::${row.slug}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       // Some DB rows (e.g. legacy ES seeds before lat/lng was populated)
       // may be NULL. Fall back to 0,0 — the scrapers that need geo (Google
       // Places nearbySearch) can skip rows where lat===0 && lng===0; the
