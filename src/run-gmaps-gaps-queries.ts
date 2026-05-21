@@ -4,12 +4,19 @@
  *
  * Inputs:
  *   - cities table → list of all (slug, name) for the country.
- *   - aggregated coverage CSV (country,city_slug,category_key,n)
- *     produced by `SELECT … GROUP BY 1,2,3` against `professionals`.
- *     Direct GROUP BY of `professionals` times out for high-volume
- *     categories (e.g. ES medicina has 73k rows); the CSV is the
- *     pragmatic input. Regenerate it whenever a fresh snapshot is
- *     needed.
+ *   - coverage: by default a LIVE read from the
+ *     `coverage_matrix_city` materialized view (one row per
+ *     (country, city, category) with a count). The view is
+ *     refreshed at the start of each run so consecutive cron
+ *     shards see the cities earlier shards already filled. Pass
+ *     `--coverage <csv>` to fall back to a static aggregated CSV
+ *     (country,city_slug,category_key,n) — useful for offline runs
+ *     or when the matview is unavailable.
+ *
+ * Why live: when daily cron shards run sequentially, an earlier
+ * shard fills its 200 cities and the next shard should see those
+ * as already covered. A static CSV snapshot makes later shards
+ * re-scrape the same (city, category) pairs.
  *
  * Output: queries.txt — one line per (city, missing category) pair,
  * each tagged `#!#{city_slug}|{cat}` so the loader can attribute
@@ -27,7 +34,7 @@ import type { CategoryKey } from "./prolio-types.js";
 
 interface CliArgs {
   country: string;
-  coverageCsv: string;
+  coverageCsv: string | null;
   output: string;
   offset: number;
   max: number;
@@ -43,9 +50,12 @@ function parseArgs(argv: string[]): CliArgs {
     if (i === -1) return fallback;
     return argv[i + 1];
   };
+  // --coverage <path> opts into the static CSV fallback. Default is
+  // live Supabase load.
+  const coverageArg = arg("coverage");
   return {
     country: (arg("country", "ES") ?? "ES").toUpperCase(),
-    coverageCsv: arg("coverage", "data/coverage.csv") ?? "data/coverage.csv",
+    coverageCsv: coverageArg ?? null,
     output: arg("output", "queries.txt") ?? "queries.txt",
     offset: Number(arg("offset", "0")),
     max: Number(arg("max", "0")), // 0 = no cap
@@ -91,6 +101,91 @@ async function loadCities(
   return out;
 }
 
+/**
+ * Live coverage load — reads from the `coverage_matrix_city`
+ * materialized view (one row per (country, city, category) with a
+ * count). Server-side it's a single index range scan filtered by
+ * `city_country = $country` — milliseconds to a couple of seconds.
+ *
+ * The materialized view is refreshed *here* before reading so each
+ * cron shard sees the cities that earlier shards already filled.
+ * The refresh runs as a SECURITY DEFINER RPC with a 5-minute
+ * statement_timeout (the underlying aggregate is ~60s for ES).
+ *
+ * Why a matview + RPC instead of a client-side aggregate or a
+ * direct RPC each call:
+ *   - PostgREST has a 60s statement_timeout and the aggregate
+ *     scan takes ~65s on prod for ES.
+ *   - Paginating raw professionals rows via the REST API timed
+ *     out too (OFFSET-style at 50k+; per-batch IN(...) keyset
+ *     forced scans the planner couldn't accelerate).
+ *   - A matview pushes the cost to the refresh boundary (once per
+ *     shard) and makes reads cheap and bounded.
+ *
+ * `candidateSlugs` filters out rows whose city_slug doesn't appear
+ * in `cities` (stale / typo'd slugs).
+ */
+async function loadCoverageLive(
+  client: SupabaseClient<any, any, any>,
+  country: string,
+  candidateSlugs: Set<string>,
+): Promise<{
+  pairs: Map<string, Set<CategoryKey>>;
+  totalByCity: Map<string, number>;
+}> {
+  console.error("  → refreshing coverage_matrix_city (may take ~60s)...");
+  const refreshStart = Date.now();
+  const { error: refreshErr } = await client.rpc("refresh_coverage_matrix_city");
+  if (refreshErr) {
+    // Refresh failure is non-fatal: stale data is still useful. Log loudly.
+    console.error(
+      `  ! refresh failed (${refreshErr.message}) — proceeding with stale matview`,
+    );
+  } else {
+    console.error(`    … refreshed in ${((Date.now() - refreshStart) / 1000).toFixed(1)}s`);
+  }
+
+  const pairs = new Map<string, Set<CategoryKey>>();
+  const totalByCity = new Map<string, number>();
+  const PAGE = 1000;
+  let dropped = 0;
+  let total = 0;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await (client.from("coverage_matrix_city") as any)
+      .select("city_slug, category_key, n")
+      .eq("city_country", country)
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    for (const row of data as Array<{
+      city_slug: string;
+      category_key: string;
+      n: number;
+    }>) {
+      if (!candidateSlugs.has(row.city_slug)) {
+        dropped++;
+        continue;
+      }
+      let set = pairs.get(row.city_slug);
+      if (!set) {
+        set = new Set();
+        pairs.set(row.city_slug, set);
+      }
+      set.add(row.category_key as CategoryKey);
+      totalByCity.set(
+        row.city_slug,
+        (totalByCity.get(row.city_slug) ?? 0) + Number(row.n),
+      );
+    }
+    total += data.length;
+    if (data.length < PAGE) break;
+  }
+  console.error(
+    `  → live coverage: ${total} (city,category) pairs (dropped ${dropped} unknown-slug rows)`,
+  );
+  return { pairs, totalByCity };
+}
+
 async function loadCoverageFromCsv(
   csvPath: string,
   country: string,
@@ -134,11 +229,16 @@ async function main() {
   const cities = await loadCities(client, args.country);
   console.error(`  → ${cities.size} cities`);
 
-  console.error(`Loading coverage from ${args.coverageCsv}...`);
-  const { pairs: existing, totalByCity } = await loadCoverageFromCsv(
-    args.coverageCsv,
-    args.country,
-  );
+  const { pairs: existing, totalByCity } = args.coverageCsv
+    ? await (async () => {
+        console.error(`Loading coverage from ${args.coverageCsv} (static)...`);
+        return loadCoverageFromCsv(args.coverageCsv!, args.country);
+      })()
+    : await (async () => {
+        console.error(`Loading coverage live from Supabase (country=${args.country})...`);
+        const candidateSlugs = new Set(cities.keys());
+        return loadCoverageLive(client, args.country, candidateSlugs);
+      })();
   const coveredCities = existing.size;
   console.error(`  → ${coveredCities} cities have ≥1 category`);
 
