@@ -48,7 +48,10 @@ export function getSink(): Sink {
     if (!lookupsPromise) {
       lookupsPromise = (async () => {
         const cityNameBySlug = new Map<string, string>();
-        for (let from = 0; from < 10_000; from += 1000) {
+        // Paginate without a hardcoded upper bound — the cities table
+        // grew past 17.5k rows (ES alone is ~8k) and the previous 10k
+        // cap caused half of cities to be invisible to the sink.
+        for (let from = 0; ; from += 1000) {
           const { data, error } = await client
             .from("cities")
             .select("slug, name")
@@ -101,7 +104,12 @@ export function getSink(): Sink {
       cityKeysPromise = (async () => {
         const keys = new Set<string>();
         // Paginate so we're not bitten by PostgREST's 1000-row cap.
-        for (let from = 0; from < 10_000; from += 1000) {
+        // No upper bound: the table has grown past 17.5k rows (ES alone
+        // is ~8k). The previous `from < 10_000` cap silently dropped
+        // every gmaps row whose (country, slug) lived past row 10k,
+        // which surfaced as the `[sink] dropped N/200 rows with
+        // unseeded (country, city_slug)` warning.
+        for (let from = 0; ; from += 1000) {
           const { data, error } = await client
             .from("cities")
             .select("country, slug")
