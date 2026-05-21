@@ -15,6 +15,7 @@
 
 import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
+import { createClient } from "@supabase/supabase-js";
 import { getSink } from "./sink.js";
 import type { ScrapedProfessional } from "./types.js";
 import type { CategoryKey } from "./prolio-types.js";
@@ -23,6 +24,7 @@ interface CliArgs {
   input: string;
   batch: number;
   dryRun: boolean;
+  refreshMatview: boolean;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -35,7 +37,50 @@ function parseArgs(argv: string[]): CliArgs {
     input: arg("input", "results.csv") ?? "results.csv",
     batch: Number(arg("batch", "200")),
     dryRun: argv.includes("--dry-run"),
+    refreshMatview: !argv.includes("--no-matview-refresh"),
   };
+}
+
+/**
+ * Best-effort refresh of `coverage_matrix_city` after a loader run.
+ *
+ * The generator (`run-gmaps-gaps-queries.ts`) refreshes the matview
+ * at the *start* of each shard. By also refreshing here, the next
+ * shard's pre-run refresh becomes a cheap no-op (the matview is
+ * already current with this shard's upserts) — saving ~30s per
+ * shard.
+ *
+ * Errors are swallowed with a warning: the data has already been
+ * loaded successfully, so a stale matview is annoying (one extra
+ * pre-refresh next shard) but not a failure mode we want to surface
+ * as a red GH Actions step.
+ */
+async function refreshMatview(): Promise<void> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.error(
+      "  ! matview refresh skipped: NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set",
+    );
+    return;
+  }
+  const client = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  console.error("\nRefreshing coverage_matrix_city (may take ~60s)...");
+  const start = Date.now();
+  try {
+    const { error } = await client.rpc("refresh_coverage_matrix_city");
+    if (error) {
+      console.error(`  ! matview refresh failed: ${error.message} (data was loaded fine)`);
+      return;
+    }
+    console.error(`  → refreshed in ${((Date.now() - start) / 1000).toFixed(1)}s`);
+  } catch (err) {
+    console.error(
+      `  ! matview refresh threw: ${(err as Error).message} (data was loaded fine)`,
+    );
+  }
 }
 
 function parseCsvLine(line: string): string[] {
@@ -188,6 +233,13 @@ async function main() {
   console.error(`  Skipped (no tag):    ${stats.skippedNoTag}`);
   console.error(`  Kept (sent to sink): ${stats.kept}`);
   console.error(`  Upserted:            ${stats.upserted}${args.dryRun ? " [dry-run]" : ""}`);
+
+  // Refresh matview *after* loading so the next shard's pre-run
+  // refresh is a near-no-op. Skipped in dry-run (no upserts happened)
+  // and when explicitly disabled via --no-matview-refresh.
+  if (!args.dryRun && args.refreshMatview) {
+    await refreshMatview();
+  }
 }
 
 main().catch((err) => {
