@@ -221,6 +221,7 @@ import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
+import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
 import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
 import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
@@ -442,6 +443,7 @@ async function main(): Promise<void> {
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
+  const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
   const oiiqQuebecOn = oiiqQuebecSource.enabled();
   const bccnmBcOn = bccnmBcSource.enabled();
@@ -626,6 +628,7 @@ async function main(): Promise<void> {
     !svmaSkVetsOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
+    !nsrddaNsDentistsOn &&
     !cnoOntarioOn &&
     !oiiqQuebecOn &&
     !bccnmBcOn &&
@@ -1388,6 +1391,7 @@ async function main(): Promise<void> {
     [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
+    [nsrddaNsDentistsOn, "nsrdda-ns-dentists", runNsrddaNsDentists],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
     [npiNursesOn, "npi-nurses", runNpiNurses],
     [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
