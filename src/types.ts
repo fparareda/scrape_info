@@ -234,7 +234,13 @@ export type ScrapeSource =
   // 2026-05-20: international company registries (hybrid enrichment + selective ingest)
   | "uk-companies-house"
   | "sec-edgar"
-  | "uspto-patentsview";
+  | "uspto-patentsview"
+  // 2026-05-21: CA vet expansion — Alberta Veterinary Medical Association
+  // (in1touch-hosted public roster, ~2k Registered Veterinarians).
+  | "abvma-ab-vets"
+  // 2026-05-21: CA vet expansion — Manitoba Veterinary Medical Association
+  // (Alinity tenant `mvma`, ~1k vets + ~600 techs; we keep vets only).
+  | "mvma-mb-vets";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
