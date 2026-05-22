@@ -234,7 +234,9 @@ export type ScrapeSource =
   // 2026-05-20: international company registries (hybrid enrichment + selective ingest)
   | "uk-companies-house"
   | "sec-edgar"
-  | "uspto-patentsview";
+  | "uspto-patentsview"
+  // 2026-05-22: NSRDDA — Nova Scotia Regulator of Dentistry and Dental Assisting
+  | "nsrdda-ns-dentists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
