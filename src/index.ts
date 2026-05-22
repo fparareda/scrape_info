@@ -258,6 +258,7 @@ import { statcanCbrSource, runStatcanCbr } from "./sources/statcan-cbr.js";
 import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sources/toronto-business-licenses.js";
 import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
 import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
+import { icacRoacEsSource, runIcacRoacEs } from "./sources/icac-roac-es.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -468,6 +469,7 @@ async function main(): Promise<void> {
   const torontoBusinessLicensesOn = torontoBusinessLicensesSource.enabled();
   const vancouverBusinessLicensesOn = vancouverBusinessLicensesSource.enabled();
   const calgaryBusinessLicencesOn = calgaryBusinessLicencesSource.enabled();
+  const icacRoacEsOn = icacRoacEsSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -662,6 +664,7 @@ async function main(): Promise<void> {
     !torontoBusinessLicensesOn &&
     !vancouverBusinessLicensesOn &&
     !calgaryBusinessLicencesOn &&
+    !icacRoacEsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1413,6 +1416,8 @@ async function main(): Promise<void> {
     [torontoBusinessLicensesOn, "toronto-business-licenses", runTorontoBusinessLicenses],
     [vancouverBusinessLicensesOn, "vancouver-business-licenses", runVancouverBusinessLicenses],
     [calgaryBusinessLicencesOn, "calgary-business-licences", runCalgaryBusinessLicences],
+    // 2026-05-22: ES ICAC ROAC — Registro Oficial de Auditores de Cuentas (fiscal)
+    [icacRoacEsOn, "icac-roac-es", runIcacRoacEs],
     // 2026-05-20: international company registries
     [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
     [secEdgarOn, "sec-edgar", runSecEdgar],

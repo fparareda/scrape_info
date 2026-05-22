@@ -234,7 +234,9 @@ export type ScrapeSource =
   // 2026-05-20: international company registries (hybrid enrichment + selective ingest)
   | "uk-companies-house"
   | "sec-edgar"
-  | "uspto-patentsview";
+  | "uspto-patentsview"
+  // 2026-05-22: ICAC ROAC — ES fiscal (Registro Oficial de Auditores de Cuentas)
+  | "icac-roac-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
