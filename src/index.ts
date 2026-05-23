@@ -221,6 +221,8 @@ import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import { abvmaAbVetsSource, runAbvmaAbVets } from "./sources/abvma-ab-vets.js";
 import { mvmaMbVetsSource, runMvmaMbVets } from "./sources/mvma-mb-vets.js";
+// 2026-05-23: Iowa DIAL — Active Construction Contractor Registrations
+import { iowaDialContractorsSource, runIowaDialContractors } from "./sources/iowa-dial-contractors.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -444,6 +446,7 @@ async function main(): Promise<void> {
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const abvmaAbVetsOn = abvmaAbVetsSource.enabled();
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
+  const iowaDialContractorsOn = iowaDialContractorsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
@@ -671,7 +674,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !iowaDialContractorsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1421,6 +1425,8 @@ async function main(): Promise<void> {
     [torontoBusinessLicensesOn, "toronto-business-licenses", runTorontoBusinessLicenses],
     [vancouverBusinessLicensesOn, "vancouver-business-licenses", runVancouverBusinessLicenses],
     [calgaryBusinessLicencesOn, "calgary-business-licences", runCalgaryBusinessLicences],
+    // 2026-05-23: Iowa DIAL contractors
+    [iowaDialContractorsOn, "iowa-dial-contractors", runIowaDialContractors],
     // 2026-05-20: international company registries
     [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
     [secEdgarOn, "sec-edgar", runSecEdgar],
