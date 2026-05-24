@@ -221,6 +221,7 @@ import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import { abvmaAbVetsSource, runAbvmaAbVets } from "./sources/abvma-ab-vets.js";
 import { mvmaMbVetsSource, runMvmaMbVets } from "./sources/mvma-mb-vets.js";
+import { irsEaFoiaSource, runIrsEaFoia } from "./sources/irs-ea-foia.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -444,6 +445,7 @@ async function main(): Promise<void> {
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const abvmaAbVetsOn = abvmaAbVetsSource.enabled();
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
+  const irsEaFoiaOn = irsEaFoiaSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
@@ -630,6 +632,7 @@ async function main(): Promise<void> {
     !svmaSkVetsOn &&
     !abvmaAbVetsOn &&
     !mvmaMbVetsOn &&
+    !irsEaFoiaOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
     !cnoOntarioOn &&
@@ -757,7 +760,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CONAHCYT_SNII=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
-        "PROLIO_SCRAPE_OVERTURE=true",
+        "PROLIO_SCRAPE_OVERTURE=true, " +
+        "PROLIO_RUN_IRS_EA_FOIA=true",
     );
     return;
   }
@@ -1394,6 +1398,7 @@ async function main(): Promise<void> {
     [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
     [abvmaAbVetsOn, "abvma-ab-vets", runAbvmaAbVets],
     [mvmaMbVetsOn, "mvma-mb-vets", runMvmaMbVets],
+    [irsEaFoiaOn, "irs-ea-foia", runIrsEaFoia],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
