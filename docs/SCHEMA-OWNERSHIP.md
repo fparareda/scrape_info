@@ -70,3 +70,28 @@ into `prolio/supabase/migrations/<timestamp>_coverage_matrix_city.sql`).
 `prolio/supabase/migrations/20260521022132_coverage_matrix_city.sql` so prolio's
 migration history matches the remote `supabase_migrations.schema_migrations`
 table (which already records version `20260521022132`).
+
+### `add_new_scrape_sources_2026_05_26` — source_kind enum additions
+
+Applied via MCP on 2026-05-26 to unblock sink upserts for PR #85 (ABVMA + MVMA
+vets), PR #99 (411.ca), and PR #100 (MerchantCircle US). PR #84 already left
+a similar note for `uk-companies-house` / `sec-edgar` / `uspto-patentsview` —
+those three were added in a previous round of this same kind of patch and now
+live in the enum.
+
+```sql
+ALTER TYPE public.source_kind ADD VALUE IF NOT EXISTS 'abvma-ab-vets';
+ALTER TYPE public.source_kind ADD VALUE IF NOT EXISTS 'mvma-mb-vets';
+ALTER TYPE public.source_kind ADD VALUE IF NOT EXISTS '411-ca';
+ALTER TYPE public.source_kind ADD VALUE IF NOT EXISTS 'merchantcircle-us';
+```
+
+**Recurring gotcha:** every new scraper that calls `getSink().upsert(...)` must
+have its slug added to this enum *before* its first GHA run, otherwise the
+sink rejects every batch with `invalid input value for enum source_kind: "<slug>"`
+and the run logs `inserted=0 updated=0` despite a non-zero `fetched`. The
+existing `feat(intl)` commit (bf9a833) flagged this in the body — see the
+"NOTE: prolio-side requires a migration…" line. The recommended workflow is:
+either apply the `ALTER TYPE` migration *as part of the same PR* in prolio,
+or run it via MCP/SQL editor right after merging here and before triggering
+the workflow.
