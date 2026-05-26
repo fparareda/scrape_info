@@ -353,6 +353,9 @@ jobs:
 
       # 2026-05-26: 411.ca — CA generalist directory (Angular SSR, schema.org)
       PROLIO_RUN_411_CA:              ${{ inputs.source == '411-ca' && 'true' || 'false' }}
+
+      # 2026-05-26: MerchantCircle US — sitemap-sharded generalist scrape
+      PROLIO_RUN_MC_US:               ${{ inputs.source == 'merchantcircle-us' && 'true' || 'false' }}
       PROLIO_RUN_CPSNS_NS_PHYSICIANS: ${{ inputs.source == 'cpsns-ns-physicians' && 'true' || 'false' }}
       PROLIO_RUN_LSNB_BAR:            ${{ inputs.source == 'lsnb-bar' && 'true' || 'false' }}
 

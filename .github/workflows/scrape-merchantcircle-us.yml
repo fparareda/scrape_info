@@ -1,0 +1,29 @@
+name: Scrape · MerchantCircle US
+on:
+  schedule:
+    # Weekly Sunday 04:00 UTC. Default config processes sub-sitemap 0
+    # with no state filter and a 5,000 row cap (~2h with 1.5s/profile).
+    # Rotate indices manually via workflow_dispatch as the directory is
+    # 897 sub-sitemaps deep.
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+    inputs:
+      sitemap_indices:
+        description: "Comma-separated sub-sitemap indices (0-896). Default '0'."
+        required: false
+        type: string
+      states:
+        description: "USPS state filter (e.g. 'ca,ny,tx,fl'). Default = all."
+        required: false
+        type: string
+      limit:
+        description: "Global row cap per run (default 5000)."
+        required: false
+        type: string
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: merchantcircle-us
+      timeout_minutes: 180
