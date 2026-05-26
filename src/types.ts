@@ -243,7 +243,11 @@ export type ScrapeSource =
   | "mvma-mb-vets"
   // 2026-05-26: 411.ca — CA generalist business directory (~3M businesses,
   // Angular SSR, schema.org markup, free pagination ?p=N).
-  | "411-ca";
+  | "411-ca"
+  // 2026-05-26: MerchantCircle US — generalist directory via gzipped sitemap
+  // shards (897 sub-sitemaps, ~44.9M URLs). Sharded fetch with state filter
+  // and category keyword-matching on slug.
+  | "merchantcircle-us";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
