@@ -221,6 +221,7 @@ import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import { abvmaAbVetsSource, runAbvmaAbVets } from "./sources/abvma-ab-vets.js";
 import { mvmaMbVetsSource, runMvmaMbVets } from "./sources/mvma-mb-vets.js";
+import { mediadoresSegurosMadridSource, runMediadoresSegurosMadrid } from "./sources/mediadores-seguros-madrid.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -444,6 +445,7 @@ async function main(): Promise<void> {
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const abvmaAbVetsOn = abvmaAbVetsSource.enabled();
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
+  const mediadoresSegurosMadridOn = mediadoresSegurosMadridSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
@@ -671,7 +673,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !mediadoresSegurosMadridOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1425,6 +1428,8 @@ async function main(): Promise<void> {
     [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
     [secEdgarOn, "sec-edgar", runSecEdgar],
     [usptoPatentsViewOn, "uspto-patentsview", runUsptoPatentsView],
+    // 2026-05-26: ES fiscal — Colegio de Mediadores de Seguros de Madrid
+    [mediadoresSegurosMadridOn, "mediadores-seguros-madrid", runMediadoresSegurosMadrid],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

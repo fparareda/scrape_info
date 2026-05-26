@@ -240,7 +240,9 @@ export type ScrapeSource =
   | "abvma-ab-vets"
   // 2026-05-21: CA vet expansion — Manitoba Veterinary Medical Association
   // (Alinity tenant `mvma`, ~1k vets + ~600 techs; we keep vets only).
-  | "mvma-mb-vets";
+  | "mvma-mb-vets"
+  // 2026-05-26: ES fiscal — Colegio de Mediadores de Seguros de Madrid
+  | "mediadores-seguros-madrid";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
