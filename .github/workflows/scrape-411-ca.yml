@@ -1,19 +1,12 @@
 name: Scrape · 411.ca
+# STUB scraper — 411.ca blocks GitHub Actions egress IPs (HTTP 403 on
+# every URL regardless of UA, verified runs #26471784610 and #26522409627).
+# See src/sources/411-ca.ts for the full diagnosis and restore options.
+# No cron schedule — workflow_dispatch only so it doesn't waste runner
+# minutes weekly. Re-enable the schedule when a residential proxy or
+# self-hosted runner lands.
 on:
-  schedule:
-    # Weekly Saturday 06:00 UTC. Runs ~30-45 min for the full plan
-    # (15 categories × ~20 CA cities × up to 5 pages × 2 s).
-    - cron: "0 6 * * 6"
   workflow_dispatch:
-    inputs:
-      categories:
-        description: "Comma-separated subset (e.g. plumber,electrician)"
-        required: false
-        type: string
-      pages_per_combo:
-        description: "Override pages per (category,city) combo (default 5)"
-        required: false
-        type: string
 jobs:
   run:
     uses: ./.github/workflows/_scrape-runner.yml
