@@ -76,6 +76,10 @@ export interface FetchAlinityOpts {
   maxPrefixLen?: number;
   /** Alphabet used to enumerate prefixes (default a..z). */
   alphabet?: string;
+  /** Override per-request delay in ms. Default REQUEST_DELAY_MS (250).
+   *  Bump for tenants that rate-limit aggressively (e.g. MVMA Manitoba
+   *  starts 403'ing after ~15 quick requests; use 2500ms there). */
+  requestDelayMs?: number;
 }
 
 function delay(ms: number): Promise<void> {
@@ -202,6 +206,7 @@ export async function* fetchAlinityDirectory(
 ): AsyncIterableIterator<AlinityRecord> {
   const limit = opts.limit ?? 50_000;
   const maxPrefixLen = opts.maxPrefixLen ?? MAX_PREFIX_LEN;
+  const requestDelayMs = opts.requestDelayMs ?? REQUEST_DELAY_MS;
   const alphabet = opts.alphabet ?? "abcdefghijklmnopqrstuvwxyz";
   const fieldId = opts.searchFieldId ?? "TextOptionB";
 
@@ -230,7 +235,7 @@ export async function* fetchAlinityDirectory(
   while (queue.length > 0 && yielded < limit) {
     const prefix = queue.shift() as string;
     const rows = await searchPrefix(tenant, querySID, fieldId, prefix);
-    await delay(REQUEST_DELAY_MS);
+    await delay(requestDelayMs);
     if (rows === null) {
       // transient failure - log only once
       if (!firstHitObserved) {

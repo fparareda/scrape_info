@@ -79,7 +79,15 @@ export async function runMvmaMbVets(): Promise<{
   const seen = new Set<string>();
   let skippedKind = 0;
 
-  for await (const rec of fetchAlinityDirectory(TENANT, { limit: cap * 2 })) {
+  // MVMA's Alinity tenant rate-limits aggressively (starts returning
+  // 403 after ~15-20 quick requests; first GHA run with the helper's
+  // default 250ms cadence yielded only 31 records out of ~1-2k actual).
+  // 2500ms is the smallest delay that consistently avoids rate-limit
+  // in our tests; full sweep at this cadence is ~30 min.
+  for await (const rec of fetchAlinityDirectory(TENANT, {
+    limit: cap * 2,
+    requestDelayMs: 2500,
+  })) {
     if (records.length >= cap) break;
     if (!isVeterinarian(rec.status)) {
       skippedKind += 1;
