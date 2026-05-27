@@ -51,8 +51,12 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const REQUEST_DELAY_MS = 2000;
 const DEFAULT_GLOBAL_LIMIT = 25_000;
 const DEFAULT_PAGES_PER_COMBO = 5;
+// 411.ca's WAF responds 200 to a generic Mozilla UA but 403 to any
+// branded bot string (verified 2026-05-26 from GHA runner: Prolio-Bot/1.0
+// got 403 on every URL). Use a current Chrome UA instead.
 const USER_AGENT =
-  "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
 /**
  * Category mapping: Prolio CategoryKey → 411.ca search term.
@@ -295,13 +299,40 @@ export async function run411Ca(): Promise<{
   const onlyCats = parseEnvList(process.env.PROLIO_411_CA_ONLY_CATEGORIES);
   const cats = filterCategories(onlyCats);
 
+  // The cities DB is partially polluted (2026-05-26: 4,632 rows tagged
+  // country=CA include Yokohama / Zhangjiang / Yorba Linda from earlier
+  // seeding bugs). Cross-product with 15 categories × 5 pages would be
+  // 69k+ HTTP calls. Restrict to a hand-curated whitelist of the top
+  // ~30 real Canadian cities by population. Override via env if needed.
+  const CA_CITY_WHITELIST = new Set(
+    [
+      "toronto","montreal","calgary","ottawa","edmonton","vancouver",
+      "mississauga","winnipeg","quebec-city","hamilton","brampton",
+      "surrey","kitchener","laval","halifax","london","markham",
+      "vaughan","gatineau","saskatoon","longueuil","burnaby","regina",
+      "richmond","richmond-hill","oakville","burlington","greater-sudbury",
+      "sherbrooke","oshawa",
+    ].map((s) => s.toLowerCase()),
+  );
   const allCities = await getCities({ country: "CA" });
   if (allCities.length === 0) {
     console.warn("[411-ca] no CA cities seeded — aborting");
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   }
+  const cities = allCities.filter((c) =>
+    CA_CITY_WHITELIST.has(c.slug.toLowerCase()),
+  );
+  if (cities.length === 0) {
+    console.warn(
+      `[411-ca] whitelist matched 0 of ${allCities.length} CA cities — aborting`,
+    );
+    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
+  }
+  console.log(
+    `[411-ca] city whitelist matched ${cities.length}/${allCities.length} CA cities`,
+  );
 
-  const plan = buildPlan(allCities, cats);
+  const plan = buildPlan(cities, cats);
   console.log(
     `[411-ca] plan: ${cats.length} cats × ${allCities.length} cities = ${plan.length} combos, pagesPerCombo=${pagesCap}, cap=${cap}`,
   );
