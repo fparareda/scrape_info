@@ -226,6 +226,7 @@ import {
   merchantCircleUsSource,
   runMerchantCircleUs,
 } from "./sources/merchantcircle-us.js";
+import { ctElicenseSource, runCtElicense } from "./sources/ct-elicense.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -451,6 +452,7 @@ async function main(): Promise<void> {
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
   const fourElevenCaOn = fourElevenCaSource.enabled();
   const merchantCircleUsOn = merchantCircleUsSource.enabled();
+  const ctElicenseOn = ctElicenseSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
@@ -680,7 +682,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !ctElicenseOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1405,6 +1408,7 @@ async function main(): Promise<void> {
     [mvmaMbVetsOn, "mvma-mb-vets", runMvmaMbVets],
     [fourElevenCaOn, "411-ca", run411Ca],
     [merchantCircleUsOn, "merchantcircle-us", runMerchantCircleUs],
+    [ctElicenseOn, "ct-elicense", runCtElicense],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
