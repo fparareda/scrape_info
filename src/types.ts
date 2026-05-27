@@ -247,7 +247,10 @@ export type ScrapeSource =
   // 2026-05-26: MerchantCircle US — generalist directory via gzipped sitemap
   // shards (897 sub-sitemaps, ~44.9M URLs). Sharded fetch with state filter
   // and category keyword-matching on slug.
-  | "merchantcircle-us";
+  | "merchantcircle-us"
+  // 2026-05-27: CONO — College of Naturopaths of Ontario (Alinity tenant
+  // `cono`, ~1,500 registered NDs; public directory, no auth required).
+  | "cono-naturopaths";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
