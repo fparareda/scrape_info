@@ -221,6 +221,7 @@ import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
 import { abvmaAbVetsSource, runAbvmaAbVets } from "./sources/abvma-ab-vets.js";
 import { mvmaMbVetsSource, runMvmaMbVets } from "./sources/mvma-mb-vets.js";
+import { nscpNsPhysioSource, runNscpNsPhysio } from "./sources/nscp-ns-physio.js";
 import { fourElevenCaSource, run411Ca } from "./sources/411-ca.js";
 import {
   merchantCircleUsSource,
@@ -449,6 +450,7 @@ async function main(): Promise<void> {
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
   const abvmaAbVetsOn = abvmaAbVetsSource.enabled();
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
+  const nscpNsPhysioOn = nscpNsPhysioSource.enabled();
   const fourElevenCaOn = fourElevenCaSource.enabled();
   const merchantCircleUsOn = merchantCircleUsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
@@ -680,6 +682,7 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
+    !nscpNsPhysioOn &&
     !competitorEsMegaOn
   ) {
     console.warn(
@@ -1589,6 +1592,23 @@ async function main(): Promise<void> {
       return {};
     }).catch((e) =>
       console.error(`[scraper] competitor-na crashed:`, (e as Error).message),
+    );
+  }
+
+  if (nscpNsPhysioOn) {
+    await withScrapeRun("nscp-ns-physio", async () => {
+      const res = await runNscpNsPhysio();
+      total += res.inserted + res.updated;
+      console.log(
+        `[scraper] nscp-ns-physio: fetched=${res.fetched} inserted=${res.inserted} updated=${res.updated} skipped=${res.skipped}`,
+      );
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] nscp-ns-physio crashed:`, (e as Error).message),
     );
   }
 
