@@ -226,6 +226,7 @@ import {
   merchantCircleUsSource,
   runMerchantCircleUs,
 } from "./sources/merchantcircle-us.js";
+import { alabamaLbgcSource, runAlabamaLbgc } from "./sources/alabama-lbgc.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -451,6 +452,7 @@ async function main(): Promise<void> {
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
   const fourElevenCaOn = fourElevenCaSource.enabled();
   const merchantCircleUsOn = merchantCircleUsSource.enabled();
+  const alabamaLbgcOn = alabamaLbgcSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
@@ -639,6 +641,7 @@ async function main(): Promise<void> {
     !mvmaMbVetsOn &&
     !fourElevenCaOn &&
     !merchantCircleUsOn &&
+    !alabamaLbgcOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
     !cnoOntarioOn &&
@@ -1589,6 +1592,23 @@ async function main(): Promise<void> {
       return {};
     }).catch((e) =>
       console.error(`[scraper] competitor-na crashed:`, (e as Error).message),
+    );
+  }
+
+  if (alabamaLbgcOn) {
+    await withScrapeRun("alabama-lbgc", async () => {
+      const res = await runAlabamaLbgc();
+      total += res.inserted + res.updated;
+      console.log(
+        `[scraper] alabama-lbgc: fetched=${res.fetched} inserted=${res.inserted} updated=${res.updated} skipped=${res.skipped}`,
+      );
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] alabama-lbgc crashed:`, (e as Error).message),
     );
   }
 
