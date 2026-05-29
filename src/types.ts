@@ -247,7 +247,10 @@ export type ScrapeSource =
   // 2026-05-26: MerchantCircle US — generalist directory via gzipped sitemap
   // shards (897 sub-sitemaps, ~44.9M URLs). Sharded fetch with state filter
   // and category keyword-matching on slug.
-  | "merchantcircle-us";
+  | "merchantcircle-us"
+  // 2026-05-29 ES: Empresas Instaladoras y Mantenedoras de Castilla y León
+  // (Junta de Castilla y León open-data XML, CC-BY 4.0; ~3,188 electricistas)
+  | "jcyl-instaladoras-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

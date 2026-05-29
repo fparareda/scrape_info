@@ -425,6 +425,11 @@ jobs:
       # Bulk HTML scrape of ~3,200 notaries, monthly cadence.
       PROLIO_RUN_CGN_NOTARIADO: ${{ inputs.source == 'cgn-notariado' && 'true' || 'false' }}
 
+      # ES Castilla y León open-data XML — empresas instaladoras electricidad (JCYL)
+      # ~3,188 BT electrical installer companies; CC-BY 4.0; daily-refreshed feed.
+      PROLIO_RUN_JCYL_INSTALADORAS_ES:  ${{ inputs.source == 'jcyl-instaladoras-es' && 'true' || 'false' }}
+      PROLIO_JCYL_INSTALADORAS_ES_LIMIT: "5000"
+
       # 2026-05-18 wave US → 500k:
       #   - npi-bulk-stream: opt-in monthly full NPPES ZIP (1 GB / 7M rows,
       #     streamed). Wraps `npi.ts`; cap 1M/run.

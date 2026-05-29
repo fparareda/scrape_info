@@ -226,6 +226,10 @@ import {
   merchantCircleUsSource,
   runMerchantCircleUs,
 } from "./sources/merchantcircle-us.js";
+import {
+  jcylInstaladoresEsSource,
+  runJcylInstaladoresEs,
+} from "./sources/jcyl-instaladoras-es.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -494,6 +498,7 @@ async function main(): Promise<void> {
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
+  const jcylInstaladoresEsOn = jcylInstaladoresEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -680,7 +685,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !jcylInstaladoresEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1436,6 +1442,8 @@ async function main(): Promise<void> {
     [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
     [secEdgarOn, "sec-edgar", runSecEdgar],
     [usptoPatentsViewOn, "uspto-patentsview", runUsptoPatentsView],
+    // 2026-05-29 ES: JCYL instaladoras electricidad (Castilla y León open data)
+    [jcylInstaladoresEsOn, "jcyl-instaladoras-es", runJcylInstaladoresEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
