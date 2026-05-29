@@ -226,6 +226,7 @@ import {
   merchantCircleUsSource,
   runMerchantCircleUs,
 } from "./sources/merchantcircle-us.js";
+import { deDprSource, runDeDpr } from "./sources/de-dpr.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -451,6 +452,7 @@ async function main(): Promise<void> {
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
   const fourElevenCaOn = fourElevenCaSource.enabled();
   const merchantCircleUsOn = merchantCircleUsSource.enabled();
+  const deDprOn = deDprSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
@@ -639,6 +641,7 @@ async function main(): Promise<void> {
     !mvmaMbVetsOn &&
     !fourElevenCaOn &&
     !merchantCircleUsOn &&
+    !deDprOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
     !cnoOntarioOn &&
@@ -1405,6 +1408,7 @@ async function main(): Promise<void> {
     [mvmaMbVetsOn, "mvma-mb-vets", runMvmaMbVets],
     [fourElevenCaOn, "411-ca", run411Ca],
     [merchantCircleUsOn, "merchantcircle-us", runMerchantCircleUs],
+    [deDprOn, "de-dpr", runDeDpr],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
