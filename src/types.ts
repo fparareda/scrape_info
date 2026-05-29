@@ -247,7 +247,10 @@ export type ScrapeSource =
   // 2026-05-26: MerchantCircle US — generalist directory via gzipped sitemap
   // shards (897 sub-sitemaps, ~44.9M URLs). Sharded fetch with state filter
   // and category keyword-matching on slug.
-  | "merchantcircle-us";
+  | "merchantcircle-us"
+  // 2026-05-29 CA: HCRA Ontario Builder Directory — licensed home builders
+  // and sellers in Ontario (~7,063 active records, open JSON API).
+  | "hcra-on-builders";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

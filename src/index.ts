@@ -226,6 +226,7 @@ import {
   merchantCircleUsSource,
   runMerchantCircleUs,
 } from "./sources/merchantcircle-us.js";
+import { hcraOnBuildersSource, runHcraOnBuilders } from "./sources/hcra-on-builders.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -461,6 +462,7 @@ async function main(): Promise<void> {
   const lsoBarOntarioOn = lsoBarOntarioSource.enabled();
   const oppqQuebecPhysioOn = oppqQuebecPhysioSource.enabled();
   const cvoVetsOntarioOn = cvoVetsOntarioSource.enabled();
+  const hcraOnBuildersOn = hcraOnBuildersSource.enabled();
   const antadAsociadosOn = antadAsociadosSource.enabled();
   const emaAcreditadosOn = emaAcreditadosSource.enabled();
   const imssDirectorioOn = imssDirectorioSource.enabled();
@@ -649,6 +651,7 @@ async function main(): Promise<void> {
     !lsoBarOntarioOn &&
     !oppqQuebecPhysioOn &&
     !cvoVetsOntarioOn &&
+    !hcraOnBuildersOn &&
     !antadAsociadosOn &&
     !emaAcreditadosOn &&
     !imssDirectorioOn &&
@@ -1405,6 +1408,7 @@ async function main(): Promise<void> {
     [mvmaMbVetsOn, "mvma-mb-vets", runMvmaMbVets],
     [fourElevenCaOn, "411-ca", run411Ca],
     [merchantCircleUsOn, "merchantcircle-us", runMerchantCircleUs],
+    [hcraOnBuildersOn, "hcra-on-builders", runHcraOnBuilders],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
