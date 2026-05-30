@@ -247,7 +247,10 @@ export type ScrapeSource =
   // 2026-05-26: MerchantCircle US — generalist directory via gzipped sitemap
   // shards (897 sub-sitemaps, ~44.9M URLs). Sharded fetch with state filter
   // and category keyword-matching on slug.
-  | "merchantcircle-us";
+  | "merchantcircle-us"
+  // 2026-05-30: CPSNB — College of Physicians and Surgeons of New Brunswick
+  // (Alinity tenant `cpsnb`, ~2.5k–3.5k NB physicians, medicina).
+  | "cpsnb-nb-physicians";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
