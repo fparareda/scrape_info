@@ -228,6 +228,8 @@ import {
 } from "./sources/merchantcircle-us.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
+// 2026-05-30: CPSNB — CA NB physicians (Alinity)
+import { cpsnbNbPhysiciansSource, runCpsnbNbPhysicians } from "./sources/cpsnb-nb-physicians.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
 import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
 import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
@@ -453,6 +455,7 @@ async function main(): Promise<void> {
   const merchantCircleUsOn = merchantCircleUsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
+  const cpsnbNbPhysiciansOn = cpsnbNbPhysiciansSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
   const oiiqQuebecOn = oiiqQuebecSource.enabled();
   const bccnmBcOn = bccnmBcSource.enabled();
@@ -641,6 +644,7 @@ async function main(): Promise<void> {
     !merchantCircleUsOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
+    !cpsnbNbPhysiciansOn &&
     !cnoOntarioOn &&
     !oiiqQuebecOn &&
     !bccnmBcOn &&
@@ -1407,6 +1411,8 @@ async function main(): Promise<void> {
     [merchantCircleUsOn, "merchantcircle-us", runMerchantCircleUs],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
+    // 2026-05-30: CPSNB NB physicians
+    [cpsnbNbPhysiciansOn, "cpsnb-nb-physicians", runCpsnbNbPhysicians],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
     [npiNursesOn, "npi-nurses", runNpiNurses],
     [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
