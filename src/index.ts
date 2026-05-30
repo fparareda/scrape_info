@@ -228,6 +228,8 @@ import {
 } from "./sources/merchantcircle-us.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
+// 2026-05-30: Oregon BCD — US OR individual trade licenses (Socrata)
+import { oregonBcdSource, runOregonBcd } from "./sources/oregon-bcd.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
 import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
 import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
@@ -453,6 +455,7 @@ async function main(): Promise<void> {
   const merchantCircleUsOn = merchantCircleUsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
+  const oregonBcdOn = oregonBcdSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
   const oiiqQuebecOn = oiiqQuebecSource.enabled();
   const bccnmBcOn = bccnmBcSource.enabled();
@@ -641,6 +644,7 @@ async function main(): Promise<void> {
     !merchantCircleUsOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
+    !oregonBcdOn &&
     !cnoOntarioOn &&
     !oiiqQuebecOn &&
     !bccnmBcOn &&
@@ -1128,6 +1132,23 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] oregon-ccb crashed:`, (e as Error).message),
+    );
+  }
+
+  // Oregon BCD — individual trade worker licenses (distinct from oregon-ccb
+  // contractor businesses). Socrata SODA API, ~49k active records.
+  if (oregonBcdOn) {
+    await withScrapeRun("oregon-bcd", async () => {
+      const res = await runOregonBcd();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] oregon-bcd crashed:`, (e as Error).message),
     );
   }
 

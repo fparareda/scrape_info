@@ -247,7 +247,11 @@ export type ScrapeSource =
   // 2026-05-26: MerchantCircle US — generalist directory via gzipped sitemap
   // shards (897 sub-sitemaps, ~44.9M URLs). Sharded fetch with state filter
   // and category keyword-matching on slug.
-  | "merchantcircle-us";
+  | "merchantcircle-us"
+  // 2026-05-30: Oregon BCD — Building Codes Division individual trade
+  // licenses (electricians, plumbers, boiler/HVAC operators). Socrata SODA
+  // API, ~49k active records, distinct from oregon-ccb (contractor businesses).
+  | "oregon-bcd";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
