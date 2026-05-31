@@ -1,27 +1,34 @@
 name: Scrape · GPhC UK pharmacists
 # Enumerates the GPhC pharmacy professionals register by sequential
 # registration number (range 2,040,000–2,250,000, ~60% hit rate).
-# Each lookup needs 1 GET + 1 POST with 2s delay = ~70 min for 2000 hits.
-# Advance PROLIO_GPHC_START by ~3500 each week to walk the full range in
+# Each lookup needs 1 GET + 1 POST with 2s delay = ~2h for 2000 hits.
+# Advance gphc_start by ~3500 each week to walk the full range in
 # ~60 weekly runs (full coverage in ~14 months at this cadence).
+#
+# Run history (start → next_start):
+#   2026-05-31 run 1: 2040000 → reached 2041509 (800 hits, 1509 scanned)
+#   Next run should start from 2041510.
 on:
   schedule:
     # Weekly Saturday 05:00 UTC
     - cron: "0 5 * * 6"
   workflow_dispatch:
     inputs:
-      start:
-        description: "Registration number range start (default 2040000)"
+      gphc_start:
+        description: "Registration number range start (default 2041510)"
         required: false
         type: string
-      end:
+        default: "2041510"
+      gphc_end:
         description: "Registration number range end (default 2250000)"
         required: false
         type: string
-      limit:
+        default: "2250000"
+      gphc_limit:
         description: "Max records to collect (default 2000)"
         required: false
         type: string
+        default: "2000"
 jobs:
   run:
     uses: ./.github/workflows/_scrape-runner.yml
