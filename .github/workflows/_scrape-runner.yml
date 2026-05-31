@@ -362,6 +362,7 @@ jobs:
 
       # 2026-05-31: SEP cédulas profesionales MX — public API, all MX professions
       PROLIO_RUN_SEP_CEDULAS:         ${{ inputs.source == 'sep-cedulas-mx' && 'true' || 'false' }}
+      PROLIO_SEP_BEARER_TOKEN:        ${{ secrets.PROLIO_SEP_BEARER_TOKEN }}
       PROLIO_RUN_CPSNS_NS_PHYSICIANS: ${{ inputs.source == 'cpsns-ns-physicians' && 'true' || 'false' }}
       PROLIO_RUN_LSNB_BAR:            ${{ inputs.source == 'lsnb-bar' && 'true' || 'false' }}
 
