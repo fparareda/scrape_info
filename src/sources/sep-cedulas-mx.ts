@@ -73,6 +73,18 @@ import { getSink } from "../sink.js";
 
 const CONFIG_URL =
   "https://www.cedulaprofesional.sep.gob.mx/assets/config.json";
+
+// Hardcoded fallback from config.json (public values baked into the Angular
+// JS bundle at main.7dc5cf82893323a9.js). Used when GHA runners cannot reach
+// config.json directly (datacenter IP may be rate-limited by SEP's CDN).
+// These are static service-account credentials for the public-facing app —
+// not user credentials.
+const FALLBACK_CONFIG: SepConfig = {
+  apiUrl:   "https://cedulaprofesional.sep.gob.mx/api",
+  tokenApi: "https://cedulaprofesional.sep.gob.mx/api",
+  clientId: "rnp-angular-app-prod",
+  apiKey:   "65da8s675f8s75fda675s8d76as87d5as675da",
+};
 const REQUEST_TIMEOUT_MS = 20_000;
 const DEFAULT_START = 1_000_000;
 const DEFAULT_END = 15_000_000;
@@ -318,8 +330,11 @@ export async function runSepCedulasMx(): Promise<{
 
   console.log(`[sep-cedulas] start=${start} end=${end} limit=${limit} delay=${delayMs}ms`);
 
-  const cfg = await loadConfig();
-  if (!cfg) { console.error("[sep-cedulas] could not load config.json"); return { fetched: 0, inserted: 0, updated: 0, skipped: 0 }; }
+  let cfg = await loadConfig();
+  if (!cfg) {
+    console.warn("[sep-cedulas] config.json unreachable — using hardcoded fallback");
+    cfg = FALLBACK_CONFIG;
+  }
 
   const token = await getToken(cfg);
   if (!token) { console.error("[sep-cedulas] could not obtain Bearer token"); return { fetched: 0, inserted: 0, updated: 0, skipped: 0 }; }

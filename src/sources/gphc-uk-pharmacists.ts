@@ -67,7 +67,10 @@ const FORM_ID = "register_search_pharmacist_form";
 const CATEGORY: CategoryKey = "farmacia";
 const DEFAULT_START = 2_040_000;
 const DEFAULT_END = 2_250_000;
-const DEFAULT_LIMIT = 2_000;
+// Each lookup = 1 GET (Drupal form_build_id) + 1 POST + 2s delay ≈ 8s/record.
+// First GHA run hit the 120min timeout at 1000 records. Cap at 800 to finish
+// within ~105min (safe margin). Increase timeout to 180min for headroom.
+const DEFAULT_LIMIT = 800;
 const DELAY_MS = 2_000;
 const REQUEST_TIMEOUT_MS = 30_000;
 const USER_AGENT =
