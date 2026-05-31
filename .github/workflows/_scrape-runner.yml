@@ -60,6 +60,21 @@ on:
         type: string
         required: false
         default: ""
+      gphc_start:
+        description: "GPhC registration number range start (only `gphc-uk-pharmacists` honours this)"
+        type: string
+        required: false
+        default: ""
+      gphc_end:
+        description: "GPhC registration number range end (only `gphc-uk-pharmacists` honours this)"
+        type: string
+        required: false
+        default: ""
+      gphc_limit:
+        description: "GPhC max records to scrape (only `gphc-uk-pharmacists` honours this)"
+        type: string
+        required: false
+        default: ""
 
 jobs:
   scrape:

@@ -274,6 +274,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           sourceId: `rpps:${idKey}`,
           name,
           categoryKey: category,
+          country: "FR",
           citySlug,
           phone: row["telephone_coord_structure"] || undefined,
           email: row["adresse_e_mail_coord_structure"] || undefined,

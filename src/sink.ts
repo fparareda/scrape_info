@@ -22,7 +22,7 @@ interface Sink {
   }>;
 }
 
-export function getSink(): Sink {
+export function getSink(_opts?: { trustCitySlugs?: boolean }): Sink {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRoleKey) {

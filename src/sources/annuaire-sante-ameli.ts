@@ -183,6 +183,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         sourceId: `ameli:${idKey}`,
         name,
         categoryKey: category,
+        country: "FR",
         citySlug,
         phone: row["coordonnees_num_tel"] || undefined,
         address: address || undefined,
