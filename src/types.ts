@@ -251,7 +251,13 @@ export type ScrapeSource =
   // 2026-05-31: GPhC UK — General Pharmaceutical Council register of
   // pharmacy professionals (~86k). Enumerated by sequential registration
   // number (2,040,000–2,250,000 range, ~60-70% density).
-  | "gphc-uk-pharmacists";
+  | "gphc-uk-pharmacists"
+  // 2026-05-31: SEP Cédulas Profesionales MX — national registry of all
+  // professional titles issued in Mexico (~8-10M active credentials across
+  // all professions). API: cedulaprofesional.sep.gob.mx/api with public
+  // Bearer token + optional X-Recaptcha-Token. Sequential cédula enumeration
+  // range 1,000,000–15,000,000.
+  | "sep-cedulas-mx";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
