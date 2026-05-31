@@ -280,6 +280,8 @@ import {
   competitorEsMegaEnabled,
   runCompetitorEsMega,
 } from "./sources/competitor-es-mega.js";
+// 2026-05-31: RII División B ES
+import { riiDivBElectricidadEsSource, runRiiDivBElectricidadEs } from "./sources/rii-div-b-electricidad-es.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -498,6 +500,7 @@ async function main(): Promise<void> {
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
+  const riiDivBElectricidadEsOn = riiDivBElectricidadEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -686,7 +689,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !riiDivBElectricidadEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1444,6 +1448,8 @@ async function main(): Promise<void> {
     [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
     [secEdgarOn, "sec-edgar", runSecEdgar],
     [usptoPatentsViewOn, "uspto-patentsview", runUsptoPatentsView],
+    // 2026-05-31: RII División B ES
+    [riiDivBElectricidadEsOn, "rii-div-b-electricidad-es", runRiiDivBElectricidadEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
