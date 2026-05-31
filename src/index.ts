@@ -228,6 +228,7 @@ import {
 } from "./sources/merchantcircle-us.js";
 import { gphcUkSource, runGphcUk } from "./sources/gphc-uk-pharmacists.js";
 import { sepCedulasMxSource, runSepCedulasMx } from "./sources/sep-cedulas-mx.js";
+import { nebraskaDolConregSource, runNebraskaDolConreg } from "./sources/nebraska-dol-conreg.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
@@ -455,6 +456,7 @@ async function main(): Promise<void> {
   const merchantCircleUsOn = merchantCircleUsSource.enabled();
   const gphcUkOn = gphcUkSource.enabled();
   const sepCedulasMxOn = sepCedulasMxSource.enabled();
+  const nebraskaDolConregOn = nebraskaDolConregSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
@@ -645,6 +647,7 @@ async function main(): Promise<void> {
     !merchantCircleUsOn &&
     !gphcUkOn &&
     !sepCedulasMxOn &&
+    !nebraskaDolConregOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
     !cnoOntarioOn &&
@@ -1413,6 +1416,7 @@ async function main(): Promise<void> {
     [merchantCircleUsOn, "merchantcircle-us", runMerchantCircleUs],
     [gphcUkOn, "gphc-uk-pharmacists", runGphcUk],
     [sepCedulasMxOn, "sep-cedulas-mx", runSepCedulasMx],
+    [nebraskaDolConregOn, "nebraska-dol-conreg", runNebraskaDolConreg],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
