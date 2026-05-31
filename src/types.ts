@@ -257,7 +257,9 @@ export type ScrapeSource =
   // all professions). API: cedulaprofesional.sep.gob.mx/api with public
   // Bearer token + optional X-Recaptcha-Token. Sequential cédula enumeration
   // range 1,000,000–15,000,000.
-  | "sep-cedulas-mx";
+  | "sep-cedulas-mx"
+  // 2026-05-31: RII División B ES — Spain MINCOTUR open data CSV (~50k+ installers).
+  | "rii-div-b-electricidad-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
