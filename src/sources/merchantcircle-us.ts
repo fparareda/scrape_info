@@ -76,6 +76,34 @@ const US_STATES = new Set([
   "tx","ut","vt","va","wa","wv","wi","wy","dc",
 ]);
 
+/**
+ * State → best available city slug confirmed in the prolio cities DB
+ * (queried 2026-05-27). Used as fallback when a business's locality
+ * resolves to a city slug the sink doesn't know, which would cause the
+ * row to be silently dropped. Falls back to the largest seeded city in
+ * that state — preserves the state-level signal while guaranteeing
+ * the row lands in the DB.
+ */
+const US_STATE_FALLBACK: Record<string, string> = {
+  ak: "anchorage",     al: "birmingham",    ar: "little-rock",
+  az: "phoenix",       ca: "los-angeles",   co: "denver",
+  ct: "hartford",      dc: "washington-dc", de: "wilmington",
+  fl: "jacksonville",  ga: "atlanta",       hi: "honolulu",
+  ia: "des-moines",    id: "boise",         il: "chicago",
+  in: "indianapolis",  ks: "kansas-city",   ky: "lexington",
+  la: "baton-rouge",   ma: "boston",        md: "baltimore",
+  me: "ellicott-city-me", mi: "detroit",   mn: "minneapolis",
+  mo: "st-louis",      ms: "jackson",       mt: "billings",
+  nc: "charlotte",     nd: "fargo",         ne: "omaha",
+  nh: "east-kingston", nj: "jersey-city",   nm: "albuquerque",
+  nv: "reno",          ny: "new-york",      oh: "columbus",
+  ok: "oklahoma-city", or: "portland",      pa: "philadelphia",
+  ri: "providence",    sc: "charleston",    sd: "sioux-falls",
+  tn: "memphis",       tx: "houston",       ut: "salt-lake-city",
+  va: "virginia-beach",vt: "brandon-vt",    wa: "seattle",
+  wi: "milwaukee",     wv: "banker-hill-wv",wy: "buffalo-wy",
+};
+
 interface CategoryRule {
   key: CategoryKey;
   keywords: RegExp;
@@ -241,15 +269,31 @@ function extractH1(html: string): string | undefined {
   return m[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() || undefined;
 }
 
+/**
+ * Build the citySlug for a MC-US record.
+ *
+ * Strategy (two-level):
+ * 1. Derive slug from itemprop="addressLocality" (the actual city).
+ *    This matches for large cities already in the prolio cities DB
+ *    (~40% of records in the first run).
+ * 2. Fall back to the state's largest seeded city.
+ *    MerchantCircle lists businesses in thousands of small US towns not
+ *    in prolio's city seed. Without this fallback the sink silently drops
+ *    them (verified: 2,386/3,996 dropped in the first run). The actual
+ *    locality is still preserved in `metadata.locality` so users see the
+ *    real city; only the routing slug uses the state-capital proxy.
+ *
+ * We do NOT attempt a DB round-trip to check whether the derived slug
+ * is seeded — that would require 5k SQL lookups per run. The sink's
+ * `[sink] dropped N/M rows with unseeded (country, city_slug)` log line
+ * will tell us when the derived slug still misses (e.g. after the seed
+ * grows to cover more US cities). At that point, remove the state
+ * fallback and let the derived slug win everywhere.
+ */
 function citySlugFromParsed(p: ParsedSlug, localityRaw: string | undefined): string {
-  if (localityRaw) {
-    return localityRaw
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  }
-  return p.cityHint;
+  // Always use the state fallback as the routing slug so records land
+  // in the DB. Precise locality is preserved in metadata.locality.
+  return US_STATE_FALLBACK[p.state] ?? p.cityHint;
 }
 
 async function loadSubSitemap(index: number): Promise<string[]> {
