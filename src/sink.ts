@@ -145,7 +145,11 @@ export function getSink(): Sink {
         );
       }
       const lookups = await loadLookups();
-      return upsertBatch(client, filtered, lookups);
+      const result = await upsertBatch(client, filtered, lookups);
+      // Surface slug-drops in the skipped counter so callers log an
+      // accurate total. Previously they disappeared silently between
+      // the source's fetched= and inserted+updated+skipped= numbers.
+      return { ...result, skipped: result.skipped + droppedSlug };
     },
   };
 }
