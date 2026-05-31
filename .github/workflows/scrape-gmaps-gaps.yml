@@ -139,9 +139,9 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       DISABLE_TELEMETRY: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -258,7 +258,7 @@ jobs:
 
       - name: Upload results CSV
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gmaps-results-${{ steps.shard.outputs.country }}-shard${{ steps.shard.outputs.city_offset }}-${{ github.run_number }}
           path: out/results.csv
