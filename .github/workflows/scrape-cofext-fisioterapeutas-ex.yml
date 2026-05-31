@@ -1,0 +1,12 @@
+name: Scrape · COFEXT (Extremadura fisioterapeutas)
+on:
+  schedule:
+    - cron: "30 4 * * 1"   # weekly Monday 04:30 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cofext-fisioterapeutas-ex
+      timeout_minutes: 10
