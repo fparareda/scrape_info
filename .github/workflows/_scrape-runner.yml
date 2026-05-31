@@ -372,6 +372,9 @@ jobs:
       # 2026-05-26: MerchantCircle US — sitemap-sharded generalist scrape
       PROLIO_RUN_MC_US:               ${{ inputs.source == 'merchantcircle-us' && 'true' || 'false' }}
 
+      # 2026-05-31: ES fisio colegios autonómicos (static HTML tables)
+      PROLIO_RUN_COFEXT_FISIO:        ${{ inputs.source == 'cofext-fisioterapeutas-ex' && 'true' || 'false' }}
+
       # 2026-05-31: GPhC UK — registration-number enumeration
       PROLIO_RUN_GPHC_UK:             ${{ inputs.source == 'gphc-uk-pharmacists' && 'true' || 'false' }}
       PROLIO_GPHC_START:              ${{ inputs.source == 'gphc-uk-pharmacists' && inputs.gphc_start || '' }}

@@ -219,6 +219,7 @@ import { nsbsNsSource, runNsbsNs } from "./sources/nsbs-ns.js";
 import { pegnlNlSource, runPegnlNl } from "./sources/pegnl-nl.js";
 import { imcpColegiosMxSource, runImcpColegiosMx } from "./sources/imcp-colegios-mx.js";
 import { svmaSkVetsSource, runSvmaSkVets } from "./sources/svma-sk-vets.js";
+import { cofextFisioSource, runCofextFisio } from "./sources/cofext-fisioterapeutas-ex.js";
 import { abvmaAbVetsSource, runAbvmaAbVets } from "./sources/abvma-ab-vets.js";
 import { mvmaMbVetsSource, runMvmaMbVets } from "./sources/mvma-mb-vets.js";
 import { fourElevenCaSource, run411Ca } from "./sources/411-ca.js";
@@ -449,6 +450,7 @@ async function main(): Promise<void> {
   const pegnlNlOn = pegnlNlSource.enabled();
   const imcpColegiosMxOn = imcpColegiosMxSource.enabled();
   const svmaSkVetsOn = svmaSkVetsSource.enabled();
+  const cofextFisioOn = cofextFisioSource.enabled();
   const abvmaAbVetsOn = abvmaAbVetsSource.enabled();
   const mvmaMbVetsOn = mvmaMbVetsSource.enabled();
   const fourElevenCaOn = fourElevenCaSource.enabled();
@@ -639,6 +641,7 @@ async function main(): Promise<void> {
     !pegnlNlOn &&
     !imcpColegiosMxOn &&
     !svmaSkVetsOn &&
+    !cofextFisioOn &&
     !abvmaAbVetsOn &&
     !mvmaMbVetsOn &&
     !fourElevenCaOn &&
@@ -1407,6 +1410,7 @@ async function main(): Promise<void> {
     [emaAcreditadosOn, "ema-acreditados", runEmaAcreditados],
     [imssDirectorioOn, "imss-directorio", runImssDirectorio],
     [svmaSkVetsOn, "svma-sk-vets", runSvmaSkVets],
+    [cofextFisioOn, "cofext-fisioterapeutas-ex", runCofextFisio],
     [abvmaAbVetsOn, "abvma-ab-vets", runAbvmaAbVets],
     [mvmaMbVetsOn, "mvma-mb-vets", runMvmaMbVets],
     [fourElevenCaOn, "411-ca", run411Ca],
