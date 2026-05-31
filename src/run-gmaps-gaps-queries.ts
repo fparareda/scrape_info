@@ -155,7 +155,13 @@ async function loadCoverageLive(
       .select("city_slug, category_key, n")
       .eq("city_country", country)
       .range(from, from + PAGE - 1);
-    if (error) throw error;
+    if (error) {
+      if ((error as any).code === "57014") {
+        console.error("  ! coverage read timed out — proceeding with empty coverage");
+        break;
+      }
+      throw error;
+    }
     if (!data || data.length === 0) break;
     for (const row of data as Array<{
       city_slug: string;

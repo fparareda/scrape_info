@@ -201,25 +201,29 @@ jobs:
                   ;;
               esac
             fi
-            echo "country=$country" >> "$GITHUB_OUTPUT"
-            echo "top_n=200" >> "$GITHUB_OUTPUT"
-            echo "city_offset=$offset" >> "$GITHUB_OUTPUT"
-            echo "depth=1" >> "$GITHUB_OUTPUT"
-            echo "concurrency=2" >> "$GITHUB_OUTPUT"
-            # Cap each cron shard at 3500 queries to fit under the 5h30m
-            # GA timeout. PR #81 emits up to 3 synonyms per (city, cat) so
-            # ES top-200 day 1 could hit ~4,200 queries (~7h). Truncating
-            # leaves coverage gaps that the next day's run picks up via
-            # the live matview — net zero waste, predictable run length.
-            echo "max_queries=3500" >> "$GITHUB_OUTPUT"
+            {
+              echo "country=$country"
+              echo "top_n=200"
+              echo "city_offset=$offset"
+              echo "depth=1"
+              echo "concurrency=2"
+              # Cap each cron shard at 3500 queries to fit under the 5h30m
+              # GA timeout. PR #81 emits up to 3 synonyms per (city, cat) so
+              # ES top-200 day 1 could hit ~4,200 queries (~7h). Truncating
+              # leaves coverage gaps that the next day's run picks up via
+              # the live matview — net zero waste, predictable run length.
+              echo "max_queries=3500"
+            } >> "$GITHUB_OUTPUT"
             echo "::notice::Cron mode — country=$country top_n=200 city_offset=$offset max=3500 (hour $hour UTC)"
           else
-            echo "country=${{ inputs.country }}" >> "$GITHUB_OUTPUT"
-            echo "top_n=${{ inputs.top_n }}" >> "$GITHUB_OUTPUT"
-            echo "city_offset=${{ inputs.city_offset }}" >> "$GITHUB_OUTPUT"
-            echo "depth=${{ inputs.depth }}" >> "$GITHUB_OUTPUT"
-            echo "concurrency=${{ inputs.concurrency }}" >> "$GITHUB_OUTPUT"
-            echo "max_queries=${{ inputs.max_queries }}" >> "$GITHUB_OUTPUT"
+            {
+              echo "country=${{ inputs.country }}"
+              echo "top_n=${{ inputs.top_n }}"
+              echo "city_offset=${{ inputs.city_offset }}"
+              echo "depth=${{ inputs.depth }}"
+              echo "concurrency=${{ inputs.concurrency }}"
+              echo "max_queries=${{ inputs.max_queries }}"
+            } >> "$GITHUB_OUTPUT"
             echo "::notice::Manual mode — country=${{ inputs.country }} top_n=${{ inputs.top_n }} city_offset=${{ inputs.city_offset }}"
           fi
 
