@@ -12,9 +12,9 @@ on:
         description: "Optional: restrict to one category"
         required: false
         type: choice
-        default: ""
+        default: "all"
         options:
-          - ""
+          - "all"
           - fontaneria
           - hvac
           - electricidad
@@ -25,5 +25,5 @@ jobs:
     secrets: inherit
     with:
       source: chambre-metiers-fr
-      category: ${{ inputs.category || '' }}
+      category: ${{ inputs.category == 'all' && '' || inputs.category }}
       timeout_minutes: 240

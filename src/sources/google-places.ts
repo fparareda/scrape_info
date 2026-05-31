@@ -94,7 +94,7 @@ async function fetchPage(
   apiKey: string,
   query: string,
   pageToken: string | undefined,
-  regionCode: "ES" | "CA" | "US" | "FR" | "MX",
+  regionCode: "ES" | "CA" | "US" | "FR" | "MX" | "GB",
   languageCode: "es" | "en" | "fr",
 ): Promise<PlacesResponse> {
   const body: Record<string, unknown> = {

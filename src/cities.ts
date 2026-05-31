@@ -1,4 +1,4 @@
-export type CountryCode = "ES" | "CA" | "US" | "FR" | "MX";
+export type CountryCode = "ES" | "CA" | "US" | "FR" | "MX" | "GB";
 
 export interface ScraperCity {
   slug: string;

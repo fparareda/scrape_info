@@ -8,7 +8,7 @@ import { generateProfileCopy } from "./seo-copy.js";
 // fallback map: every scraper has to declare its country explicitly.
 function resolveCountry(
   record: ScrapedProfessional,
-): "ES" | "CA" | "US" | "FR" | "MX" {
+): "ES" | "CA" | "US" | "FR" | "MX" | "GB" {
   return record.country;
 }
 

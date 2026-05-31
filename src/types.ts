@@ -247,7 +247,11 @@ export type ScrapeSource =
   // 2026-05-26: MerchantCircle US — generalist directory via gzipped sitemap
   // shards (897 sub-sitemaps, ~44.9M URLs). Sharded fetch with state filter
   // and category keyword-matching on slug.
-  | "merchantcircle-us";
+  | "merchantcircle-us"
+  // 2026-05-31: GPhC UK — General Pharmaceutical Council register of
+  // pharmacy professionals (~86k). Enumerated by sequential registration
+  // number (2,040,000–2,250,000 range, ~60-70% density).
+  | "gphc-uk-pharmacists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
@@ -266,7 +270,7 @@ export interface ScrapedProfessional {
    *  Multi-country sources (google_places, osm, overture, wikidata,
    *  paginas-amarillas, gleif…) must set this per-row from the data
    *  they are emitting. */
-  country: "ES" | "CA" | "US" | "FR" | "MX";
+  country: "ES" | "CA" | "US" | "FR" | "MX" | "GB";
   /** Slug within `country`. Pass empty string when the source only
    *  resolves to province granularity — the sink writes `city_slug = NULL`
    *  and you should populate `metadata.province_slug`. */
@@ -298,7 +302,7 @@ export interface ScrapeTarget {
   /** ISO country code — ES, CA, US, FR, MX today. Sources can choose
    *  to skip (e.g. CCAA Spain-only registries) or adapt queries
    *  (e.g. EN/FR synonyms per locale). */
-  country: "ES" | "CA" | "US" | "FR" | "MX";
+  country: "ES" | "CA" | "US" | "FR" | "MX" | "GB";
   /** Language to form the textQuery in for this city. */
   queryLocale: "es" | "en" | "fr";
 }
