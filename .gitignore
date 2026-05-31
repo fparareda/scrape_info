@@ -6,3 +6,5 @@ dist/
 .DS_Store
 .claude/
 data/queries-*.txt
+local-pa/
+repro*.mjs
