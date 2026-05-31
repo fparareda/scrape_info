@@ -333,14 +333,16 @@ export async function runSepCedulasMx(): Promise<{
   // Allow pre-fetched token via env var for GHA (the token endpoint is
   // blocked from datacenter IPs; token is valid 1 year so the secret only
   // needs refreshing annually from a residential/office IP).
+  let cfg = FALLBACK_CONFIG;
   let token: string | null = process.env.PROLIO_SEP_BEARER_TOKEN ?? null;
   if (token) {
     console.log("[sep-cedulas] using PROLIO_SEP_BEARER_TOKEN from env");
   } else {
-    let cfg = await loadConfig();
-    if (!cfg) {
+    const fetched = await loadConfig();
+    if (!fetched) {
       console.warn("[sep-cedulas] config.json unreachable — using hardcoded fallback");
-      cfg = FALLBACK_CONFIG;
+    } else {
+      cfg = fetched;
     }
     token = await getToken(cfg);
     if (!token) {
