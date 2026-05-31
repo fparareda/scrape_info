@@ -86,6 +86,43 @@ ALTER TYPE public.source_kind ADD VALUE IF NOT EXISTS '411-ca';
 ALTER TYPE public.source_kind ADD VALUE IF NOT EXISTS 'merchantcircle-us';
 ```
 
+### `add_gb_gphc_source_and_uk_cities` — GB country + GPhC slug + 15 UK cities
+
+Applied via MCP on 2026-05-31 to unblock GPhC UK pharmacy professionals scraper
+(PR #117). Two changes in one migration:
+
+1. `ALTER TYPE source_kind ADD VALUE IF NOT EXISTS 'gphc-uk-pharmacists'`
+2. `INSERT INTO cities` — 15 UK cities seeded for country='GB':
+   London, Birmingham, Manchester, Glasgow, Leeds, Edinburgh, Liverpool,
+   Bristol, Sheffield, Cardiff, Belfast, Nottingham, Newcastle, Leicester,
+   Coventry.
+
+```sql
+ALTER TYPE public.source_kind ADD VALUE IF NOT EXISTS 'gphc-uk-pharmacists';
+
+INSERT INTO public.cities (slug, name, country, lat, lng, region)
+SELECT slug, name, country, lat, lng, region FROM (VALUES
+  ('london','London','GB',51.5074,-0.1278,'ENG'),
+  ('birmingham','Birmingham','GB',52.4862,-1.8904,'ENG'),
+  ('manchester','Manchester','GB',53.4808,-2.2426,'ENG'),
+  ('glasgow','Glasgow','GB',55.8642,-4.2518,'SCO'),
+  ('leeds','Leeds','GB',53.8008,-1.5491,'ENG'),
+  ('edinburgh','Edinburgh','GB',55.9533,-3.1883,'SCO'),
+  ('liverpool','Liverpool','GB',53.4084,-2.9916,'ENG'),
+  ('bristol','Bristol','GB',51.4545,-2.5879,'ENG'),
+  ('sheffield','Sheffield','GB',53.3811,-1.4701,'ENG'),
+  ('cardiff','Cardiff','GB',51.4816,-3.1791,'WAL'),
+  ('belfast','Belfast','GB',54.5973,-5.9301,'NIR'),
+  ('nottingham','Nottingham','GB',52.9548,-1.1581,'ENG'),
+  ('newcastle','Newcastle','GB',54.9783,-1.6178,'ENG'),
+  ('leicester','Leicester','GB',52.6369,-1.1398,'ENG'),
+  ('coventry','Coventry','GB',52.4068,-1.5197,'ENG')
+) AS v(slug, name, country, lat, lng, region)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.cities c WHERE c.slug = v.slug AND c.country = v.country
+);
+```
+
 **Recurring gotcha:** every new scraper that calls `getSink().upsert(...)` must
 have its slug added to this enum *before* its first GHA run, otherwise the
 sink rejects every batch with `invalid input value for enum source_kind: "<slug>"`
