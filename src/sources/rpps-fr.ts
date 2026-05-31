@@ -88,10 +88,27 @@ interface DatasetMeta {
 
 function professionToCategory(profession: string): CategoryKey | undefined {
   const p = profession.toLowerCase();
+  // Primary healthcare
   if (p.includes("médecin") || p.includes("medecin")) return "medicina";
-  if (p.includes("chirurgien") && p.includes("dentiste")) return "dentista";
-  if (p.includes("dentiste")) return "dentista";
-  if (p.includes("kinésithéra") || p.includes("kinesithera"))
+  if ((p.includes("chirurgien") && p.includes("dentiste")) || p.includes("dentiste"))
+    return "dentista";
+  if (p.includes("kinésithéra") || p.includes("kinesithera") || p.includes("masseur"))
+    return "fisioterapia";
+  if (p.includes("sage-femme") || p.includes("sage femme") || p.includes("maïeuticien"))
+    return "medicina"; // closest category — midwives are healthcare practitioners
+  if (p.includes("infirmier") || p.includes("infirmière"))
+    return "enfermeria";
+  if (p.includes("pharmacien") || p.includes("pharmacie"))
+    return "farmacia";
+  if (p.includes("vétérinaire") || p.includes("veterinaire"))
+    return "veterinario";
+  if (p.includes("psychologue") || p.includes("psychothéra"))
+    return "psicologia";
+  if (p.includes("pédicure") || p.includes("podologue"))
+    return "fisioterapia"; // podiatrists → physio as closest
+  if (p.includes("orthophoniste") || p.includes("orthoptiste"))
+    return "fisioterapia"; // speech/vision therapists → physio as closest
+  if (p.includes("ergothéra") || p.includes("psychomotricien"))
     return "fisioterapia";
   return undefined;
 }
@@ -281,7 +298,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   }
 
   console.log(
-    `[rpps-fr] scanned=${scanned} parsed=${out.length} (filtered to medicina/dentista/fisioterapia)`,
+    `[rpps-fr] scanned=${scanned} parsed=${out.length} (filtered to medicina/dentista/fisioterapia/enfermeria/farmacia/veterinario/psicologia)`,
   );
   return out;
 }
