@@ -1,0 +1,34 @@
+name: Scrape · SEP Cédulas Profesionales (MX)
+# Enumerates the SEP national professional credentials registry by sequential
+# cédula number. Range 1,000,000–15,000,000 (~14M numbers, >70% hit rate).
+# Default: 5000 records/run at 1s delay ≈ 1.5h. Advance PROLIO_SEP_START
+# by ~7500 each week (5000 records / ~65% category hit rate).
+on:
+  schedule:
+    # Weekly Sunday 03:00 UTC (offset from GPhC at 05:00 to spread load)
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "Cédula range start (default 1000000)"
+        required: false
+        type: string
+      end:
+        description: "Cédula range end (default 15000000)"
+        required: false
+        type: string
+      limit:
+        description: "Max records to collect (default 5000)"
+        required: false
+        type: string
+      delay_ms:
+        description: "Delay between requests in ms (default 1000)"
+        required: false
+        type: string
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: sep-cedulas-mx
+      timeout_minutes: 120
