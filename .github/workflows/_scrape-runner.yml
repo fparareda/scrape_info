@@ -359,6 +359,9 @@ jobs:
 
       # 2026-05-31: GPhC UK — registration-number enumeration
       PROLIO_RUN_GPHC_UK:             ${{ inputs.source == 'gphc-uk-pharmacists' && 'true' || 'false' }}
+      PROLIO_GPHC_START:              ${{ inputs.source == 'gphc-uk-pharmacists' && inputs.gphc_start || '' }}
+      PROLIO_GPHC_END:                ${{ inputs.source == 'gphc-uk-pharmacists' && inputs.gphc_end   || '' }}
+      PROLIO_GPHC_LIMIT:              ${{ inputs.source == 'gphc-uk-pharmacists' && inputs.gphc_limit || '' }}
 
       # 2026-05-31: SEP cédulas profesionales MX — public API, all MX professions
       PROLIO_RUN_SEP_CEDULAS:         ${{ inputs.source == 'sep-cedulas-mx' && 'true' || 'false' }}
