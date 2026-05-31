@@ -330,14 +330,31 @@ export async function runSepCedulasMx(): Promise<{
 
   console.log(`[sep-cedulas] start=${start} end=${end} limit=${limit} delay=${delayMs}ms`);
 
-  let cfg = await loadConfig();
-  if (!cfg) {
-    console.warn("[sep-cedulas] config.json unreachable — using hardcoded fallback");
-    cfg = FALLBACK_CONFIG;
+  // Allow pre-fetched token via env var for GHA (the token endpoint is
+  // blocked from datacenter IPs; token is valid 1 year so the secret only
+  // needs refreshing annually from a residential/office IP).
+  let cfg = FALLBACK_CONFIG;
+  let token: string | null = process.env.PROLIO_SEP_BEARER_TOKEN ?? null;
+  if (token) {
+    console.log("[sep-cedulas] using PROLIO_SEP_BEARER_TOKEN from env");
+  } else {
+    const fetched = await loadConfig();
+    if (!fetched) {
+      console.warn("[sep-cedulas] config.json unreachable — using hardcoded fallback");
+    } else {
+      cfg = fetched;
+    }
+    token = await getToken(cfg);
+    if (!token) {
+      console.error(
+        "[sep-cedulas] could not obtain Bearer token. " +
+          "Set PROLIO_SEP_BEARER_TOKEN secret (run the token endpoint from " +
+          "a non-datacenter IP: GET https://cedulaprofesional.sep.gob.mx/api/auth/token " +
+          "with X-Client-Id: rnp-angular-app-prod and X-API-Key from config.json)",
+      );
+      return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
+    }
   }
-
-  const token = await getToken(cfg);
-  if (!token) { console.error("[sep-cedulas] could not obtain Bearer token"); return { fetched: 0, inserted: 0, updated: 0, skipped: 0 }; }
 
   const records: ScrapedProfessional[] = [];
   const seen = new Set<string>();
