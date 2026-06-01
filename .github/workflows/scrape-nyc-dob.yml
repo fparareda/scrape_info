@@ -1,0 +1,12 @@
+name: Scrape · NYC DOB (contractors)
+on:
+  schedule:
+    - cron: "0 8 * * 1"   # weekly Monday 08:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: nyc-dob
+      timeout_minutes: 60

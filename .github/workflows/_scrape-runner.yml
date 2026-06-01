@@ -177,6 +177,9 @@ jobs:
 
       # 2026-05-14 US/MX wave: federal bulk + state HTML (final wiring)
       PROLIO_RUN_HIFLD_US:            ${{ inputs.source == 'hifld-us' && 'true' || 'false' }}
+      PROLIO_RUN_NYC_DOB:             ${{ inputs.source == 'nyc-dob' && 'true' || 'false' }}
+      PROLIO_RUN_LOUISIANA_LSLBC:     ${{ inputs.source == 'louisiana-lslbc' && 'true' || 'false' }}
+      PROLIO_RUN_NPPES_BULK:          ${{ inputs.source == 'nppes-bulk' && 'true' || 'false' }}
       PROLIO_RUN_RENIECYT_MX:         ${{ inputs.source == 'reniecyt-mx' && 'true' || 'false' }}
       PROLIO_RUN_PADRON_NOTARIOS_FED_MX: ${{ inputs.source == 'padron-notarios-fed-mx' && 'true' || 'false' }}
       PROLIO_RUN_CA_DCA_OPEN_DATA:    ${{ inputs.source == 'ca-dca-open-data' && 'true' || 'false' }}
@@ -217,6 +220,8 @@ jobs:
       PROLIO_ORDRE_VET_FR_LIMIT:        "2000"
       # RPPS — Répertoire Partagé des Professionnels de Santé (bulk FR healthcare)
       PROLIO_RUN_RPPS_FR:               ${{ inputs.source == 'rpps-fr' && 'true' || 'false' }}
+      # Annuaire Santé Ameli (CNAM libéral extract, subset of RPPS)
+      PROLIO_RUN_ANNUAIRE_SANTE_AMELI:  ${{ inputs.source == 'annuaire-sante-ameli' && 'true' || 'false' }}
       # 2026-05 consolidation: rpps-fr + annuaire-sante-ameli → annuaire-sante-ans
       # (multi-table ANS extraction covering RPPS+ADELI bascule).
       PROLIO_RUN_ANNUAIRE_SANTE_ANS:    ${{ inputs.source == 'annuaire-sante-ans' && 'true' || 'false' }}
@@ -258,7 +263,10 @@ jobs:
       PROLIO_RUN_SAT_EFOS_EDOS:         ${{ inputs.source == 'sat-efos-edos' && 'true' || 'false' }}
       PROLIO_RUN_SAT_CPR_MX:            ${{ inputs.source == 'sat-cpr-mx' && 'true' || 'false' }}
       PROLIO_RUN_PROFECO_SANCIONADOS:   ${{ inputs.source == 'profeco-sancionados' && 'true' || 'false' }}
+      PROLIO_RUN_PROFECO_RPCA_TALLERES: ${{ inputs.source == 'profeco-rpca-talleres' && 'true' || 'false' }}
       PROLIO_RUN_CRE_PERMISIONARIOS:    ${{ inputs.source == 'cre-permisionarios' && 'true' || 'false' }}
+      PROLIO_RUN_CONDUSEF_SIPRES:       ${{ inputs.source == 'condusef-sipres' && 'true' || 'false' }}
+      PROLIO_RUN_IFT_RPC_MX:           ${{ inputs.source == 'ift-rpc-mx' && 'true' || 'false' }}
 
       # 2026-05-13 wave 2: MX business directories (SIEM + COFEPRIS +
       # CNBV + Padrón Ganadero)
@@ -276,6 +284,8 @@ jobs:
       PROLIO_RUN_ANTAD_ASOCIADOS:       ${{ inputs.source == 'antad-asociados' && 'true' || 'false' }}
       PROLIO_RUN_EMA_ACREDITADOS:       ${{ inputs.source == 'ema-acreditados' && 'true' || 'false' }}
       PROLIO_RUN_IMSS_DIRECTORIO:       ${{ inputs.source == 'imss-directorio' && 'true' || 'false' }}
+      PROLIO_RUN_IMCP_COLEGIOS_MX:     ${{ inputs.source == 'imcp-colegios-mx' && 'true' || 'false' }}
+      PROLIO_RUN_COLEGIOS_NOTARIOS_MX: ${{ inputs.source == 'colegios-notarios-mx' && 'true' || 'false' }}
 
       # 2026-05-14 wave: MX médicos certificados (CONACEM) — stub honesto.
       # Buscador bloqueado por proxy SSR (backend Flask requiere token

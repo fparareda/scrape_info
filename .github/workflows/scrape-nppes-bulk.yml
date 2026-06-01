@@ -1,0 +1,17 @@
+name: Scrape · NPPES bulk (US NPI full dataset)
+on:
+  schedule:
+    - cron: "0 2 15 * *"  # monthly 15th, 02:00 UTC (after monthly update)
+  workflow_dispatch:
+    inputs:
+      nppes_url:
+        description: "Override NPPES bulk CSV URL (optional)"
+        required: false
+        type: string
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: nppes-bulk
+      timeout_minutes: 240
