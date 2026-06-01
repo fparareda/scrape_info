@@ -79,8 +79,12 @@ function professionToCategory(profession: string): CategoryKey | undefined {
   // (106k in the ANS file at last sample). Sages-femmes are nurses-
   // adjacent and get lumped under enfermeria too.
   if (p.includes("infirmier") || p.includes("infirmière")) return "enfermeria";
-  if (p.includes("sage-femme")) return "enfermeria";
-  if (p.includes("pharmacien")) return "farmacia";
+  if (p.includes("sage-femme") || p.includes("maïeuticien")) return "enfermeria";
+  if (p.includes("pharmacien") || p.includes("pharmacie")) return "farmacia";
+  if (p.includes("vétérinaire") || p.includes("veterinaire")) return "veterinario";
+  if (p.includes("pédicure") || p.includes("podologue")) return "fisioterapia";
+  if (p.includes("ergothéra") || p.includes("psychomotricien")) return "fisioterapia";
+  if (p.includes("masseur") && p.includes("esthéticien")) return "fisioterapia";
   return undefined;
 }
 

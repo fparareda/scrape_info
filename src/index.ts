@@ -254,6 +254,7 @@ import { usdaAphisVetsSource, runUsdaAphisVets } from "./sources/usda-aphis-vets
 import { stateBarsBulkSource, runStateBarsBulk } from "./sources/state-bars-bulk.js";
 import { foursquareTradesSource, runFoursquareTrades } from "./sources/foursquare-trades.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
+import { condusefSipresSource, runCondusefSipres } from "./sources/condusef-sipres.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -496,6 +497,7 @@ async function main(): Promise<void> {
   const usdaAphisVetsOn = usdaAphisVetsSource.enabled();
   const stateBarsBulkOn = stateBarsBulkSource.enabled();
   const foursquareTradesOn = foursquareTradesSource.enabled();
+  const condusefSipresOn = condusefSipresSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -673,6 +675,7 @@ async function main(): Promise<void> {
     !usdaAphisVetsOn &&
     !stateBarsBulkOn &&
     !foursquareTradesOn &&
+    !condusefSipresOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1449,6 +1452,12 @@ async function main(): Promise<void> {
     [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
     [secEdgarOn, "sec-edgar", runSecEdgar],
     [usptoPatentsViewOn, "uspto-patentsview", runUsptoPatentsView],
+    // 2026-05-31: dispatch wiring fixes — sources imported but never dispatched
+    [habitissimoEsOn, "habitissimo-es", runHabitissimoEs],
+    [openDataBcnLocalesOn, "open-data-bcn-locales", runOpenDataBcnLocales],
+    [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
+    [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
+    [condusefSipresOn, "condusef-sipres", runCondusefSipres],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
