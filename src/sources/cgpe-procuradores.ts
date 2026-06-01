@@ -167,7 +167,7 @@ async function fetchAll(limitPerCity: number): Promise<ScrapedProfessional[]> {
 export const cgpeProcuradoresSource: ScraperSource = {
   name: "colegio",
   enabled() {
-    return process.env.PROLIO_RUN_CGPE === "true";
+    return process.env.PROLIO_RUN_CGPE_PROCURADORES === "true";
   },
   async fetch() {
     return [];

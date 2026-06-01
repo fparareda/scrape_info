@@ -1,0 +1,12 @@
+name: Scrape · Louisiana LSLBC (contractors)
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # weekly Monday 07:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: louisiana-lslbc
+      timeout_minutes: 60
