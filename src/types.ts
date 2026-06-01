@@ -262,7 +262,10 @@ export type ScrapeSource =
   | "data-gov-chicago-bacp"
   | "data-gov-montgomery-md-electrician"
   // 2026-06-01: CA notario — BC Notaries Association public member directory (~458 records)
-  | "bcna-bc-notaries";
+  | "bcna-bc-notaries"
+  // 2026-06-01: ES RASIC Cataluña — industrial installers (electricidad / fontaneria / hvac /
+  // cerrajero); first government-backed ES cerrajero source (~800 alarm records + 19k total).
+  | "rasic-instaladores-cat";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

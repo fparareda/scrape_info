@@ -257,6 +257,8 @@ import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import { condusefSipresSource, runCondusefSipres } from "./sources/condusef-sipres.js";
 // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
 import { bcnaBcNotariesSource, runBcnaBcNotaries } from "./sources/bcna-bc-notaries.js";
+// 2026-06-01: ES RASIC Cataluña — industrial installers (electricidad/fontaneria/hvac/cerrajero)
+import { rasicInstaladorsCatSource, runRasicInstaladorsCat } from "./sources/rasic-instaladores-cat.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -501,6 +503,7 @@ async function main(): Promise<void> {
   const foursquareTradesOn = foursquareTradesSource.enabled();
   const condusefSipresOn = condusefSipresSource.enabled();
   const bcnaBcNotariesOn = bcnaBcNotariesSource.enabled();
+  const rasicInstaladorsCatOn = rasicInstaladorsCatSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -696,7 +699,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !rasicInstaladorsCatOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1464,6 +1468,8 @@ async function main(): Promise<void> {
     [condusefSipresOn, "condusef-sipres", runCondusefSipres],
     // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
     [bcnaBcNotariesOn, "bcna-bc-notaries", runBcnaBcNotaries],
+    // 2026-06-01: ES RASIC Cataluña — industrial installers
+    [rasicInstaladorsCatOn, "rasic-instaladores-cat", runRasicInstaladorsCat],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
