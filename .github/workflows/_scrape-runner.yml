@@ -215,6 +215,8 @@ jobs:
       PROLIO_RUN_OEC_FR:                ${{ inputs.source == 'oec-fr' && 'true' || 'false' }}
       PROLIO_RUN_ORDRE_VET_FR:          ${{ inputs.source == 'ordre-vet-fr' && 'true' || 'false' }}
       PROLIO_ORDRE_VET_FR_LIMIT:        "2000"
+      # RPPS — Répertoire Partagé des Professionnels de Santé (bulk FR healthcare)
+      PROLIO_RUN_RPPS_FR:               ${{ inputs.source == 'rpps-fr' && 'true' || 'false' }}
       # 2026-05 consolidation: rpps-fr + annuaire-sante-ameli → annuaire-sante-ans
       # (multi-table ANS extraction covering RPPS+ADELI bascule).
       PROLIO_RUN_ANNUAIRE_SANTE_ANS:    ${{ inputs.source == 'annuaire-sante-ans' && 'true' || 'false' }}
