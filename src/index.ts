@@ -1406,6 +1406,7 @@ async function main(): Promise<void> {
     [nsbsNsOn, "nsbs-ns", runNsbsNs],
     [pegnlNlOn, "pegnl-nl", runPegnlNl],
     [imcpColegiosMxOn, "imcp-colegios-mx", runImcpColegiosMx],
+    [iftRpcMxOn, "ift-rpc-mx", runIftRpcMx],
     [antadAsociadosOn, "antad-asociados", runAntadAsociados],
     [emaAcreditadosOn, "ema-acreditados", runEmaAcreditados],
     [imssDirectorioOn, "imss-directorio", runImssDirectorio],
