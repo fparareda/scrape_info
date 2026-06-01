@@ -260,7 +260,9 @@ export type ScrapeSource =
   | "sep-cedulas-mx"
   // 2026-05-31: US data.gov / Socrata open-data catalog (pilot sources)
   | "data-gov-chicago-bacp"
-  | "data-gov-montgomery-md-electrician";
+  | "data-gov-montgomery-md-electrician"
+  // 2026-06-01: CA notario — BC Notaries Association public member directory (~458 records)
+  | "bcna-bc-notaries";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
