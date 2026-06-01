@@ -260,7 +260,9 @@ export type ScrapeSource =
   | "sep-cedulas-mx"
   // 2026-05-31: US data.gov / Socrata open-data catalog (pilot sources)
   | "data-gov-chicago-bacp"
-  | "data-gov-montgomery-md-electrician";
+  | "data-gov-montgomery-md-electrician"
+  // 2026-06-01: US psicologia — Oklahoma State Board of Examiners of Psychologists (~1,200 records)
+  | "ok-osbep-psychologists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
