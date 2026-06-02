@@ -265,7 +265,16 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-02: Manitoba Dental Association — server-rendered HTML roster
+  | "mda-mb-dentists"  // manitobadentist.ca dentist registry (~856 records)
+  // 2026-06-02: Vermont DFS — Department of Fire Safety licensing master list
+  // (~11k electricians, plumbers, gas installers). Socrata open-data CSV.
+  | "vermont-dfs"
+  // 2026-06-02: ES RII División A — carpinterías (joinery workshops).
+  // Same CSV as rii-div-a-talleres-es (División A open data) but filtered on
+  // Denominación containing "carpint" → ~780 active carpintería businesses.
+  | "rii-div-a-carpinteria-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
