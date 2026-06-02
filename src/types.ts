@@ -260,7 +260,12 @@ export type ScrapeSource =
   | "sep-cedulas-mx"
   // 2026-05-31: US data.gov / Socrata open-data catalog (pilot sources)
   | "data-gov-chicago-bacp"
-  | "data-gov-montgomery-md-electrician";
+  | "data-gov-montgomery-md-electrician"
+  // 2026-05-31: local-pa yellow-pages scrapers (residential-IP, humanlike pacing)
+  | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
+  | "yellowpages_us"    // yellowpages.com (US)
+  | "yellowpages_ca"    // yellowpages.ca (CA)
+  | "pagesjaunes";      // pagesjaunes.fr (FR)
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
