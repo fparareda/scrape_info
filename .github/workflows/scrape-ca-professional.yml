@@ -49,13 +49,10 @@ jobs:
       PROLIO_CA_PROFESSIONAL_LIMIT: "1000"
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v5
-        with:
-          version: "10"
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          cache: npm
+      - run: npm ci
       - name: scrape ca-professional
-        run: pnpm --filter @prolio/scraper scrape
+        run: npm run scrape

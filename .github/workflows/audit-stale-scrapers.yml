@@ -58,7 +58,8 @@ jobs:
           }
           EOF
           cat stale.md
-          echo "count=$(grep -c '^| \`' stale.md || echo 0)" >> "$GITHUB_OUTPUT"
+          cnt=$(grep -c "^| \`" stale.md 2>/dev/null || true)
+          echo "count=${cnt:-0}" >> "$GITHUB_OUTPUT"
       - name: Open or update issue
         if: steps.detect.outputs.count != '0'
         env:
