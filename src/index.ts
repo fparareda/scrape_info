@@ -231,6 +231,7 @@ import { gphcUkSource, runGphcUk } from "./sources/gphc-uk-pharmacists.js";
 import { sepCedulasMxSource, runSepCedulasMx } from "./sources/sep-cedulas-mx.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
+import { mdaMbDentistsSource, runMdaMbDentists } from "./sources/mda-mb-dentists.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
 import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
 import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
@@ -255,6 +256,8 @@ import { stateBarsBulkSource, runStateBarsBulk } from "./sources/state-bars-bulk
 import { foursquareTradesSource, runFoursquareTrades } from "./sources/foursquare-trades.js";
 import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import { condusefSipresSource, runCondusefSipres } from "./sources/condusef-sipres.js";
+// 2026-06-02: Vermont DFS — Socrata open-data CSV (~11k electricians + plumbers)
+import { vermontDfsSource, runVermontDfs } from "./sources/vermont-dfs.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -460,6 +463,7 @@ async function main(): Promise<void> {
   const sepCedulasMxOn = sepCedulasMxSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
+  const mdaMbDentistsOn = mdaMbDentistsSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
   const oiiqQuebecOn = oiiqQuebecSource.enabled();
   const bccnmBcOn = bccnmBcSource.enabled();
@@ -498,6 +502,7 @@ async function main(): Promise<void> {
   const stateBarsBulkOn = stateBarsBulkSource.enabled();
   const foursquareTradesOn = foursquareTradesSource.enabled();
   const condusefSipresOn = condusefSipresSource.enabled();
+  const vermontDfsOn = vermontDfsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -652,6 +657,7 @@ async function main(): Promise<void> {
     !sepCedulasMxOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
+    !mdaMbDentistsOn &&
     !cnoOntarioOn &&
     !oiiqQuebecOn &&
     !bccnmBcOn &&
@@ -692,7 +698,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !vermontDfsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1423,6 +1430,7 @@ async function main(): Promise<void> {
     [sepCedulasMxOn, "sep-cedulas-mx", runSepCedulasMx],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
+    [mdaMbDentistsOn, "mda-mb-dentists", runMdaMbDentists],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
     [npiNursesOn, "npi-nurses", runNpiNurses],
     [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
@@ -1458,6 +1466,8 @@ async function main(): Promise<void> {
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
     [condusefSipresOn, "condusef-sipres", runCondusefSipres],
+    // 2026-06-02: Vermont DFS — electricians + plumbers (~11k)
+    [vermontDfsOn, "vermont-dfs", runVermontDfs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
