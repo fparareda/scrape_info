@@ -265,7 +265,9 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"      // pagesjaunes.fr (FR)
+  // 2026-06-04 scout wave (CA): APEGNB NB ~6,901 engineers → ingenieria
+  | "apegnb-nb-engineers";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
