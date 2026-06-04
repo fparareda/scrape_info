@@ -1,4 +1,7 @@
 name: Scrape · NPPES bulk (US NPI full dataset)
+# Uses the standalone run-nppes-bulk.ts entry point (not _scrape-runner.yml)
+# because runNppesBulk requires a Supabase client and streams a 9 GB CSV;
+# it bypasses the standard dispatch table by design.
 on:
   schedule:
     - cron: "0 2 15 * *"  # monthly 15th, 02:00 UTC (after monthly update)
@@ -8,10 +11,24 @@ on:
         description: "Override NPPES bulk CSV URL (optional)"
         required: false
         type: string
+
 jobs:
   run:
-    uses: ./.github/workflows/_scrape-runner.yml
-    secrets: inherit
-    with:
-      source: nppes-bulk
-      timeout_minutes: 240
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      PROLIO_RUN_NPPES_BULK: "true"
+      PROLIO_NPPES_BULK_URL: ${{ inputs.nppes_url || '' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run NPPES bulk ingest
+        run: npm run nppes-bulk

@@ -1475,6 +1475,15 @@ async function main(): Promise<void> {
     [condusefSipresOn, "condusef-sipres", runCondusefSipres],
     [chicagoBacpOn, "data-gov-chicago-bacp", runChicagoBacpSource],
     [montgomeryMdElectricianOn, "data-gov-montgomery-md-electrician", runMontgomeryMdElectricianSource],
+    // 2026-06-04: CA professional colleges — imported/gated but dispatch missing
+    [cnoOntarioOn, "cno-ontario", runCnoOntario],
+    [oiiqQuebecOn, "oiiq-quebec", runOiiqQuebec],
+    [bccnmBcOn, "bccnm-bc", runBccnmBc],
+    [albertaCrnaOn, "alberta-crna", runAlbertaCrna],
+    [ocpPharmacyOn, "ocp-pharmacy", runOcpPharmacy],
+    [lsoBarOntarioOn, "lso-bar-ontario", runLsoBarOntario],
+    [oppqQuebecPhysioOn, "oppq-quebec-physio", runOppqQuebecPhysio],
+    [cvoVetsOntarioOn, "cvo-vets-ontario", runCvoVetsOntario],
     // 2026-06-04: new ES colegios (static HTML tables)
     [cgfeFisioOn, "cgfe-fisio-es", runCgfeFisio],
     [colfisiocvFisioOn, "colfisiocv-fisio-cv", runColfisiocvFisio],
