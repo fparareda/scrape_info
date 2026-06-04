@@ -258,6 +258,7 @@ import { condusefSipresSource, runCondusefSipres } from "./sources/condusef-sipr
 import { chicagoBacpSource, runChicagoBacpSource } from "./sources/data-gov-chicago-bacp.js";
 import { montgomeryMdElectricianSource, runMontgomeryMdElectricianSource } from "./sources/data-gov-montgomery-md-electrician.js";
 import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
+import { peivmaPeiVetsSource, runPeivmaPeiVets } from "./sources/peivma-pei-vets.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 import { coptocylToSource, runCoptocylTo } from "./sources/coptocyl-to-cyl.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
@@ -506,6 +507,7 @@ async function main(): Promise<void> {
   const chicagoBacpOn = chicagoBacpSource.enabled();
   const montgomeryMdElectricianOn = montgomeryMdElectricianSource.enabled();
   const cgfeFisioOn = cgfeFisioSource.enabled();
+  const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
@@ -691,6 +693,7 @@ async function main(): Promise<void> {
     !cgfeFisioOn &&
     !colfisiocvFisioOn &&
     !coptocylToOn &&
+    !peivmaPeiVetsOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1488,6 +1491,7 @@ async function main(): Promise<void> {
     [cgfeFisioOn, "cgfe-fisio-es", runCgfeFisio],
     [colfisiocvFisioOn, "colfisiocv-fisio-cv", runColfisiocvFisio],
     [coptocylToOn, "coptocyl-to-cyl", runCoptocylTo],
+    [peivmaPeiVetsOn, "peivma-pei-vets", runPeivmaPeiVets],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

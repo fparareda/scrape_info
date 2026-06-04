@@ -1,0 +1,15 @@
+name: Scrape · PEIVMA (veterinarians PEI)
+# Prince Edward Island Veterinary Medical Association — official register.
+# ~258 licensed vets, single-page static HTML, no auth.
+# Monthly — roster changes slowly.
+on:
+  schedule:
+    - cron: "0 6 1 * *"   # 1st of month 06:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: peivma-pei-vets
+      timeout_minutes: 10

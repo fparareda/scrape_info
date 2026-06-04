@@ -273,6 +273,7 @@ jobs:
       PROLIO_RUN_CGFE_FISIO:            ${{ inputs.source == 'cgfe-fisio-es' && 'true' || 'false' }}
       PROLIO_RUN_COLFISIOCV_FISIO:      ${{ inputs.source == 'colfisiocv-fisio-cv' && 'true' || 'false' }}
       PROLIO_RUN_COPTOCYL_TO:           ${{ inputs.source == 'coptocyl-to-cyl' && 'true' || 'false' }}
+      PROLIO_RUN_PEIVMA_PEI_VETS:       ${{ inputs.source == 'peivma-pei-vets' && 'true' || 'false' }}
 
       # 2026-05-13 wave 2: MX business directories (SIEM + COFEPRIS +
       # CNBV + Padrón Ganadero)
