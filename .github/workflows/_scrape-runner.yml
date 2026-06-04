@@ -267,6 +267,8 @@ jobs:
       PROLIO_RUN_CRE_PERMISIONARIOS:    ${{ inputs.source == 'cre-permisionarios' && 'true' || 'false' }}
       PROLIO_RUN_CONDUSEF_SIPRES:       ${{ inputs.source == 'condusef-sipres' && 'true' || 'false' }}
       PROLIO_RUN_IFT_RPC_MX:           ${{ inputs.source == 'ift-rpc-mx' && 'true' || 'false' }}
+      PROLIO_RUN_CHICAGO_BACP:          ${{ inputs.source == 'data-gov-chicago-bacp' && 'true' || 'false' }}
+      PROLIO_RUN_MONTGOMERY_MD_ELECTRICIAN: ${{ inputs.source == 'data-gov-montgomery-md-electrician' && 'true' || 'false' }}
 
       # 2026-05-13 wave 2: MX business directories (SIEM + COFEPRIS +
       # CNBV + Padrón Ganadero)

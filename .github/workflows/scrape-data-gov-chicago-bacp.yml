@@ -1,0 +1,16 @@
+name: Scrape · Chicago BACP (trades/HVAC/auto)
+# Chicago Business Affairs and Consumer Protection — active business
+# licenses filtered to HVAC, motor vehicle repair, and home repair.
+# ~50k rows per run from the 1.5M-row Socrata dataset.
+# Bi-weekly Sunday to catch new licenses without hammering Socrata.
+on:
+  schedule:
+    - cron: "0 3 * * 0"   # weekly Sunday 03:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: data-gov-chicago-bacp
+      timeout_minutes: 60

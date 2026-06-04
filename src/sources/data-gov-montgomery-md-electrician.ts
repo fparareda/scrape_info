@@ -23,9 +23,10 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategoryKey } from "../prolio-types.js";
-import type { ScrapedProfessional } from "../types.js";
+import type { ScrapedProfessional, ScraperSource, ScrapeSource } from "../types.js";
 import { fetchSocrataJson, socrataPick, type SocrataRow } from "./_socrata-utils.js";
 import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { getSink } from "../sink.js";
 
 const HOST = "data.montgomerycountymd.gov";
@@ -161,4 +162,36 @@ export async function runMontgomeryMdElectrician(
       `cities_created=${cityStats.inserted} geocoded_inline=${cityStats.geocoded} ungeocoded=${cityStats.failedGeocode}`,
   );
   return { scanned, accepted, written };
+}
+
+// ── ScraperSource wrapper ─────────────────────────────────────────────────────
+
+const DEFAULT_LIMIT = 20_000;
+
+export const montgomeryMdElectricianSource: ScraperSource = {
+  name: "data-gov-montgomery-md-electrician" as ScrapeSource,
+  enabled() {
+    return process.env.PROLIO_RUN_MONTGOMERY_MD_ELECTRICIAN === "true";
+  },
+  async fetch() {
+    return [];
+  },
+};
+
+export async function runMontgomeryMdElectricianSource(): Promise<{
+  fetched: number;
+  inserted: number;
+  updated: number;
+  skipped: number;
+}> {
+  if (!montgomeryMdElectricianSource.enabled())
+    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
+  const rawLimit = Number(process.env.PROLIO_MONTGOMERY_MD_ELECTRICIAN_LIMIT ?? DEFAULT_LIMIT);
+  const maxRows = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
+  const client = getSupabaseClient();
+  const { scanned, accepted, written } = await runMontgomeryMdElectrician(client, { maxRows });
+  console.log(
+    `[montgomery-md-electrician] done — scanned=${scanned} accepted=${accepted} written=${written}`,
+  );
+  return { fetched: accepted, inserted: written, updated: 0, skipped: scanned - accepted };
 }

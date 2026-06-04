@@ -27,9 +27,10 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategoryKey } from "../prolio-types.js";
-import type { ScrapedProfessional } from "../types.js";
+import type { ScrapedProfessional, ScraperSource, ScrapeSource } from "../types.js";
 import { fetchSocrataJson, socrataPick, type SocrataRow } from "./_socrata-utils.js";
 import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { getSink } from "../sink.js";
 
 const HOST = "data.cityofchicago.org";
@@ -217,4 +218,38 @@ export async function runChicagoBacp(
       `cities_created=${cs.inserted} geocoded_inline=${cs.geocoded} ungeocoded=${cs.failedGeocode}`,
   );
   return { scanned, accepted, written };
+}
+
+// ── ScraperSource wrapper ─────────────────────────────────────────────────────
+
+const DEFAULT_LIMIT = 50_000;
+
+export const chicagoBacpSource: ScraperSource = {
+  name: "data-gov-chicago-bacp" as ScrapeSource,
+  enabled() {
+    return process.env.PROLIO_RUN_CHICAGO_BACP === "true";
+  },
+  async fetch() {
+    return [];
+  },
+};
+
+export async function runChicagoBacpSource(): Promise<{
+  fetched: number;
+  inserted: number;
+  updated: number;
+  skipped: number;
+}> {
+  if (!chicagoBacpSource.enabled())
+    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
+  const rawLimit = Number(process.env.PROLIO_CHICAGO_BACP_LIMIT ?? DEFAULT_LIMIT);
+  const maxRows = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
+  const client = getSupabaseClient();
+  const { scanned, accepted, written } = await runChicagoBacp(client, { maxRows });
+  console.log(
+    `[chicago-bacp] done — scanned=${scanned} accepted=${accepted} written=${written}`,
+  );
+  // sink writes are counted in `written` (inserted+updated); we can't split
+  // inserted vs updated here without deeper plumbing — return written as inserted.
+  return { fetched: accepted, inserted: written, updated: 0, skipped: scanned - accepted };
 }

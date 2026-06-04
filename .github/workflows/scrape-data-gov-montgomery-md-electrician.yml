@@ -1,0 +1,15 @@
+name: Scrape · Montgomery County MD — Master Electricians
+# Montgomery County (MD) master electrician licenses via Socrata.
+# ~5-15k rows. Multi-state coverage (MD + VA/DC/PA reciprocal).
+# Monthly — electrician rosters change slowly.
+on:
+  schedule:
+    - cron: "0 4 1 * *"   # 1st of month 04:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: data-gov-montgomery-md-electrician
+      timeout_minutes: 20
