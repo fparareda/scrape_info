@@ -71,5 +71,5 @@ jobs:
             gh issue edit "$existing" --body "$body"
             echo "Updated issue #$existing"
           else
-            gh issue create --title "Stale scraper audit" --body "$body" --label "scrape-health"
+            gh issue create --title "Stale scraper audit" --body "$body"
           fi

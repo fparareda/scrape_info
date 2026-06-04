@@ -257,6 +257,9 @@ import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import { condusefSipresSource, runCondusefSipres } from "./sources/condusef-sipres.js";
 import { chicagoBacpSource, runChicagoBacpSource } from "./sources/data-gov-chicago-bacp.js";
 import { montgomeryMdElectricianSource, runMontgomeryMdElectricianSource } from "./sources/data-gov-montgomery-md-electrician.js";
+import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
+import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
+import { coptocylToSource, runCoptocylTo } from "./sources/coptocyl-to-cyl.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -502,6 +505,9 @@ async function main(): Promise<void> {
   const condusefSipresOn = condusefSipresSource.enabled();
   const chicagoBacpOn = chicagoBacpSource.enabled();
   const montgomeryMdElectricianOn = montgomeryMdElectricianSource.enabled();
+  const cgfeFisioOn = cgfeFisioSource.enabled();
+  const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
+  const coptocylToOn = coptocylToSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -682,6 +688,9 @@ async function main(): Promise<void> {
     !condusefSipresOn &&
     !chicagoBacpOn &&
     !montgomeryMdElectricianOn &&
+    !cgfeFisioOn &&
+    !colfisiocvFisioOn &&
+    !coptocylToOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1466,6 +1475,10 @@ async function main(): Promise<void> {
     [condusefSipresOn, "condusef-sipres", runCondusefSipres],
     [chicagoBacpOn, "data-gov-chicago-bacp", runChicagoBacpSource],
     [montgomeryMdElectricianOn, "data-gov-montgomery-md-electrician", runMontgomeryMdElectricianSource],
+    // 2026-06-04: new ES colegios (static HTML tables)
+    [cgfeFisioOn, "cgfe-fisio-es", runCgfeFisio],
+    [colfisiocvFisioOn, "colfisiocv-fisio-cv", runColfisiocvFisio],
+    [coptocylToOn, "coptocyl-to-cyl", runCoptocylTo],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

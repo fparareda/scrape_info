@@ -1,0 +1,15 @@
+name: Scrape · COPTOCYL (terapeutas ocupacionales Castilla y León)
+# Colegio de Terapeutas Ocupacionales de Castilla y León.
+# ~840 colegiados, single-page static HTML roster.
+# Monthly — membership changes slowly.
+on:
+  schedule:
+    - cron: "30 5 15 * *"   # 15th of month 05:30 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: coptocyl-to-cyl
+      timeout_minutes: 10

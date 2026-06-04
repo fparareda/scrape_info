@@ -1,0 +1,15 @@
+name: Scrape · COLFISIOCV (fisioterapeutas Comunitat Valenciana)
+# Col·legi de Fisioterapeutes de la Comunitat Valenciana.
+# ~3,960 colegiados across Valencia, Alicante, Castellón.
+# Monthly — membership changes slowly.
+on:
+  schedule:
+    - cron: "0 5 15 * *"   # 15th of month 05:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: colfisiocv-fisio-cv
+      timeout_minutes: 20
