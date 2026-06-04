@@ -282,6 +282,11 @@ import {
   competitorEsMegaEnabled,
   runCompetitorEsMega,
 } from "./sources/competitor-es-mega.js";
+// 2026-06-04 scout wave (US)
+import {
+  iardcIlAttorneysEnabled,
+  runIardcIlAttorneys,
+} from "./sources/iardc-il-attorneys.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -502,6 +507,8 @@ async function main(): Promise<void> {
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
+  // 2026-06-04 scout wave (US)
+  const iardcIlAttorneysOn = iardcIlAttorneysEnabled();
 
   if (
     sources.length === 0 &&
@@ -692,7 +699,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !iardcIlAttorneysOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1458,7 +1466,9 @@ async function main(): Promise<void> {
     [farmaceuticosEsGuardiaOn, "farmaceuticos-es-guardia", runFarmaceuticosEsGuardia],
     [combBarcelonaOn, "comb-barcelona", runCombBarcelona],
     [condusefSipresOn, "condusef-sipres", runCondusefSipres],
-  ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
+    // 2026-06-04 scout wave (US)
+    [iardcIlAttorneysOn, "iardc-il-attorneys", runIardcIlAttorneys],
+  ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number } | null>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
       const res = await runFn();
