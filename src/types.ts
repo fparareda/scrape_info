@@ -266,7 +266,9 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-05: new per-country sources
+  | "bcpharmacists-bc"; // College of Pharmacists of BC HTML roster (~7.4k)
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
