@@ -257,6 +257,10 @@ import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import { condusefSipresSource, runCondusefSipres } from "./sources/condusef-sipres.js";
 import { chicagoBacpSource, runChicagoBacpSource } from "./sources/data-gov-chicago-bacp.js";
 import { montgomeryMdElectricianSource, runMontgomeryMdElectricianSource } from "./sources/data-gov-montgomery-md-electrician.js";
+// 2026-06-06 scout wave: ES + US + CA
+import { rasicInstaladorsCatSource, runRasicInstaladorsCat } from "./sources/rasic-instaladores-cat.js";
+import { ctElicenseSource, runCtElicenseSource } from "./sources/data-gov-ct-elicense.js";
+import { cdsaAbDentistsSource, runCdsaAbDentists } from "./sources/cdsa-ab-dentists.js";
 import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
 import { peivmaPeiVetsSource, runPeivmaPeiVets } from "./sources/peivma-pei-vets.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
@@ -506,6 +510,10 @@ async function main(): Promise<void> {
   const condusefSipresOn = condusefSipresSource.enabled();
   const chicagoBacpOn = chicagoBacpSource.enabled();
   const montgomeryMdElectricianOn = montgomeryMdElectricianSource.enabled();
+  // 2026-06-06 scout wave
+  const rasicInstaladorsCatOn = rasicInstaladorsCatSource.enabled();
+  const ctElicenseOn = ctElicenseSource.enabled();
+  const cdsaAbDentistsOn = cdsaAbDentistsSource.enabled();
   const cgfeFisioOn = cgfeFisioSource.enabled();
   const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
@@ -710,7 +718,10 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !rasicInstaladorsCatOn &&
+    !ctElicenseOn &&
+    !cdsaAbDentistsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1492,6 +1503,10 @@ async function main(): Promise<void> {
     [colfisiocvFisioOn, "colfisiocv-fisio-cv", runColfisiocvFisio],
     [coptocylToOn, "coptocyl-to-cyl", runCoptocylTo],
     [peivmaPeiVetsOn, "peivma-pei-vets", runPeivmaPeiVets],
+    // 2026-06-06 scout wave: ES + US + CA
+    [rasicInstaladorsCatOn, "rasic-instaladores-cat", runRasicInstaladorsCat],
+    [ctElicenseOn, "data-gov-ct-elicense", runCtElicenseSource],
+    [cdsaAbDentistsOn, "cdsa-ab-dentists", runCdsaAbDentists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
