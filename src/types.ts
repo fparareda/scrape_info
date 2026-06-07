@@ -266,7 +266,9 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members, fiscal)
+  | "aedaf-asesores-fiscales-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
