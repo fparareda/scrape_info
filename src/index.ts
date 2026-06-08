@@ -288,6 +288,7 @@ import {
   competitorEsMegaEnabled,
   runCompetitorEsMega,
 } from "./sources/competitor-es-mega.js";
+import { cptaAbPhysioSource, runCptaAbPhysio } from "./sources/cpta-ab-physio.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -514,6 +515,7 @@ async function main(): Promise<void> {
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
+  const cptaAbPhysioOn = cptaAbPhysioSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -710,7 +712,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !cptaAbPhysioOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1645,6 +1648,21 @@ async function main(): Promise<void> {
       return {};
     }).catch((e) =>
       console.error(`[scraper] competitor-na crashed:`, (e as Error).message),
+    );
+  }
+
+  if (cptaAbPhysioOn) {
+    await withScrapeRun("cpta-ab-physio", async () => {
+      const res = await runCptaAbPhysio();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] cpta-ab-physio crashed:`, (e as Error).message),
     );
   }
 
