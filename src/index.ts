@@ -261,6 +261,7 @@ import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
 import { peivmaPeiVetsSource, runPeivmaPeiVets } from "./sources/peivma-pei-vets.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 import { coptocylToSource, runCoptocylTo } from "./sources/coptocyl-to-cyl.js";
+import { connecticutDcpSource, runConnecticutDcpSource } from "./sources/connecticut-dcp.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -514,6 +515,7 @@ async function main(): Promise<void> {
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
+  const connecticutDcpOn = connecticutDcpSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -710,7 +712,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !connecticutDcpOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1666,6 +1669,21 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] competitor-es-mega crashed:`, (e as Error).message),
+    );
+  }
+
+  if (connecticutDcpOn) {
+    await withScrapeRun("connecticut-dcp", async () => {
+      const res = await runConnecticutDcpSource();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] connecticut-dcp crashed:`, (e as Error).message),
     );
   }
 
