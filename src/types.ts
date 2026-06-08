@@ -266,7 +266,9 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"      // pagesjaunes.fr (FR)
+  // 2026-06-08: ES hvac — RII División B thermal installers (~50k HVAC companies)
+  | "rii-div-b-termicas-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
