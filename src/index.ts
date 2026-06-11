@@ -261,6 +261,9 @@ import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
 import { peivmaPeiVetsSource, runPeivmaPeiVets } from "./sources/peivma-pei-vets.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 import { coptocylToSource, runCoptocylTo } from "./sources/coptocyl-to-cyl.js";
+// 2026-06-11: scout wave
+import { maineAlmsElectriciansSource, runMaineAlmsElectricians } from "./sources/maine-alms-electricians.js";
+import { cdssSkDentistsSource, runCdssSkDentists } from "./sources/cdss-sk-dentists.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -510,6 +513,8 @@ async function main(): Promise<void> {
   const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
+  const maineAlmsElectriciansOn = maineAlmsElectriciansSource.enabled();
+  const cdssSkDentistsOn = cdssSkDentistsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -710,7 +715,9 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !maineAlmsElectriciansOn &&
+    !cdssSkDentistsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1492,6 +1499,9 @@ async function main(): Promise<void> {
     [colfisiocvFisioOn, "colfisiocv-fisio-cv", runColfisiocvFisio],
     [coptocylToOn, "coptocyl-to-cyl", runCoptocylTo],
     [peivmaPeiVetsOn, "peivma-pei-vets", runPeivmaPeiVets],
+    // 2026-06-11: scout wave
+    [maineAlmsElectriciansOn, "maine-alms-electricians", runMaineAlmsElectricians],
+    [cdssSkDentistsOn, "cdss-sk-dentists", runCdssSkDentists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
