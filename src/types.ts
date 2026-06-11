@@ -266,7 +266,9 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"      // pagesjaunes.fr (FR)
+  // 2026-06-11: scout wave — SK dentists
+  | "cdss-sk-dentists";  // College of Dental Surgeons of Saskatchewan (dentista)
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
