@@ -268,7 +268,9 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-13: ES — Colegio Oficial de Economistas de Valencia (fiscal, ~4120 rows)
+  | "coev-economistas"; // coev.com/colegiados
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
