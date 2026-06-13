@@ -262,11 +262,15 @@ export type ScrapeSource =
   // 2026-05-31: US data.gov / Socrata open-data catalog (pilot sources)
   | "data-gov-chicago-bacp"
   | "data-gov-montgomery-md-electrician"
+  // 2026-06-13: CA DIR ECU — certified + trainee electricians (~55k rows)
+  | "ca-dir-ecu-electricians"
   // 2026-05-31: local-pa yellow-pages scrapers (residential-IP, humanlike pacing)
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-13: ES — Colegio Oficial de Economistas de Valencia (fiscal, ~4120 rows)
+  | "coev-economistas"; // coev.com/colegiados
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
