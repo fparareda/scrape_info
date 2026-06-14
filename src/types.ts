@@ -262,11 +262,16 @@ export type ScrapeSource =
   // 2026-05-31: US data.gov / Socrata open-data catalog (pilot sources)
   | "data-gov-chicago-bacp"
   | "data-gov-montgomery-md-electrician"
+  // 2026-06-14: ES Castilla y León — talleres reparación vehículos (mecanica)
+  // Open-data CSV from Junta de Castilla y León, ~1 000+ rows, CC BY 4.0.
+  | "jcyl-talleres-es"
   // 2026-05-31: local-pa yellow-pages scrapers (residential-IP, humanlike pacing)
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-14: CA Quebec immigration consultants (MIFI open data)
+  | "rqci-qc-ca";       // Registre québécois des consultants en immigration
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

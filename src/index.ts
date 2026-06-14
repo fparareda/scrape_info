@@ -198,6 +198,7 @@ import { datosGobEsSource, runDatosGobEs } from "./sources/datos-gob-es.js";
 import { guiadentistasEsSource, runGuiadentistasEs } from "./sources/guiadentistas-es.js";
 import { dgtItvEsSource, runDgtItvEs } from "./sources/dgt-itv-es.js";
 import { rasicTalleresCatSource, runRasicTalleresCat } from "./sources/rasic-talleres-cat.js";
+import { jcylTalleresEsSource, runJcylTalleresEs } from "./sources/jcyl-talleres-es.js";
 import { cgpeProcuradoresSource, runCgpeProcuradores } from "./sources/cgpe-procuradores.js";
 import { droCdmxSource, runDroCdmx } from "./sources/dro-cdmx.js";
 import { profepaVerificentrosEdomexSource, runProfepaVerificentrosEdomex } from "./sources/profepa-verificentros-edomex.js";
@@ -508,6 +509,7 @@ async function main(): Promise<void> {
   const montgomeryMdElectricianOn = montgomeryMdElectricianSource.enabled();
   const cgfeFisioOn = cgfeFisioSource.enabled();
   const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
+  const jcylTalleresEsOn = jcylTalleresEsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
@@ -710,7 +712,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !jcylTalleresEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1492,6 +1495,8 @@ async function main(): Promise<void> {
     [colfisiocvFisioOn, "colfisiocv-fisio-cv", runColfisiocvFisio],
     [coptocylToOn, "coptocyl-to-cyl", runCoptocylTo],
     [peivmaPeiVetsOn, "peivma-pei-vets", runPeivmaPeiVets],
+    // 2026-06-14: ES Castilla y León — talleres reparación vehículos (mecanica)
+    [jcylTalleresEsOn, "jcyl-talleres-es", runJcylTalleresEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
