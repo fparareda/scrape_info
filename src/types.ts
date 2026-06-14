@@ -266,7 +266,12 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-14: IRS FOIA — active Enrolled Agents (US fiscal / tax pros).
+  // Public FOIA CSV, bi-annual refresh, ~87k rows worldwide, ~70k US-based.
+  | "irs-ea-foia"
+  // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
+  | "rqci-qc-ca";       // Registre québécois des consultants en immigration
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
