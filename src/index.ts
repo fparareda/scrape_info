@@ -718,7 +718,8 @@ async function main(): Promise<void> {
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
-    !competitorEsMegaOn
+    !competitorEsMegaOn &&
+    !irsEaFoiaOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -804,7 +805,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CONAHCYT_SNII=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
-        "PROLIO_SCRAPE_OVERTURE=true",
+        "PROLIO_SCRAPE_OVERTURE=true, " +
+        "PROLIO_RUN_IRS_EA_FOIA=true",
     );
     return;
   }
@@ -1676,6 +1678,27 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] competitor-es-mega crashed:`, (e as Error).message),
+    );
+  }
+
+  // IRS FOIA — active Enrolled Agents (US fiscal). Public FOIA CSV download,
+  // bi-annual update cadence, ~87k records worldwide (~70k US-based).
+  if (irsEaFoiaOn) {
+    await withScrapeRun("irs-ea-foia", async () => {
+      const res = await runIrsEaFoia();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+        metadata: {
+          us_records: res.usOnly,
+          international_skipped: res.international,
+        },
+      };
+    }).catch((e) =>
+      console.error(`[scraper] irs-ea-foia crashed:`, (e as Error).message),
     );
   }
 
