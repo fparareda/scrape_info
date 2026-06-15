@@ -261,6 +261,11 @@ import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
 import { peivmaPeiVetsSource, runPeivmaPeiVets } from "./sources/peivma-pei-vets.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 import { coptocylToSource, runCoptocylTo } from "./sources/coptocyl-to-cyl.js";
+// 2026-06-15 wave: ES fontanería — RII Instaladores Gas (datos.gob.es open CSV)
+import {
+  riiInstaladorasGasEsSource,
+  runRiiInstaladorasGasEs,
+} from "./sources/rii-instaladores-gas-es.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -510,6 +515,7 @@ async function main(): Promise<void> {
   const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
+  const riiInstaladorasGasEsOn = riiInstaladorasGasEsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -707,6 +713,7 @@ async function main(): Promise<void> {
     !torontoBusinessLicensesOn &&
     !vancouverBusinessLicensesOn &&
     !calgaryBusinessLicencesOn &&
+    !riiInstaladorasGasEsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1492,6 +1499,8 @@ async function main(): Promise<void> {
     [colfisiocvFisioOn, "colfisiocv-fisio-cv", runColfisiocvFisio],
     [coptocylToOn, "coptocyl-to-cyl", runCoptocylTo],
     [peivmaPeiVetsOn, "peivma-pei-vets", runPeivmaPeiVets],
+    // 2026-06-15: ES fontanería — RII Instaladores Gas open CSV
+    [riiInstaladorasGasEsOn, "rii-instaladores-gas-es", runRiiInstaladorasGasEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

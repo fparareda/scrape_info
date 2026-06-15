@@ -266,7 +266,11 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-15 wave: ES fontanería — RII Instaladores Gas (Ministerio Industria)
+  // ~8.6k unique certified gas/fluid installer companies nationally; open CSV
+  // from datos.gob.es. Mapped to fontaneria (gas+fluidos = water+gas in Spain).
+  | "rii-instaladores-gas-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
