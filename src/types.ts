@@ -262,6 +262,9 @@ export type ScrapeSource =
   // 2026-05-31: US data.gov / Socrata open-data catalog (pilot sources)
   | "data-gov-chicago-bacp"
   | "data-gov-montgomery-md-electrician"
+  // 2026-06-15: Delaware DPR — Socrata multi-category (arquitecto/veterinario/
+  // fontaneria/hvac/electricidad). ~23k records across 8 license types.
+  | "delaware-dpr"
   // 2026-05-31: local-pa yellow-pages scrapers (residential-IP, humanlike pacing)
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
