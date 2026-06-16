@@ -266,7 +266,9 @@ export type ScrapeSource =
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
   | "yellowpages_ca"    // yellowpages.ca (CA)
-  | "pagesjaunes";      // pagesjaunes.fr (FR)
+  | "pagesjaunes"       // pagesjaunes.fr (FR)
+  // 2026-06-16: CA Manitoba lawyers
+  | "lsm-lawyers-mb";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
