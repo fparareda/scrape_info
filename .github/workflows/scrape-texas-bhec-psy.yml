@@ -1,0 +1,14 @@
+name: Scrape · Texas BHEC (psychologists)
+# Texas Behavioral Health Executive Council — licensed psychologists (~10k).
+# Monthly — license roster changes slowly.
+on:
+  schedule:
+    - cron: "0 6 2 * *"   # 2nd of month 06:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: texas-bhec-psy
+      timeout_minutes: 30

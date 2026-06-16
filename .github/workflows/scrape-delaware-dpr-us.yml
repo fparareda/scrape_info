@@ -1,0 +1,14 @@
+name: Scrape · Delaware DPR (US trades/professions)
+# Delaware Division of Professional Regulation — arquitecto/veterinario/
+# fontaneria/hvac/electricidad (~23k records). Monthly cadence.
+on:
+  schedule:
+    - cron: "0 6 3 * *"   # 3rd of month 06:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: delaware-dpr
+      timeout_minutes: 45
