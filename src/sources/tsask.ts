@@ -38,6 +38,13 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_LIMIT = 25_000;
 const PAGE_SIZE = 500;
 const REQUEST_DELAY_MS = 400;
+// Hard ceiling on pages enumerated, regardless of meta. The known
+// dataset is ~23k rows = ~47 pages at PAGE_SIZE=500; 100 leaves ample
+// headroom for growth while guaranteeing termination if the endpoint
+// changes (e.g. starts ignoring `page` and returning a full page of
+// identical rows, which would otherwise spin forever since the dedup
+// set keeps `out.length` below `limit`). See oec-fr's MAX_PAGES pattern.
+const MAX_PAGES = 100;
 
 const TECH_TO_CATEGORY: Record<string, string> = {
   electrical: "electricidad",
@@ -134,7 +141,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   let page = 1;
   let totalPages: number | undefined;
   let total: number | undefined;
-  while (out.length < limit) {
+  while (out.length < limit && page <= MAX_PAGES) {
     const data = await fetchPage(page);
     if (!data || !data.results || data.results.length === 0) break;
     if (totalPages === undefined && data.meta) {
@@ -142,6 +149,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       total = data.meta.total;
       console.log(`[tsask] total=${total} pages=${totalPages}`);
     }
+    const beforePage = out.length;
     for (const r of data.results) {
       const displayName = buildDisplayName(r);
       const licenceNumber = (r.licence_number || "").trim();
@@ -178,6 +186,16 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     }
     if (data.results.length < PAGE_SIZE) break;
     if (totalPages !== undefined && page >= totalPages) break;
+    // Guard against a changed endpoint that ignores `page` and returns
+    // the same full page repeatedly: if a full page yielded no new
+    // records (all duplicates or all filtered), further pages won't
+    // either, so stop rather than spin until the CI timeout.
+    if (out.length === beforePage) {
+      console.warn(
+        `[tsask] page=${page} returned ${data.results.length} rows but 0 new — stopping (endpoint may ignore paging)`,
+      );
+      break;
+    }
     page += 1;
     await delay(REQUEST_DELAY_MS);
   }

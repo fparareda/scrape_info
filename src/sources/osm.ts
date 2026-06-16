@@ -28,17 +28,48 @@ import { normalise } from "../normalise.js";
  */
 
 const ENDPOINT = "https://overpass-api.de/api/interpreter";
-// Overpass fair-use is ~10k queries/day/IP. A full ES sweep of the 0043
-// seed (~730 cities × 9 categories = 6,570 queries) fits comfortably
-// inside that budget at 1.5 s between calls. Keep this conservative —
-// we run weekly, not hourly.
+// Overpass fair-use is ~10k queries/day/IP. The original sizing only
+// counted the 1.5 s courtesy delay (~730 cities × 9 categories ≈ 6.5k
+// queries × 1.5 s ≈ 2.7 h) and ignored Overpass's own multi-second
+// server-side processing per query AND the per-target retry backoff.
+// Once the city list grew to thousands of DB rows across ES/US/CA the
+// run could never finish inside the 180-minute CI window — it was
+// cancelled at the timeout every week, restarting from the same prefix
+// of the (alphabetical) target list and never reaching the tail. We now
+// bound the run by a wall-clock deadline (see RUN_DEADLINE_MS) so it
+// stops gracefully and telemetry finalises within the window.
 const REQUEST_DELAY_MS = 1500;
 const TIMEOUT_SEC = 25;
 const MAX_RETRIES = 3;
 // Overpass emits 429 ("Too Many Requests") and 504 ("Gateway Timeout")
-// under load. Back off exponentially — the public endpoint needs ~30 s
-// to recover a thread slot when it hands out a 429.
+// under load. Back off — the public endpoint needs a pause to recover a
+// thread slot. Capped so a single throttled target can't burn ~35 s;
+// persistent throttling trips the wall-clock halt instead of slow-walking
+// the whole remaining target list.
 const BACKOFF_BASE_MS = 5_000;
+const BACKOFF_MAX_MS = 10_000;
+
+// Wall-clock budget for the whole run. The CI job times out at 180 min
+// (.github/workflows/scrape-osm.yml). Stop issuing new Overpass queries
+// well before that so the orchestrator can flush telemetry and exit
+// cleanly instead of being hard-cancelled mid-run. Override with
+// PROLIO_OSM_RUN_MINUTES (CI / .env.local).
+const RUN_MINUTES_DEFAULT = 165;
+const RUN_MINUTES_RAW = Number(process.env.PROLIO_OSM_RUN_MINUTES);
+const RUN_MINUTES =
+  Number.isFinite(RUN_MINUTES_RAW) && RUN_MINUTES_RAW > 0
+    ? RUN_MINUTES_RAW
+    : RUN_MINUTES_DEFAULT;
+const RUN_DEADLINE_MS = RUN_MINUTES * 60_000;
+
+// Set on the first fetch() call so the deadline measures elapsed scrape
+// time, not process start. Once `halted` trips (deadline reached) every
+// subsequent fetch() returns [] without touching Overpass — mirrors the
+// halt-flag pattern in yelp-fusion.ts so a partial sweep ends promptly
+// rather than iterating thousands of remaining targets.
+let runStartedAt: number | null = null;
+let halted = false;
+let haltWarned = false;
 
 /**
  * OSM tag filters per Prolio category. Each entry is a (key,value) pair
@@ -223,6 +254,27 @@ export const osmSource: ScraperSource = {
     //
     // Opt out via PROLIO_OSM_COUNTRIES (CSV); unset = iterate every
     // target.
+    // Wall-clock halt: once the run budget is spent, every remaining
+    // target returns [] immediately so the orchestrator finishes the
+    // sweep (and flushes telemetry) inside the CI window instead of being
+    // hard-cancelled at the 180-min timeout. Cancelled runs restart from
+    // the same target-list prefix, so without this the tail of the list
+    // was never reached week after week.
+    if (halted) return [];
+    const now = Date.now();
+    if (runStartedAt === null) runStartedAt = now;
+    if (now - runStartedAt >= RUN_DEADLINE_MS) {
+      halted = true;
+      if (!haltWarned) {
+        haltWarned = true;
+        console.warn(
+          `[osm] run budget reached (${RUN_MINUTES} min) — halting; ` +
+            `remaining targets skipped this run`,
+        );
+      }
+      return [];
+    }
+
     const allowedCountries = process.env.PROLIO_OSM_COUNTRIES
       ?.split(",")
       .map((s) => s.trim())
@@ -279,7 +331,10 @@ export const osmSource: ScraperSource = {
         );
         return [];
       }
-      const backoff = BACKOFF_BASE_MS * Math.pow(2, attempt);
+      const backoff = Math.min(
+        BACKOFF_BASE_MS * Math.pow(2, attempt),
+        BACKOFF_MAX_MS,
+      );
       console.warn(
         `[osm] ${response.status} on ${target.categoryKey}/${target.citySlug}, retrying in ${backoff}ms (attempt ${attempt + 1}/${MAX_RETRIES})`,
       );

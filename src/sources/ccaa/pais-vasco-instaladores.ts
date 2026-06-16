@@ -22,6 +22,10 @@ import { normalise, slugify } from "../../normalise.js";
 const DEFAULT_URL =
   "https://opendata.euskadi.eus/contenidos/ds_recursos_industriales/empresas_instaladoras/opendata/empresas_instaladoras.csv";
 const USER_AGENT = "Prolio/0.1 (ferranp.work@gmail.com)";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: a stalled endpoint would hang the await forever and the
+// whole ccaa run would never terminate.
+const FETCH_TIMEOUT_MS = 120_000;
 
 function denominacionToCategory(denom: string): CategoryKey | undefined {
   const d = denom.toLowerCase();
@@ -108,7 +112,10 @@ export const paisVascoInstaladores: CcaaSource = {
     const url = process.env.PROLIO_EUSKADI_INSTALADORES_CSV || DEFAULT_URL;
     let response: Response;
     try {
-      response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
     } catch (error) {
       console.error(
         `[pais-vasco-instaladores] network error: ${(error as Error).message}`,

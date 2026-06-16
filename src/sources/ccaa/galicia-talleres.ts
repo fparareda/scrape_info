@@ -17,6 +17,10 @@ import { normalise, slugify } from "../../normalise.js";
 const DEFAULT_URL =
   "https://abertos.xunta.gal/catalogo/economia-empresa/-/dataset/0210/rexistro-talleres/talleres.csv";
 const USER_AGENT = "Prolio/0.1 (ferranp.work@gmail.com)";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: a stalled endpoint would hang the await forever and the
+// whole ccaa run would never terminate.
+const FETCH_TIMEOUT_MS = 120_000;
 
 function parseCsv(text: string): Array<Record<string, string>> {
   const clean = text.replace(/^﻿/, "");
@@ -83,7 +87,10 @@ export const galiciaTalleres: CcaaSource = {
     const url = process.env.PROLIO_GALICIA_TALLERES_CSV || DEFAULT_URL;
     let response: Response;
     try {
-      response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
     } catch (error) {
       console.error(
         `[galicia-talleres] network error: ${(error as Error).message}`,

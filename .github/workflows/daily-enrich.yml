@@ -83,12 +83,9 @@ jobs:
       PROLIO_EMAIL_CRAWLER_LIMIT: ${{ inputs.crawler_limit }}
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v5
-        with:
-          version: "10"
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: "pnpm"
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @prolio/scraper scrape
+          cache: npm
+      - run: npm ci
+      - run: npm run scrape

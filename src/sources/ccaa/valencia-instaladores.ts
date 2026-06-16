@@ -17,6 +17,10 @@ import { normalise, slugify } from "../../normalise.js";
 const DEFAULT_URL =
   "https://dadesobertes.gva.es/dataset/empreses-instal-ladores/resource/empreses-instal-ladores.csv";
 const USER_AGENT = "Prolio/0.1 (ferranp.work@gmail.com)";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: a stalled endpoint would hang the await forever and the
+// whole ccaa run would never terminate.
+const FETCH_TIMEOUT_MS = 120_000;
 
 function denominacionToCategory(denom: string): CategoryKey | undefined {
   const d = denom.toLowerCase();
@@ -101,7 +105,10 @@ export const valenciaInstaladores: CcaaSource = {
     const url = process.env.PROLIO_VALENCIA_INSTALADORES_CSV || DEFAULT_URL;
     let response: Response;
     try {
-      response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
     } catch (error) {
       console.error(
         `[valencia-instaladores] network error: ${(error as Error).message}`,

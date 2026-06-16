@@ -30,5 +30,30 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Resolve + download + unzip NPI archive
+        if: ${{ inputs.nppes_url == '' }}
+        run: |
+          set -e
+          mkdir -p /tmp/nppes
+          ZIP_URL=$(curl -sSL https://download.cms.gov/nppes/NPI_Files.html \
+            | grep -oE "href='[^']*NPPES_Data_Dissemination_[A-Z][a-z]+_[0-9]{4}_V2\.zip'" \
+            | head -1 | sed -E "s|href='./|https://download.cms.gov/nppes/|; s|'$||")
+          if [ -z "$ZIP_URL" ]; then
+            echo "::error::Could not resolve current NPPES ZIP URL from CMS index"
+            exit 1
+          fi
+          echo "Downloading $ZIP_URL"
+          curl -sSL --fail -o /tmp/nppes/npi.zip "$ZIP_URL"
+          ls -lh /tmp/nppes/npi.zip
+          unzip -o /tmp/nppes/npi.zip -d /tmp/nppes/ | tail -5
+          CSV=$(find /tmp/nppes -maxdepth 1 -name 'npidata_pfile_*.csv' ! -name '*FileHeader*' | head -1)
+          if [ -z "$CSV" ]; then
+            echo "::error::No npidata_pfile_*.csv found in zip"
+            ls -la /tmp/nppes
+            exit 1
+          fi
+          echo "PROLIO_NPPES_BULK_URL=$CSV" >> "$GITHUB_ENV"
+          echo "Extracted: $CSV ($(stat -c%s "$CSV" | numfmt --to=iec))"
+          rm -f /tmp/nppes/npi.zip
       - name: Run NPPES bulk ingest
         run: npm run nppes-bulk

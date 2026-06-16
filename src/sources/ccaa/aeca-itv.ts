@@ -32,6 +32,15 @@ const ENDPOINT =
   "https://www.aeca-itv.com/la-itv/listado-por-comunidades-autonomas/";
 const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 Prolio/0.1";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: a stalled endpoint would hang the await forever and the
+// whole ccaa run would never terminate.
+const FETCH_TIMEOUT_MS = 120_000;
+// Defensive cap on the <tr> regex scan. A global-regex exec() loop spins
+// forever if lastIndex ever fails to advance (zero-width match after a
+// template change). The live page has ~400 stations; 100k iterations is
+// orders of magnitude of headroom while still guaranteeing termination.
+const MAX_ROW_ITERATIONS = 100_000;
 
 function stripTags(html: string): string {
   return html
@@ -80,6 +89,7 @@ export const aecaItv: CcaaSource = {
           Accept: "text/html,application/xhtml+xml",
           "Accept-Language": "es-ES,es;q=0.9",
         },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
     } catch (error) {
       console.error(
@@ -98,7 +108,18 @@ export const aecaItv: CcaaSource = {
     // fewer — headers, colspans, section titles.
     const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
     let match: RegExpExecArray | null;
+    let iterations = 0;
     while ((match = rowRe.exec(html)) !== null) {
+      // Guard against a non-advancing lastIndex (zero-width match) spinning
+      // forever, and against pathological row counts.
+      if (match.index === rowRe.lastIndex) rowRe.lastIndex += 1;
+      iterations += 1;
+      if (iterations > MAX_ROW_ITERATIONS) {
+        console.error(
+          `[aeca-itv] aborting scan after ${MAX_ROW_ITERATIONS} rows (possible template change)`,
+        );
+        break;
+      }
       const cells = extractCells(match[1]);
       if (cells.length < 7) continue;
 
