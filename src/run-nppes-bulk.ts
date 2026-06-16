@@ -1,7 +1,7 @@
 /**
  * Standalone runner for the NPI bulk re-ingest.
  *
- *   pnpm --filter @prolio/scraper nppes-bulk
+ *   npm run nppes-bulk
  *
  * Reads `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` from env (the
  * .env.local fallback that the orchestrator does is intentionally

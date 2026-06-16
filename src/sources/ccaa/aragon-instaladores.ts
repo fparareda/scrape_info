@@ -21,6 +21,10 @@ import { normalise, slugify } from "../../normalise.js";
 const DEFAULT_URL =
   "https://opendata.aragon.es/GA_OD_Core/download?resource_id=328&formato=csv";
 const USER_AGENT = "Prolio/0.1 (ferranp.work@gmail.com)";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: a stalled endpoint would hang the await forever and the
+// whole ccaa run would never terminate.
+const FETCH_TIMEOUT_MS = 120_000;
 
 function denominacionToCategory(denom: string): CategoryKey | undefined {
   const d = denom.toLowerCase();
@@ -93,7 +97,10 @@ export const aragonInstaladores: CcaaSource = {
     const url = process.env.PROLIO_ARAGON_INSTALADORES_CSV || DEFAULT_URL;
     let response: Response;
     try {
-      response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
     } catch (error) {
       console.error(
         `[aragon-instaladores] network error: ${(error as Error).message}`,

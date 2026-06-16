@@ -53,13 +53,18 @@ import { frPostalCodeToCitySlug, toTitleCase, splitCsvLine } from "./_bulk-utils
  * redistribution of the file itself) is in-scope.
  *
  * Off by default. `PROLIO_RUN_ORDRE_PHARMACIENS_FR=true`. Cap with
- * `PROLIO_ORDRE_PHARMACIENS_FR_LIMIT` (default 80000 = full set).
- * Override URL with `PROLIO_ORDRE_PHARMACIENS_FR_URL`.
+ * `PROLIO_ORDRE_PHARMACIENS_FR_LIMIT` (default 50000 — a single weekly run
+ * upserts at most this many pharmacists so it completes inside the 60-min
+ * job window; the ~75k full set is swept across consecutive runs, matching
+ * the per-run-cap pattern used by `annuaire-sante-ans` / `chambre-metiers-fr`).
+ * Earlier this defaulted to 80000 (the full set in one go), which pushed all
+ * ~75k rows through `sink.upsert` in a single call and chronically blew past
+ * the 60-min timeout. Override URL with `PROLIO_ORDRE_PHARMACIENS_FR_URL`.
  */
 
 const ZIP_URL =
   "https://www.ordre.pharmacien.fr/download/annuaire_csv.zip";
-const DEFAULT_LIMIT = 80_000;
+const DEFAULT_LIMIT = 50_000;
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 

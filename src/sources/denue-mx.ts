@@ -4,7 +4,6 @@ import type { ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise, slugify } from "../normalise.js";
 import { getCities } from "../cities.js";
 import { getSink } from "../sink.js";
-import { parseCsv, pick } from "./_bulk-utils.js";
 
 /**
  * DENUE — Directorio Estadístico Nacional de Unidades Económicas
@@ -31,7 +30,18 @@ import { parseCsv, pick } from "./_bulk-utils.js";
  *
  * Off by default. `PROLIO_RUN_DENUE_MX=true` enables. Cap with
  * `PROLIO_DENUE_MX_LIMIT` (default 10000 across all sectors). On a
- * full run all four archives total ~45 MB compressed / ~150 MB CSV.
+ * full run all seven archives total ~60 MB compressed / ~250 MB CSV.
+ *
+ * PERFORMANCE (fixed 2026-06-16): each sector ZIP inflates to a CSV of
+ * millions of rows. The original implementation called `parseCsv()`
+ * from `_bulk-utils`, which materialises the WHOLE CSV into an array of
+ * `Record<string,string>` (every column for every row) BEFORE any
+ * filtering — so a single run allocated hundreds of MB per sector and
+ * spent all its time in GC, never finishing inside the 4h job budget.
+ * We now stream each CSV row-by-row (local `iterateCsvRows`, mirroring
+ * `denue-mx-bulk.ts`), stop the moment the per-run cap is hit, and
+ * flush each sector's kept rows to the sink immediately so a cancelled
+ * run still persists partial progress instead of redoing everything.
  */
 
 const USER_AGENT =
@@ -332,10 +342,10 @@ function readZipEntryData(buf: Buffer, entry: ZipEntry): Buffer | null {
   return null;
 }
 
-// DENUE CSVs are Latin-1. Decode → UTF-8 string.
-const LATIN1 = new TextDecoder("latin1");
+// DENUE CSVs are Latin-1; we decode byte-by-byte while streaming so we
+// never hold the whole decoded string in memory.
 
-async function fetchSectorCsv(url: string): Promise<string | null> {
+async function fetchSectorCsvBytes(url: string): Promise<Buffer | null> {
   let response: Response;
   try {
     response = await fetch(url, {
@@ -365,57 +375,218 @@ async function fetchSectorCsv(url: string): Promise<string | null> {
     console.error(`[denue-mx] no data CSV in archive — entries=${entries.map((e) => e.name).join(", ")}`);
     return null;
   }
-  const data = readZipEntryData(buf, dataEntry);
-  if (!data) return null;
-  return LATIN1.decode(data);
+  return readZipEntryData(buf, dataEntry);
 }
 
+// --- Streaming CSV row iterator (local copy — mirrors denue-mx-bulk.ts) ---
+//
+// Walks the inflated Buffer byte-by-byte, tracking quote state and line
+// breaks, decoding each byte as Latin-1 (each byte is one iso-8859-1
+// codepoint). Emits one row at a time via `handleRow`, which returns
+// false to stop early. Peak heap stays at ~one row of strings on top of
+// the inflated Buffer — instead of an array holding every parsed row.
+
+function iterateCsvRows(
+  bytes: Buffer,
+  handleRow: (cells: string[]) => boolean,
+): void {
+  let cur = "";
+  let inQuotes = false;
+  let row: string[] = [];
+  let stop = false;
+
+  let start = 0;
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === 0xef &&
+    bytes[1] === 0xbb &&
+    bytes[2] === 0xbf
+  ) {
+    start = 3;
+  }
+
+  const finishRow = (): boolean => {
+    row.push(cur);
+    cur = "";
+    const keep = handleRow(row);
+    row = [];
+    return keep;
+  };
+
+  for (let i = start; i < bytes.length; i += 1) {
+    const b = bytes[i];
+    if (inQuotes) {
+      if (b === 0x22) {
+        if (i + 1 < bytes.length && bytes[i + 1] === 0x22) {
+          cur += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cur += String.fromCharCode(b);
+      }
+    } else if (b === 0x22) {
+      inQuotes = true;
+    } else if (b === 0x2c) {
+      row.push(cur);
+      cur = "";
+    } else if (b === 0x0a || b === 0x0d) {
+      if (cur.length > 0 || row.length > 0) {
+        if (!finishRow()) {
+          stop = true;
+          break;
+        }
+      }
+      if (b === 0x0d && i + 1 < bytes.length && bytes[i + 1] === 0x0a) i += 1;
+    } else {
+      cur += String.fromCharCode(b);
+    }
+  }
+  if (!stop && (cur.length > 0 || row.length > 0)) finishRow();
+}
+
+function normaliseHeaderCell(raw: string): string {
+  return raw
+    .replace(/^﻿/, "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function findHeaderIndex(header: string[], candidates: string[]): number {
+  for (const c of candidates) {
+    const idx = header.indexOf(c);
+    if (idx >= 0) return idx;
+  }
+  for (const c of candidates) {
+    const idx = header.findIndex((h) => h.includes(c));
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+function cell(row: string[], idx: number): string {
+  if (idx < 0 || idx >= row.length) return "";
+  return row[idx]?.trim() ?? "";
+}
+
+interface SectorColMap {
+  codigo_act: number;
+  ident: number;
+  ident_alt: number[];
+  nom_estab: number;
+  municipio: number;
+  tipo_vial: number;
+  nom_vial: number;
+  num_ext: number;
+  cod_postal: number;
+  ciudad: number;
+  telefono: number;
+  correoelec: number;
+  www: number;
+  nombre_act: number;
+  per_ocu: number;
+  entidad: number;
+}
+
+function buildSectorColMap(header: string[]): SectorColMap {
+  return {
+    codigo_act: findHeaderIndex(header, ["codigo_act", "codigo_actividad"]),
+    ident: findHeaderIndex(header, ["id"]),
+    ident_alt: [
+      findHeaderIndex(header, ["id_unidad"]),
+      findHeaderIndex(header, ["clee"]),
+    ].filter((i) => i >= 0),
+    nom_estab: findHeaderIndex(header, [
+      "nom_estab",
+      "razon_social",
+      "nombre",
+      "nom_v_e",
+    ]),
+    municipio: findHeaderIndex(header, ["municipio", "nom_mun"]),
+    tipo_vial: findHeaderIndex(header, ["tipo_vial"]),
+    nom_vial: findHeaderIndex(header, ["nom_vial", "nom_v_e"]),
+    num_ext: findHeaderIndex(header, ["numero_ext", "num_ext"]),
+    cod_postal: findHeaderIndex(header, ["cod_postal", "cp"]),
+    ciudad: findHeaderIndex(header, ["ciudad", "nom_ciudad"]),
+    telefono: findHeaderIndex(header, ["telefono", "tel"]),
+    correoelec: findHeaderIndex(header, ["correoelec", "correo_elec", "email"]),
+    www: findHeaderIndex(header, ["www", "sitio_internet"]),
+    nombre_act: findHeaderIndex(header, ["nombre_act", "actividad"]),
+    per_ocu: findHeaderIndex(header, ["per_ocu", "per_ocupado"]),
+    entidad: findHeaderIndex(header, ["entidad", "nom_entidad"]),
+  };
+}
+
+/**
+ * Stream-parse one sector ZIP and emit kept rows via `emit`. Stops as
+ * soon as `remaining` rows have been kept. `seen` is shared across all
+ * sectors so cross-sector duplicate DENUE ids are dropped. Returns the
+ * number of rows kept from this sector.
+ */
 async function fetchSector(
   sector: DenueSector,
   remaining: number,
-): Promise<ScrapedProfessional[]> {
-  if (remaining <= 0) return [];
-  const text = await fetchSectorCsv(sector.url);
-  if (!text) return [];
-  const rows = parseCsv(text);
-  const out: ScrapedProfessional[] = [];
-  const seen = new Set<string>();
-  const validSlugs = await ensureMxCitySlugs();
+  validSlugs: Set<string>,
+  seen: Set<string>,
+  emit: (rec: ScrapedProfessional) => void,
+): Promise<number> {
+  if (remaining <= 0) return 0;
+  const bytes = await fetchSectorCsvBytes(sector.url);
+  if (!bytes) return 0;
 
-  for (const row of rows) {
-    if (out.length >= remaining) break;
-    const scian = pick(row, ["codigo_act", "codigo_actividad"]);
+  let cols: SectorColMap | null = null;
+  let kept = 0;
+  let inspected = 0;
+
+  iterateCsvRows(bytes, (row) => {
+    if (!cols) {
+      cols = buildSectorColMap(row.map(normaliseHeaderCell));
+      return true;
+    }
+    if (kept >= remaining) return false;
+    inspected += 1;
+
+    const scian = cell(row, cols.codigo_act);
     const category = SCIAN_TO_CATEGORY[scian];
-    if (!category) continue;
+    if (!category) return true;
 
-    const ident = pick(row, ["id", "id_unidad", "clee"]);
-    if (!ident) continue;
+    let ident = cell(row, cols.ident);
+    if (!ident) {
+      for (const alt of cols.ident_alt) {
+        ident = cell(row, alt);
+        if (ident) break;
+      }
+    }
+    if (!ident) return true;
 
-    const municipio = pick(row, ["municipio", "nom_mun"]);
+    const municipio = cell(row, cols.municipio);
     const citySlug = denueLabelToCitySlug(municipio, validSlugs);
-    if (!citySlug) continue;
+    if (!citySlug) return true;
 
-    if (seen.has(ident)) continue;
+    if (seen.has(ident)) return true;
+
+    const name = cell(row, cols.nom_estab);
+    if (!name) return true;
+
     seen.add(ident);
 
-    const name =
-      pick(row, ["nom_estab", "razon_social", "nombre"]) ||
-      pick(row, ["nom_v_e"]);
-    if (!name) continue;
-
-    const street =
-      [
-        pick(row, ["tipo_vial"]),
-        pick(row, ["nom_vial", "nom_v_e"]),
-        pick(row, ["numero_ext", "num_ext"]),
-      ]
-        .filter(Boolean)
-        .join(" ");
-    const cp = pick(row, ["cod_postal", "cp"]);
-    const ciudad = pick(row, ["ciudad", "nom_ciudad"]) || municipio;
+    const street = [
+      cell(row, cols.tipo_vial),
+      cell(row, cols.nom_vial),
+      cell(row, cols.num_ext),
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const cp = cell(row, cols.cod_postal);
+    const ciudad = cell(row, cols.ciudad) || municipio;
     const address = [street, cp, ciudad].filter(Boolean).join(", ");
 
-    out.push(
+    emit(
       normalise({
         source: "denue-mx",
         country: "MX",
@@ -423,25 +594,30 @@ async function fetchSector(
         name,
         categoryKey: category,
         citySlug,
-        phone: pick(row, ["telefono", "tel"]) || undefined,
-        email: pick(row, ["correoelec", "correo_elec", "email"]) || undefined,
-        website: pick(row, ["www", "sitio_internet"]) || undefined,
+        phone: cell(row, cols.telefono) || undefined,
+        email: cell(row, cols.correoelec) || undefined,
+        website: cell(row, cols.www) || undefined,
         address: address || undefined,
         metadata: {
           country: "MX",
           authority: "INEGI / DENUE",
-          scian: scian,
-          actividad: pick(row, ["nombre_act", "actividad"]) || undefined,
-          tamano: pick(row, ["per_ocu", "per_ocupado"]) || undefined,
-          entidad: pick(row, ["entidad", "nom_entidad"]) || undefined,
+          scian,
+          actividad: cell(row, cols.nombre_act) || undefined,
+          tamano: cell(row, cols.per_ocu) || undefined,
+          entidad: cell(row, cols.entidad) || undefined,
           municipio,
           ciudad,
         },
       }),
     );
-  }
-  console.log(`[denue-mx] sector=${sector.label}: kept=${out.length}`);
-  return out;
+    kept += 1;
+    return true;
+  });
+
+  console.log(
+    `[denue-mx] sector=${sector.label}: inspected=${inspected} kept=${kept}`,
+  );
+  return kept;
 }
 
 export const denueMxSource: ScraperSource = {
@@ -466,20 +642,41 @@ export async function runDenueMx(): Promise<{
   const limit =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
 
-  const all: ScrapedProfessional[] = [];
+  // Stream-and-flush per sector: a sector's kept rows are upserted
+  // immediately, so a timeout/cancellation still persists everything
+  // processed up to that point instead of losing the whole run.
+  const sink = getSink();
+  const CHUNK = 25_000;
+  const validSlugs = await ensureMxCitySlugs();
+  const seen = new Set<string>();
+
+  let fetched = 0;
+  let inserted = 0;
+  let updated = 0;
+  let skipped = 0;
+
   for (const sector of DENUE_SECTORS) {
-    if (all.length >= limit) break;
-    const remaining = limit - all.length;
-    const records = await fetchSector(sector, remaining);
-    all.push(...records);
+    if (fetched >= limit) break;
+    const remaining = limit - fetched;
+    const buffer: ScrapedProfessional[] = [];
+    await fetchSector(sector, remaining, validSlugs, seen, (rec) =>
+      buffer.push(rec),
+    );
+    if (buffer.length === 0) continue;
+    for (let i = 0; i < buffer.length; i += CHUNK) {
+      const res = await sink.upsert(buffer.slice(i, i + CHUNK));
+      inserted += res.inserted;
+      updated += res.updated;
+      skipped += res.skipped;
+    }
+    fetched += buffer.length;
+    console.log(
+      `[denue-mx] sector=${sector.label} flushed — buffer=${buffer.length} total_inserted=${inserted} total_updated=${updated} total_skipped=${skipped}`,
+    );
   }
 
-  if (all.length === 0)
-    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-  const sink = getSink();
-  const { inserted, updated, skipped } = await sink.upsert(all);
   console.log(
-    `[denue-mx] done — fetched=${all.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
+    `[denue-mx] done — fetched=${fetched} inserted=${inserted} updated=${updated} skipped=${skipped}`,
   );
-  return { fetched: all.length, inserted, updated, skipped };
+  return { fetched, inserted, updated, skipped };
 }

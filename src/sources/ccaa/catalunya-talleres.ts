@@ -19,6 +19,10 @@ import { normalise, slugify } from "../../normalise.js";
 const DEFAULT_URL =
   "https://analisi.transparenciacatalunya.cat/api/views/ebyt-8dme/rows.csv?accessType=DOWNLOAD";
 const USER_AGENT = "Prolio/0.1 (ferranp.work@gmail.com)";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: a stalled endpoint would hang the await forever and the
+// whole ccaa run would never terminate.
+const FETCH_TIMEOUT_MS = 120_000;
 
 function parseCsv(text: string): Array<Record<string, string>> {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
@@ -73,7 +77,10 @@ export const catalunyaTalleres: CcaaSource = {
     const url = process.env.PROLIO_CAT_TALLERES_CSV || DEFAULT_URL;
     let response: Response;
     try {
-      response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
     } catch (error) {
       console.error(
         `[catalunya-talleres] network error: ${(error as Error).message}`,

@@ -24,6 +24,11 @@ import { normalise, slugify } from "../../normalise.js";
 const DEFAULT_URL =
   "https://www6.serviciosmin.gob.es/Aplicaciones/OpenDataModule_AC202101/UbicacionRIII/Consulta%20RII%20division%20A.csv";
 const USER_AGENT = "Prolio/0.1 (ferranp.work@gmail.com)";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: if the endpoint accepts the connection but stalls sending
+// the body, the await hangs forever and the whole ccaa run never
+// terminates. This CSV is ~37MB so the cap is generous.
+const FETCH_TIMEOUT_MS = 120_000;
 
 /**
  * Map CNAE 3-digit group → Prolio category.
@@ -153,7 +158,10 @@ export const riiNational: CcaaSource = {
     const url = process.env.PROLIO_RII_CSV || DEFAULT_URL;
     let response: Response;
     try {
-      response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
     } catch (error) {
       console.error(
         `[rii-national] network error: ${(error as Error).message}`,

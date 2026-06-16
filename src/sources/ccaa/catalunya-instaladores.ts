@@ -23,6 +23,10 @@ import { normalise, slugify } from "../../normalise.js";
 const DEFAULT_URL =
   "https://analisi.transparenciacatalunya.cat/api/views/qcrr-stew/rows.csv?accessType=DOWNLOAD";
 const USER_AGENT = "Prolio/0.1 (ferranp.work@gmail.com)";
+// Hard ceiling on the request. Node's global fetch has NO default
+// timeout: a stalled endpoint would hang the await forever and the
+// whole ccaa run would never terminate.
+const FETCH_TIMEOUT_MS = 120_000;
 
 // Columns that signal the pro installs electricity (AT = alta tensión,
 // BT = baja tensión). Any "Sí" triggers electricidad.
@@ -110,7 +114,10 @@ export const catalunyaInstaladores: CcaaSource = {
     const url = process.env.PROLIO_CAT_INSTALADORES_CSV || DEFAULT_URL;
     let response: Response;
     try {
-      response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      response = await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
     } catch (error) {
       console.error(
         `[catalunya-instaladores] network error: ${(error as Error).message}`,
