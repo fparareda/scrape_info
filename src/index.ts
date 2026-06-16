@@ -257,6 +257,7 @@ import { iftRpcMxSource, runIftRpcMx } from "./sources/ift-rpc-mx.js";
 import { condusefSipresSource, runCondusefSipres } from "./sources/condusef-sipres.js";
 import { chicagoBacpSource, runChicagoBacpSource } from "./sources/data-gov-chicago-bacp.js";
 import { montgomeryMdElectricianSource, runMontgomeryMdElectricianSource } from "./sources/data-gov-montgomery-md-electrician.js";
+import { delawareDprSource, runDelawareDprSource } from "./sources/delaware-dpr.js";
 import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
 import { peivmaPeiVetsSource, runPeivmaPeiVets } from "./sources/peivma-pei-vets.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
@@ -508,6 +509,7 @@ async function main(): Promise<void> {
   const condusefSipresOn = condusefSipresSource.enabled();
   const chicagoBacpOn = chicagoBacpSource.enabled();
   const montgomeryMdElectricianOn = montgomeryMdElectricianSource.enabled();
+  const delawareDprOn = delawareDprSource.enabled();
   const cgfeFisioOn = cgfeFisioSource.enabled();
   const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
@@ -694,6 +696,7 @@ async function main(): Promise<void> {
     !condusefSipresOn &&
     !chicagoBacpOn &&
     !montgomeryMdElectricianOn &&
+    !delawareDprOn &&
     !cgfeFisioOn &&
     !colfisiocvFisioOn &&
     !coptocylToOn &&
@@ -1483,6 +1486,8 @@ async function main(): Promise<void> {
     [condusefSipresOn, "condusef-sipres", runCondusefSipres],
     [chicagoBacpOn, "data-gov-chicago-bacp", runChicagoBacpSource],
     [montgomeryMdElectricianOn, "data-gov-montgomery-md-electrician", runMontgomeryMdElectricianSource],
+    // 2026-06-15: Delaware DPR — Socrata multi-category (arquitecto/veterinario/fontaneria/hvac/electricidad)
+    [delawareDprOn, "delaware-dpr", runDelawareDprSource],
     // 2026-06-04: CA professional colleges — imported/gated but dispatch missing
     [cnoOntarioOn, "cno-ontario", runCnoOntario],
     [oiiqQuebecOn, "oiiq-quebec", runOiiqQuebec],
