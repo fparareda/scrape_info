@@ -404,7 +404,8 @@ export type ScrapeSource =
   // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
   | "cpbc-bc-pharmacists"
   | "iardc-il-attorneys"
-  | "apegnb-nb-engineers";
+  | "apegnb-nb-engineers"
+  | "code-cas-leon-dentistas";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

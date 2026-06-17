@@ -396,6 +396,7 @@ import { riiDivBElectricidadEsSource, runRiiDivBElectricidadEs } from "./sources
 import { riiGasEsSource, runRiiGasEs } from "./sources/rii-gas-es.js";
 import { iardcIlAttorneysSource, runIardcIlAttorneys } from "./sources/iardc-il-attorneys.js";
 import { apegnbNbEngineersSource, runApegnbNbEngineers } from "./sources/apegnb-nb-engineers.js";
+import { codeCasLeonDentistasSource, runCodeCasLeonDentistas } from "./sources/code-cas-leon-dentistas.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -657,6 +658,7 @@ async function main(): Promise<void> {
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
   const texasBhecPsyOn = texasBhecPsySource.enabled();
+  const codeCasLeonDentistasOn = codeCasLeonDentistasSource.enabled();
   const apegnbNbEngineersOn = apegnbNbEngineersSource.enabled();
   const iardcIlAttorneysOn = iardcIlAttorneysSource.enabled();
   const bcpharmacistsBcOn = bcpharmacistsBcSource.enabled();
@@ -1842,6 +1844,7 @@ async function main(): Promise<void> {
     [cpbcBcPharmacistsOn, "cpbc-bc-pharmacists", runCpbcBcPharmacists],
     [iardcIlAttorneysOn, "iardc-il-attorneys", runIardcIlAttorneys],
     [apegnbNbEngineersOn, "apegnb-nb-engineers", runApegnbNbEngineers],
+    [codeCasLeonDentistasOn, "code-cas-leon-dentistas", runCodeCasLeonDentistas],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
