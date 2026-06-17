@@ -331,7 +331,9 @@ export type ScrapeSource =
   | "bcna-bc-notaries"
   // 2026-05-15: ES psicología — COPM Madrid colegiados listing
   | "copm-psicologos"
-  | "cgcod-es";
+  | "cgcod-es"
+  // 2026-05-16: ES Ministerio de Industria — RII gas installers (fontaneria)
+  | "rii-instaladores-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

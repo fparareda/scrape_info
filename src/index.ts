@@ -321,6 +321,7 @@ import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sou
 import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
 import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
 import { copmPsicologosSource, runCopmPsicologos } from "./sources/copm-psicologos.js";
+import { riiInstaladoresEsSource, runRiiInstaladoresEs } from "./sources/rii-instaladores-es.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -600,6 +601,7 @@ async function main(): Promise<void> {
   // 2026-06-14: IRS FOIA enrolled agents
   const irsEaFoiaOn = irsEaFoiaSource.enabled();
   const riiDivBElectricidadEsOn = riiDivBElectricidadEsSource.enabled();
+  const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -826,7 +828,8 @@ async function main(): Promise<void> {
     !irsEaFoiaOn &&
     !cdssSkDentistsOn &&
     !riiDivBElectricidadEsOn &&
-    !rhodeIslandCrbOn
+    !rhodeIslandCrbOn &&
+    !riiInstaladoresEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1660,6 +1663,7 @@ async function main(): Promise<void> {
     [bcnaBcNotariesOn, "bcna-bc-notaries", runBcnaBcNotaries],
     [copmPsicologosOn, "copm-psicologos", runCopmPsicologos],
     [cgcodEsOn, "cgcod-es", runCgcodEs],
+    [riiInstaladoresEsOn, "rii-instaladores-es", runRiiInstaladoresEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
