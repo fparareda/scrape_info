@@ -377,7 +377,10 @@ export type ScrapeSource =
   | "jcyl-instaladoras-es"
   // 2026-05-29 CA: HCRA Ontario Builder Directory — licensed home builders
   // and sellers in Ontario (~7,063 active records, open JSON API).
-  | "hcra-on-builders";
+  | "hcra-on-builders"
+  // 2026-05-30: CPSNB — College of Physicians and Surgeons of New Brunswick
+  // (Alinity tenant `cpsnb`, ~2.5k–3.5k NB physicians, medicina).
+  | "cpsnb-nb-physicians";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
