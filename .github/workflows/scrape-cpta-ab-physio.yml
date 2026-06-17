@@ -1,0 +1,13 @@
+name: Scrape · cpta ab physio
+# cpta ab physio — auto-wired cpta-ab-physio. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 10 6 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cpta-ab-physio
+      timeout_minutes: 45

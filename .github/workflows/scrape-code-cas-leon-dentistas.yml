@@ -1,0 +1,13 @@
+name: Scrape · code cas leon dentistas
+# code cas leon dentistas — auto-wired code-cas-leon-dentistas. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 10 5 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: code-cas-leon-dentistas
+      timeout_minutes: 45

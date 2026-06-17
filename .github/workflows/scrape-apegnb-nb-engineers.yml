@@ -1,0 +1,13 @@
+name: Scrape · apegnb nb engineers
+# apegnb nb engineers — auto-wired apegnb-nb-engineers. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 10 4 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: apegnb-nb-engineers
+      timeout_minutes: 45

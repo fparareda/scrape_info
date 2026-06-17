@@ -1,0 +1,13 @@
+name: Scrape · iardc il attorneys
+# iardc il attorneys — auto-wired iardc-il-attorneys. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 10 7 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: iardc-il-attorneys
+      timeout_minutes: 45

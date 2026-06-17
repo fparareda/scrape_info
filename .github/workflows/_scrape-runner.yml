@@ -550,6 +550,10 @@ jobs:
       PROLIO_RUN_RASIC_INSTALADORES_CAT: ${{ inputs.source == 'rasic-instaladores-cat' && 'true' || 'false' }}
       PROLIO_RUN_RII_DIV_A_CARPINTERIA_ES: ${{ inputs.source == 'rii-div-a-carpinteria-es' && 'true' || 'false' }}
       PROLIO_RUN_VERMONT_DFS:           ${{ inputs.source == 'vermont-dfs' && 'true' || 'false' }}
+      PROLIO_RUN_APEGNB_NB_ENGINEERS:   ${{ inputs.source == 'apegnb-nb-engineers' && 'true' || 'false' }}
+      PROLIO_RUN_CODE_CAS_LEON_DENTISTAS: ${{ inputs.source == 'code-cas-leon-dentistas' && 'true' || 'false' }}
+      PROLIO_RUN_CPTA_AB_PHYSIO:        ${{ inputs.source == 'cpta-ab-physio' && 'true' || 'false' }}
+      PROLIO_RUN_IARDC_IL_ATTORNEYS:    ${{ inputs.source == 'iardc-il-attorneys' && 'true' || 'false' }}
       PROLIO_FOURSQUARE_CATEGORY:   ${{ inputs.category }}
       PROLIO_FOURSQUARE_REQUESTS_PER_RUN: "800"
       FOURSQUARE_API_KEY:           ${{ secrets.FOURSQUARE_API_KEY }}
