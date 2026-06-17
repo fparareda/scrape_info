@@ -394,7 +394,11 @@ export type ScrapeSource =
   // 2026-06-02: ES RII División A — carpinterías (joinery workshops).
   // Same CSV as rii-div-a-talleres-es (División A open data) but filtered on
   // Denominación containing "carpint" → ~780 active carpintería businesses.
-  | "rii-div-a-carpinteria-es";
+  | "rii-div-a-carpinteria-es"
+  // 2026-06-01: CA notario — BC Notaries Association public member directory (~458 records)
+  // 2026-06-01: ES RASIC Cataluña — industrial installers (electricidad / fontaneria / hvac /
+  // cerrajero); first government-backed ES cerrajero source (~800 alarm records + 19k total).
+  | "rasic-instaladores-cat";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

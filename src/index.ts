@@ -343,6 +343,9 @@ import { bcnaBcNotariesSource, runBcnaBcNotaries } from "./sources/bcna-bc-notar
 import { maineAlmsElectriciansSource, runMaineAlmsElectricians } from "./sources/maine-alms-electricians.js";
 // 2026-06-02: Vermont DFS — Socrata open-data CSV (~11k electricians + plumbers)
 import { vermontDfsSource, runVermontDfs } from "./sources/vermont-dfs.js";
+// 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
+// 2026-06-01: ES RASIC Cataluña — industrial installers (electricidad/fontaneria/hvac/cerrajero)
+import { rasicInstaladorsCatSource, runRasicInstaladorsCat } from "./sources/rasic-instaladores-cat.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -662,6 +665,7 @@ async function main(): Promise<void> {
   const maaArchitectsOn = maaArchitectsSource.enabled();
   const maineAlmsElectriciansOn = maineAlmsElectriciansSource.enabled();
   const vermontDfsOn = vermontDfsSource.enabled();
+  const rasicInstaladorsCatOn = rasicInstaladorsCatSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const cgcodEsOn = cgcodEsEnabled();
   // 2026-05-20: ES colegios de economistas
@@ -928,7 +932,8 @@ async function main(): Promise<void> {
     !riiGasEsOn &&
     !jcylInstaladoresEsOn &&
     !maineAlmsElectriciansOn &&
-    !vermontDfsOn
+    !vermontDfsOn &&
+    !rasicInstaladorsCatOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1820,6 +1825,9 @@ async function main(): Promise<void> {
     // 2026-06-02: Vermont DFS — electricians + plumbers (~11k)
     // 2026-06-02: ES RII División A — carpinterías (~780 active joinery workshops)
     [riiDivACarpinteriaEsOn, "rii-div-a-carpinteria-es", runRiiDivACarpinteriaEs],
+    // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
+    // 2026-06-01: ES RASIC Cataluña — industrial installers
+    [rasicInstaladorsCatOn, "rasic-instaladores-cat", runRasicInstaladorsCat],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
