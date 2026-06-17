@@ -251,6 +251,7 @@ import {
 } from "./sources/cvbc-bc-vets.js";
 import { ncarbArchitectsSource, runNcarbArchitects } from "./sources/ncarb-architects.js";
 import { mediadoresSegurosMadridSource, runMediadoresSegurosMadrid } from "./sources/mediadores-seguros-madrid.js";
+import { lsmMbLawyersSource, runLsmMbLawyers } from "./sources/lsm-mb-lawyers.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
@@ -561,6 +562,7 @@ async function main(): Promise<void> {
   const cvbcBcVetsOn = cvbcBcVetsSource.enabled();
   const ncarbArchitectsOn = ncarbArchitectsSource.enabled();
   const mediadoresSegurosMadridOn = mediadoresSegurosMadridSource.enabled();
+  const lsmMbLawyersOn = lsmMbLawyersSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
@@ -888,7 +890,8 @@ async function main(): Promise<void> {
     !nyDmvRepairShopsOn &&
     !cvbcBcVetsOn &&
     !ncarbArchitectsOn &&
-    !mediadoresSegurosMadridOn
+    !mediadoresSegurosMadridOn &&
+    !lsmMbLawyersOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1746,6 +1749,8 @@ async function main(): Promise<void> {
     [ncarbArchitectsOn, "ncarb-architects", runNcarbArchitects],
     // 2026-05-26: ES fiscal — Colegio de Mediadores de Seguros de Madrid
     [mediadoresSegurosMadridOn, "mediadores-seguros-madrid", runMediadoresSegurosMadrid],
+    // 2026-05-26: CA lawyers — Law Society of Manitoba
+    [lsmMbLawyersOn, "lsm-mb-lawyers", runLsmMbLawyers],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
