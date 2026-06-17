@@ -358,7 +358,9 @@ export type ScrapeSource =
   // 2026-05-25: CA CVBC — BC veterinary facility/practice registry (~670 active).
   | "cvbc-bc-vets"
   // 2026-05-26: US architects — NCARB certified architect directory
-  | "ncarb-architects";
+  | "ncarb-architects"
+  // 2026-05-26: ES fiscal — Colegio de Mediadores de Seguros de Madrid
+  | "mediadores-seguros-madrid";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
