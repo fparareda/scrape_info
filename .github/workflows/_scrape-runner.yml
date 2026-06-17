@@ -276,6 +276,8 @@ jobs:
       PROLIO_RUN_PEIVMA_PEI_VETS:       ${{ inputs.source == 'peivma-pei-vets' && 'true' || 'false' }}
       PROLIO_RUN_TEXAS_BHEC_PSY:        ${{ inputs.source == 'texas-bhec-psy' && 'true' || 'false' }}
       PROLIO_RUN_DELAWARE_DPR:          ${{ inputs.source == 'delaware-dpr' && 'true' || 'false' }}
+      PROLIO_RUN_IRS_EA_FOIA:           ${{ inputs.source == 'irs-ea-foia' && 'true' || 'false' }}
+      PROLIO_RUN_RQCI_QC_CA:            ${{ inputs.source == 'rqci-qc-ca' && 'true' || 'false' }}
       PROLIO_RUN_AEDAF_ASESORES_FISCALES: ${{ inputs.source == 'aedaf-asesores-fiscales-es' && 'true' || 'false' }}
       PROLIO_RUN_BCPHARMACISTS_BC:      ${{ inputs.source == 'bcpharmacists-bc' && 'true' || 'false' }}
       PROLIO_RUN_CA_DIR_ECU_ELECTRICIANS: ${{ inputs.source == 'ca-dir-ecu-electricians' && 'true' || 'false' }}

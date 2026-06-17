@@ -310,7 +310,12 @@ export type ScrapeSource =
   // 2026-06-16: WA DOH psychologist credentials — first US psicologia source
   | "wa-doh-psychologists"
   // 2026-06-16: CA Manitoba lawyers
-  | "lsm-lawyers-mb";
+  | "lsm-lawyers-mb"
+  // 2026-06-14: IRS FOIA — active Enrolled Agents (US fiscal / tax pros).
+  // Public FOIA CSV, bi-annual refresh, ~87k rows worldwide, ~70k US-based.
+  | "irs-ea-foia"
+  // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
+  | "rqci-qc-ca"; // Registre québécois des consultants en immigration
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

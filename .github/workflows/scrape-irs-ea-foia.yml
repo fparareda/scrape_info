@@ -1,0 +1,13 @@
+name: Scrape · IRS enrolled agents (US fiscal)
+# ~87k FOIA CSV — one-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 21 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: irs-ea-foia
+      timeout_minutes: 60

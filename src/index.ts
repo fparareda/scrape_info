@@ -280,6 +280,8 @@ import { coevEconomistasSource, runCoevEconomistas } from "./sources/coev-econom
 import { nscpNsPhysioSource, runNscpNsPhysio } from "./sources/nscp-ns-physio.js";
 import { waDohPsychologistsSource, runWaDohPsychologists } from "./sources/wa-doh-psychologists.js";
 import { lsmLawyersMbSource, runLsmLawyersMb } from "./sources/lsm-lawyers-mb.js";
+// 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
+import { rqciQcCaSource, runRqciQcCa } from "./sources/rqci-qc-ca.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -322,6 +324,8 @@ import {
   competitorEsMegaEnabled,
   runCompetitorEsMega,
 } from "./sources/competitor-es-mega.js";
+// 2026-06-14: IRS FOIA — active Enrolled Agents (US fiscal)
+import { irsEaFoiaSource, runIrsEaFoia } from "./sources/irs-ea-foia-us.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -552,6 +556,7 @@ async function main(): Promise<void> {
   const nscpNsPhysioOn = nscpNsPhysioSource.enabled();
   const waDohPsychologistsOn = waDohPsychologistsSource.enabled();
   const lsmLawyersMbOn = lsmLawyersMbSource.enabled();
+  const rqciQcCaOn = rqciQcCaSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -568,6 +573,8 @@ async function main(): Promise<void> {
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
   const connecticutDcpOn = connecticutDcpSource.enabled();
+  // 2026-06-14: IRS FOIA enrolled agents
+  const irsEaFoiaOn = irsEaFoiaSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -755,6 +762,7 @@ async function main(): Promise<void> {
     !nscpNsPhysioOn &&
     !waDohPsychologistsOn &&
     !lsmLawyersMbOn &&
+    !rqciQcCaOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -783,7 +791,8 @@ async function main(): Promise<void> {
     !cphmMbPharmacistsOn &&
     !caDirEcuElectriciansOn &&
     !coevEconomistasOn &&
-    !jcylTalleresEsOn
+    !jcylTalleresEsOn &&
+    !irsEaFoiaOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -869,7 +878,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_CONAHCYT_SNII=true, " +
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
-        "PROLIO_SCRAPE_OVERTURE=true",
+        "PROLIO_SCRAPE_OVERTURE=true, " +
+        "PROLIO_RUN_IRS_EA_FOIA=true",
     );
     return;
   }
@@ -1598,6 +1608,8 @@ async function main(): Promise<void> {
     [riiInstaladorasGasEsOn, "rii-instaladores-gas-es", runRiiInstaladorasGasEs],
     [waDohPsychologistsOn, "wa-doh-psychologists", runWaDohPsychologists],
     [lsmLawyersMbOn, "lsm-lawyers-mb", runLsmLawyersMb],
+    // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
+    [rqciQcCaOn, "rqci-qc-ca", runRqciQcCa],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
@@ -1787,6 +1799,27 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] connecticut-dcp crashed:`, (e as Error).message),
+    );
+  }
+
+  // IRS FOIA — active Enrolled Agents (US fiscal). Public FOIA CSV download,
+  // bi-annual update cadence, ~87k records worldwide (~70k US-based).
+  if (irsEaFoiaOn) {
+    await withScrapeRun("irs-ea-foia", async () => {
+      const res = await runIrsEaFoia();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+        metadata: {
+          us_records: res.usOnly,
+          international_skipped: res.international,
+        },
+      };
+    }).catch((e) =>
+      console.error(`[scraper] irs-ea-foia crashed:`, (e as Error).message),
     );
   }
 
