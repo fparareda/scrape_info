@@ -1,0 +1,14 @@
+name: Scrape · CT eLicense (data.ct.gov)
+# Connecticut eLicense — all regulated professions (Socrata ngch-56tr).
+# Server-side filtered to trade/contractor/engineering credentials.
+on:
+  schedule:
+    - cron: "0 13 6 * *"   # 6th of month 13:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: data-gov-ct-elicense
+      timeout_minutes: 60
