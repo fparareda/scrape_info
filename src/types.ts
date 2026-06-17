@@ -402,7 +402,8 @@ export type ScrapeSource =
   // 2026-05-21 wave: ES electricidad + hvac — RII División B national installer registry
   // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
   // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
-  | "cpbc-bc-pharmacists";
+  | "cpbc-bc-pharmacists"
+  | "iardc-il-attorneys";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

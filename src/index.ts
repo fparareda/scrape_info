@@ -394,6 +394,7 @@ import { irsEaFoiaSource, runIrsEaFoia } from "./sources/irs-ea-foia-us.js";
 // 2026-05-31: RII División B ES
 import { riiDivBElectricidadEsSource, runRiiDivBElectricidadEs } from "./sources/rii-div-b-electricidad-es.js";
 import { riiGasEsSource, runRiiGasEs } from "./sources/rii-gas-es.js";
+import { iardcIlAttorneysSource, runIardcIlAttorneys } from "./sources/iardc-il-attorneys.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -655,6 +656,7 @@ async function main(): Promise<void> {
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
   const texasBhecPsyOn = texasBhecPsySource.enabled();
+  const iardcIlAttorneysOn = iardcIlAttorneysSource.enabled();
   const bcpharmacistsBcOn = bcpharmacistsBcSource.enabled();
   const instaladoresoficialesEsOn = instaladoresoficialesEsSource.enabled();
   const iowaDialContractorsOn = iowaDialContractorsSource.enabled();
@@ -1836,6 +1838,7 @@ async function main(): Promise<void> {
     // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
     // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
     [cpbcBcPharmacistsOn, "cpbc-bc-pharmacists", runCpbcBcPharmacists],
+    [iardcIlAttorneysOn, "iardc-il-attorneys", runIardcIlAttorneys],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
