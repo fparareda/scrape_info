@@ -330,7 +330,8 @@ export type ScrapeSource =
   // 2026-06-01: CA notario — BC Notaries Association public member directory (~458 records)
   | "bcna-bc-notaries"
   // 2026-05-15: ES psicología — COPM Madrid colegiados listing
-  | "copm-psicologos";
+  | "copm-psicologos"
+  | "cgcod-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

@@ -326,6 +326,10 @@ import {
   runCgnNotariado,
 } from "./sources/cgn-notariado.js";
 import {
+  cgcodEsEnabled,
+  runCgcodEs,
+} from "./sources/cgcod-es.js";
+import {
   overtureEnabled,
   runOvertureEnrichment,
 } from "./sources/overture.js";
@@ -588,6 +592,7 @@ async function main(): Promise<void> {
   const bcnaBcNotariesOn = bcnaBcNotariesSource.enabled();
   const copmPsicologosOn = copmPsicologosSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
+  const cgcodEsOn = cgcodEsEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
@@ -805,6 +810,7 @@ async function main(): Promise<void> {
     !riiInstaladorasGasEsOn &&
     !copmPsicologosOn &&
     !cgnNotariadoOn &&
+    !cgcodEsOn &&
     !overtureOn &&
     !competitorNaOn &&
     !competitorEsMegaOn &&
@@ -878,6 +884,7 @@ async function main(): Promise<void> {
         "PROLIO_RUN_DENUE_MX=true, " +
         "PROLIO_RUN_CLUES_SINAIS_MX=true, " +
         "PROLIO_RUN_LOUISIANA_LSLBC=true, " +
+        "PROLIO_RUN_CGCOD_ES=true, " +
         "PROLIO_RUN_CGN_NOTARIADO=true, " +
         "PROLIO_RUN_OAQ=true, " +
         "PROLIO_RUN_OAA=true, " +
@@ -1652,6 +1659,7 @@ async function main(): Promise<void> {
     // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
     [bcnaBcNotariesOn, "bcna-bc-notaries", runBcnaBcNotaries],
     [copmPsicologosOn, "copm-psicologos", runCopmPsicologos],
+    [cgcodEsOn, "cgcod-es", runCgcodEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
