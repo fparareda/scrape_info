@@ -328,6 +328,11 @@ import {
   cgnNotariadoEnabled,
   runCgnNotariado,
 } from "./sources/cgn-notariado.js";
+// 2026-05-20: ES colegios de economistas — CGE federation fan-out (fiscal)
+import {
+  cgeEconomistasEsEnabled,
+  runCgeEconomistasEs,
+} from "./sources/cge-economistas-es.js";
 import {
   cgcodEsEnabled,
   runCgcodEs,
@@ -598,6 +603,8 @@ async function main(): Promise<void> {
   const maaArchitectsOn = maaArchitectsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const cgcodEsOn = cgcodEsEnabled();
+  // 2026-05-20: ES colegios de economistas
+  const cgeEconomistasEsOn = cgeEconomistasEsEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
   const competitorEsMegaOn = competitorEsMegaEnabled();
@@ -819,6 +826,7 @@ async function main(): Promise<void> {
     !maaArchitectsOn &&
     !cgnNotariadoOn &&
     !cgcodEsOn &&
+    !cgeEconomistasEsOn &&
     !overtureOn &&
     !competitorNaOn &&
     !competitorEsMegaOn &&
@@ -1672,6 +1680,8 @@ async function main(): Promise<void> {
     [cgcodEsOn, "cgcod-es", runCgcodEs],
     [riiInstaladoresEsOn, "rii-instaladores-es", runRiiInstaladoresEs],
     [maaArchitectsOn, "maa-architects", runMaaArchitects],
+    // 2026-05-20: ES colegios de economistas — CGE federation fan-out (fiscal)
+    [cgeEconomistasEsOn, "cge-economistas-es", runCgeEconomistasEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
