@@ -403,7 +403,8 @@ export type ScrapeSource =
   // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
   // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
   | "cpbc-bc-pharmacists"
-  | "iardc-il-attorneys";
+  | "iardc-il-attorneys"
+  | "apegnb-nb-engineers";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
