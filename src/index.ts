@@ -288,6 +288,11 @@ import { instaladoresoficialesEsSource, runInstaladoresoficialesEs } from "./sou
 import { connecticutDcpSource, runConnecticutDcpSource } from "./sources/connecticut-dcp.js";
 // 2026-06-12: US — Florida DBPR Board of Veterinary Medicine (CSV bulk)
 import { floridaDbprVetsSource, runFloridaDbprVets } from "./sources/florida-dbpr-vets.js";
+// 2026-06-15 wave: ES fontanería — RII Instaladores Gas (datos.gob.es open CSV)
+import {
+  riiInstaladorasGasEsSource,
+  runRiiInstaladorasGasEs,
+} from "./sources/rii-instaladores-gas-es.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -553,6 +558,7 @@ async function main(): Promise<void> {
   const aedafAsesoresFiscalesEsOn = aedafAsesoresFiscalesEsEnabled();
   const waCpaBoardOn = waCpaBoardSource.enabled();
   const floridaDbprVetsOn = floridaDbprVetsSource.enabled();
+  const riiInstaladorasGasEsOn = riiInstaladorasGasEsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -758,6 +764,7 @@ async function main(): Promise<void> {
     !calgaryBusinessLicencesOn &&
     !iowaDialContractorsOn &&
     !aedafAsesoresFiscalesEsOn &&
+    !riiInstaladorasGasEsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1581,6 +1588,8 @@ async function main(): Promise<void> {
     [jcylTalleresEsOn, "jcyl-talleres-es", runJcylTalleresEs],
     // 2026-06-15: CA NS physiotherapists (NSCP) — static Joomla HTML table, ~780 rows
     [nscpNsPhysioOn, "nscp-ns-physio", runNscpNsPhysio],
+    // 2026-06-15: ES fontanería — RII Instaladores Gas open CSV
+    [riiInstaladorasGasEsOn, "rii-instaladores-gas-es", runRiiInstaladorasGasEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

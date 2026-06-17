@@ -303,7 +303,11 @@ export type ScrapeSource =
   // 2026-06-13: ES — Colegio Oficial de Economistas de Valencia (fiscal, ~4120 rows)
   | "coev-economistas" // coev.com/colegiados
   // 2026-06-14: CA Quebec immigration consultants (MIFI open data)
-  | "rqci-qc-ca"; // Registre québécois des consultants en immigration
+  | "rqci-qc-ca" // Registre québécois des consultants en immigration
+  // 2026-06-15 wave: ES fontanería — RII Instaladores Gas (Ministerio Industria)
+  // ~8.6k unique certified gas/fluid installer companies nationally; open CSV
+  // from datos.gob.es. Mapped to fontaneria (gas+fluidos = water+gas in Spain).
+  | "rii-instaladores-gas-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
