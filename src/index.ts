@@ -141,6 +141,7 @@ import { michiganLaraSource, runMichiganLara } from "./sources/michigan-lara.js"
 import { marylandDllrSource, runMarylandDllr } from "./sources/maryland-dllr.js";
 import { newJerseyDcaSource, runNewJerseyDca } from "./sources/new-jersey-dca.js";
 import { tennesseeTdciSource, runTennesseeTdci } from "./sources/tennessee-tdci.js";
+import { kentuckyDhbcSource, runKentuckyDhbc } from "./sources/kentucky-dhbc.js";
 import { cnbAvocatsSource, runCnbAvocats } from "./sources/cnb-avocats.js";
 import { architectesFrSource, runArchitectesFr } from "./sources/architectes-fr.js";
 import { oecFrSource, runOecFr } from "./sources/oec-fr.js";
@@ -443,6 +444,7 @@ async function main(): Promise<void> {
   const marylandDllrOn = marylandDllrSource.enabled();
   const newJerseyDcaOn = newJerseyDcaSource.enabled();
   const tennesseeTdciOn = tennesseeTdciSource.enabled();
+  const kentuckyDhbcOn = kentuckyDhbcSource.enabled();
   const cnbAvocatsOn = cnbAvocatsSource.enabled();
   const architectesFrOn = architectesFrSource.enabled();
   const oecFrOn = oecFrSource.enabled();
@@ -683,6 +685,7 @@ async function main(): Promise<void> {
     !marylandDllrOn &&
     !newJerseyDcaOn &&
     !tennesseeTdciOn &&
+    !kentuckyDhbcOn &&
     !cnbAvocatsOn &&
     !architectesFrOn &&
     !oecFrOn &&
@@ -1489,6 +1492,7 @@ async function main(): Promise<void> {
     [marylandDllrOn, "maryland-dllr", runMarylandDllr],
     [newJerseyDcaOn, "new-jersey-dca", runNewJerseyDca],
     [tennesseeTdciOn, "tennessee-tdci", runTennesseeTdci],
+    [kentuckyDhbcOn, "kentucky-dhbc", runKentuckyDhbc],
     [cnbAvocatsOn, "cnb-avocats", runCnbAvocats],
     [architectesFrOn, "architectes-fr", runArchitectesFr],
     [oecFrOn, "oec-fr", runOecFr],

@@ -339,7 +339,9 @@ export type ScrapeSource =
   // 2026-05-20: NPI Physical Therapists — fisioterapia US (NPPES V2 API)
   | "npi-physical-therapists"
   // 2026-05-21 wave: ES electricidad + hvac — RII División B national installer registry
-  | "rii-div-b-es";
+  | "rii-div-b-es"
+  // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
+  | "kentucky-dhbc";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
