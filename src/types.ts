@@ -411,7 +411,8 @@ export type ScrapeSource =
   | "irs-ptin"
   | "indiana-pla"
   | "rii-div-b-termicas-es"
-  | "cvo-on-vets";
+  | "cvo-on-vets"
+  | "cgcfe-fisioterapeutas";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
