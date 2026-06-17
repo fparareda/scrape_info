@@ -322,6 +322,7 @@ import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from ".
 import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
 import { copmPsicologosSource, runCopmPsicologos } from "./sources/copm-psicologos.js";
 import { riiInstaladoresEsSource, runRiiInstaladoresEs } from "./sources/rii-instaladores-es.js";
+import { maaArchitectsSource, runMaaArchitects } from "./sources/maa-architects.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -592,6 +593,7 @@ async function main(): Promise<void> {
   const okOsbepPsychologistsOn = okOsbepPsychologistsSource.enabled();
   const bcnaBcNotariesOn = bcnaBcNotariesSource.enabled();
   const copmPsicologosOn = copmPsicologosSource.enabled();
+  const maaArchitectsOn = maaArchitectsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const cgcodEsOn = cgcodEsEnabled();
   const overtureOn = overtureEnabled();
@@ -811,6 +813,7 @@ async function main(): Promise<void> {
     !aedafAsesoresFiscalesEsOn &&
     !riiInstaladorasGasEsOn &&
     !copmPsicologosOn &&
+    !maaArchitectsOn &&
     !cgnNotariadoOn &&
     !cgcodEsOn &&
     !overtureOn &&
@@ -1664,6 +1667,7 @@ async function main(): Promise<void> {
     [copmPsicologosOn, "copm-psicologos", runCopmPsicologos],
     [cgcodEsOn, "cgcod-es", runCgcodEs],
     [riiInstaladoresEsOn, "rii-instaladores-es", runRiiInstaladoresEs],
+    [maaArchitectsOn, "maa-architects", runMaaArchitects],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

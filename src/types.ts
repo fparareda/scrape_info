@@ -333,7 +333,9 @@ export type ScrapeSource =
   | "copm-psicologos"
   | "cgcod-es"
   // 2026-05-16: ES Ministerio de Industria — RII gas installers (fontaneria)
-  | "rii-instaladores-es";
+  | "rii-instaladores-es"
+  // 2026-05-17: CA Manitoba Association of Architects
+  | "maa-architects";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
