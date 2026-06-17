@@ -273,6 +273,7 @@ import {
 import { waCpaBoardSource, runWaCpaBoard } from "./sources/wa-cpa-board.js";
 import { cptbcPhysioSource, runCptbcPhysio } from "./sources/cptbc-physio.js";
 import { cphmMbPharmacistsSource, runCphmMbPharmacists } from "./sources/cphm-mb-pharmacists.js";
+import { caDirEcuElectriciansSource, runCaDirEcuElectriciansSource } from "./sources/ca-dir-ecu-electricians.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -534,6 +535,7 @@ async function main(): Promise<void> {
   const cdsaAbDentistsOn = cdsaAbDentistsSource.enabled();
   const cptbcPhysioOn = cptbcPhysioSource.enabled();
   const cphmMbPharmacistsOn = cphmMbPharmacistsSource.enabled();
+  const caDirEcuElectriciansOn = caDirEcuElectriciansSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -757,7 +759,8 @@ async function main(): Promise<void> {
     !instaladoresoficialesEsOn &&
     !connecticutDcpOn &&
     !waCpaBoardOn &&
-    !cphmMbPharmacistsOn
+    !cphmMbPharmacistsOn &&
+    !caDirEcuElectriciansOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1559,6 +1562,8 @@ async function main(): Promise<void> {
     [floridaDbprVetsOn, "florida-dbpr-vets", runFloridaDbprVets],
     // 2026-06-13: CPhM — College of Pharmacists of Manitoba (~3.1k)
     [cphmMbPharmacistsOn, "cphm-mb-pharmacists", runCphmMbPharmacists],
+    // 2026-06-13: CA DIR ECU — certified + trainee electricians (~55k)
+    [caDirEcuElectriciansOn, "ca-dir-ecu-electricians", runCaDirEcuElectriciansSource],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

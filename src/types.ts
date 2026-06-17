@@ -269,6 +269,8 @@ export type ScrapeSource =
   // 2026-06-15: Delaware DPR — Socrata multi-category (arquitecto/veterinario/
   // fontaneria/hvac/electricidad). ~23k records across 8 license types.
   | "delaware-dpr"
+  // 2026-06-13: CA DIR ECU — certified + trainee electricians (~55k rows)
+  | "ca-dir-ecu-electricians"
   // 2026-05-31: local-pa yellow-pages scrapers (residential-IP, humanlike pacing)
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
