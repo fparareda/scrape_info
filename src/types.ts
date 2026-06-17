@@ -380,7 +380,11 @@ export type ScrapeSource =
   | "hcra-on-builders"
   // 2026-05-30: CPSNB — College of Physicians and Surgeons of New Brunswick
   // (Alinity tenant `cpsnb`, ~2.5k–3.5k NB physicians, medicina).
-  | "cpsnb-nb-physicians";
+  | "cpsnb-nb-physicians"
+  // 2026-05-30: Oregon BCD — Building Codes Division individual trade
+  // licenses (electricians, plumbers, boiler/HVAC operators). Socrata SODA
+  // API, ~49k active records, distinct from oregon-ccb (contractor businesses).
+  | "oregon-bcd";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

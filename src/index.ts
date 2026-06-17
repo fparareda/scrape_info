@@ -264,6 +264,8 @@ import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
 // 2026-05-30: CPSNB — CA NB physicians (Alinity)
 import { cpsnbNbPhysiciansSource, runCpsnbNbPhysicians } from "./sources/cpsnb-nb-physicians.js";
+// 2026-05-30: Oregon BCD — US OR individual trade licenses (Socrata)
+import { oregonBcdSource, runOregonBcd } from "./sources/oregon-bcd.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
 import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
 import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
@@ -579,6 +581,7 @@ async function main(): Promise<void> {
   const lsnbBarOn = lsnbBarSource.enabled();
   const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
   const cpsnbNbPhysiciansOn = cpsnbNbPhysiciansSource.enabled();
+  const oregonBcdOn = oregonBcdSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
   const oiiqQuebecOn = oiiqQuebecSource.enabled();
   const bccnmBcOn = bccnmBcSource.enabled();
@@ -824,6 +827,7 @@ async function main(): Promise<void> {
     !lsnbBarOn &&
     !nsrddaNsDentistsOn &&
     !cpsnbNbPhysiciansOn &&
+    !oregonBcdOn &&
     !cnoOntarioOn &&
     !oiiqQuebecOn &&
     !bccnmBcOn &&
@@ -1365,6 +1369,23 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] oregon-ccb crashed:`, (e as Error).message),
+    );
+  }
+
+  // Oregon BCD — individual trade worker licenses (distinct from oregon-ccb
+  // contractor businesses). Socrata SODA API, ~49k active records.
+  if (oregonBcdOn) {
+    await withScrapeRun("oregon-bcd", async () => {
+      const res = await runOregonBcd();
+      if (!res) return {};
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] oregon-bcd crashed:`, (e as Error).message),
     );
   }
 
