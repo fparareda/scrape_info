@@ -14,7 +14,8 @@
     "bulk:denue": "node scripts/bulk-ingest/denue-mx-bulk.mjs",
     "bulk:overture": "node --max-old-space-size=4096 scripts/bulk-ingest/overture.mjs",
     "bulk:osm": "node scripts/bulk-ingest/osm-pbf.mjs",
-    "coverage-report": "tsx src/run-coverage-report.ts"
+    "coverage-report": "tsx src/run-coverage-report.ts",
+    "osm-locksmith-worldwide": "tsx src/run-osm-locksmith-worldwide.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
