@@ -1,0 +1,13 @@
+name: Scrape · vermont dfs
+# vermont dfs — auto-wired vermont-dfs. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 9 8 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: vermont-dfs
+      timeout_minutes: 30

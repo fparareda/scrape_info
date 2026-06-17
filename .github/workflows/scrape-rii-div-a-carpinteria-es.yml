@@ -1,0 +1,13 @@
+name: Scrape · rii div a carpinteria es
+# rii div a carpinteria es — auto-wired rii-div-a-carpinteria-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 9 7 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rii-div-a-carpinteria-es
+      timeout_minutes: 30

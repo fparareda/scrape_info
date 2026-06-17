@@ -123,7 +123,6 @@ import { cgeEnfermeriaSource, runCgeEnfermeria } from "./sources/cge-enfermeria.
 import { cgcofFarmaciaSource, runCgcofFarmacia } from "./sources/cgcof-farmacia.js";
 import { ciccpIngenierosSource, runCiccpIngenieros } from "./sources/ciccp-ingenieros.js";
 import { coiimIngenierosSource, runCoiimIngenieros } from "./sources/coiim-ingenieros.js";
-import { riiDivBEsSource, runRiiDivBEs } from "./sources/rii-div-b-es.js";
 import { illinoisIdfprSource, runIllinoisIdfpr } from "./sources/illinois-idfpr.js";
 import { newYorkDosSource, runNewYorkDos } from "./sources/new-york-dos.js";
 import { northCarolinaLbcSource, runNorthCarolinaLbc } from "./sources/north-carolina-lbc.js";
@@ -469,7 +468,6 @@ async function main(): Promise<void> {
   const cgcofFarmaciaOn = cgcofFarmaciaSource.enabled();
   const ciccpIngenierosOn = ciccpIngenierosSource.enabled();
   const coiimIngenierosOn = coiimIngenierosSource.enabled();
-  const riiDivBEsOn = riiDivBEsSource.enabled();
   const illinoisIdfprOn = illinoisIdfprSource.enabled();
   const newYorkDosOn = newYorkDosSource.enabled();
   const northCarolinaLbcOn = northCarolinaLbcSource.enabled();
@@ -735,7 +733,6 @@ async function main(): Promise<void> {
     !cgcofFarmaciaOn &&
     !ciccpIngenierosOn &&
     !coiimIngenierosOn &&
-    !riiDivBEsOn &&
     !illinoisIdfprOn &&
     !newYorkDosOn &&
     !northCarolinaLbcOn &&
@@ -1717,7 +1714,6 @@ async function main(): Promise<void> {
     [ciccpIngenierosOn, "ciccp-ingenieros", runCiccpIngenieros],
     [coiimIngenierosOn, "coiim-ingenieros", runCoiimIngenieros],
     // 2026-05-21 wave: ES electricidad + hvac — RII División B
-    [riiDivBEsOn, "rii-div-b-es", runRiiDivBEs],
     // 2026-05-18 wave MX → 500k
     [sicSsMedicinaOn, "sic-ss-medicina", runSicSsMedicina],
     [cecmDentistasOn, "cecm-dentistas", runCecmDentistas],

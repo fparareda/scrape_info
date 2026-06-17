@@ -1,0 +1,13 @@
+name: Scrape · rasic instaladores cat
+# rasic instaladores cat — auto-wired rasic-instaladores-cat. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 9 6 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rasic-instaladores-cat
+      timeout_minutes: 30

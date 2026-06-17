@@ -1,0 +1,13 @@
+name: Scrape · cpbc bc pharmacists
+# cpbc bc pharmacists — auto-wired cpbc-bc-pharmacists. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 9 4 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cpbc-bc-pharmacists
+      timeout_minutes: 30
