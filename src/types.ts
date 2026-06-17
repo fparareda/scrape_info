@@ -272,7 +272,8 @@ export type ScrapeSource =
   | "pagesjaunes"       // pagesjaunes.fr (FR)
   // 2026-06-05: new per-country sources
   | "texas-bhec-psy"   // Texas BHEC psychologist CSV (~10k active licensees)
-  | "bcpharmacists-bc"; // College of Pharmacists of BC HTML roster (~7.4k)
+  | "bcpharmacists-bc" // College of Pharmacists of BC HTML roster (~7.4k)
+  | "instaladoresoficiales-es"; // instaladoresoficiales.com FENIE electricians (~12k ES)
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
