@@ -277,6 +277,7 @@ import { cphmMbPharmacistsSource, runCphmMbPharmacists } from "./sources/cphm-mb
 import { caDirEcuElectriciansSource, runCaDirEcuElectriciansSource } from "./sources/ca-dir-ecu-electricians.js";
 // 2026-06-13: ES — COEV economistas (Valencia licensed economists, fiscal)
 import { coevEconomistasSource, runCoevEconomistas } from "./sources/coev-economistas.js";
+import { nscpNsPhysioSource, runNscpNsPhysio } from "./sources/nscp-ns-physio.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -541,6 +542,7 @@ async function main(): Promise<void> {
   const caDirEcuElectriciansOn = caDirEcuElectriciansSource.enabled();
   const coevEconomistasOn = coevEconomistasSource.enabled();
   const jcylTalleresEsOn = jcylTalleresEsSource.enabled();
+  const nscpNsPhysioOn = nscpNsPhysioSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -740,6 +742,7 @@ async function main(): Promise<void> {
     !cdsaAbDentistsOn &&
     !cptbcPhysioOn &&
     !floridaDbprVetsOn &&
+    !nscpNsPhysioOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1576,6 +1579,8 @@ async function main(): Promise<void> {
     [coevEconomistasOn, "coev-economistas", runCoevEconomistas],
     // 2026-06-14: ES Castilla y León — talleres reparación vehículos (mecanica)
     [jcylTalleresEsOn, "jcyl-talleres-es", runJcylTalleresEs],
+    // 2026-06-15: CA NS physiotherapists (NSCP) — static Joomla HTML table, ~780 rows
+    [nscpNsPhysioOn, "nscp-ns-physio", runNscpNsPhysio],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

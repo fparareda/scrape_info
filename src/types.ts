@@ -246,6 +246,9 @@ export type ScrapeSource =
   | "cptbc-physio"
   // 2026-06-13: CPhM — College of Pharmacists of Manitoba (~3.1k pharmacists + techs)
   | "cphm-mb-pharmacists"
+  // 2026-06-15: Nova Scotia College of Physiotherapists (NSCP) — fisioterapia (~780 NS PTs).
+  // Joomla static HTML table, no auth, robots.txt allows member-directory path.
+  | "nscp-ns-physio"
   // 2026-05-26: 411.ca — CA generalist business directory (~3M businesses,
   // Angular SSR, schema.org markup, free pagination ?p=N).
   | "411-ca"
