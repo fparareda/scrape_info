@@ -36,6 +36,13 @@ export interface SocrataPageOptions {
   where?: string;
   /** Rows per page. Default 1000. Socrata caps at 50_000 for most hosts. */
   pageSize?: number;
+  /**
+   * SoQL `$order` column for deterministic offset pagination. Without a
+   * stable sort, Socrata may shuffle rows between pages → duplicated or
+   * skipped rows on large result sets. Defaults to `:id` (the universal
+   * Socrata system field), which is always present and unique.
+   */
+  order?: string;
   /** Hard cap on total rows yielded (for dry runs). */
   maxRows?: number;
   /** Optional Socrata app token (lifts rate-limit; not required for low volume). */
@@ -65,6 +72,8 @@ export async function* fetchSocrataJson(
     const url = new URL(`https://${opts.host}/resource/${opts.viewId}.json`);
     url.searchParams.set("$limit", String(limit));
     url.searchParams.set("$offset", String(offset));
+    // Stable sort so $offset paging can't duplicate/skip rows.
+    url.searchParams.set("$order", opts.order ?? ":id");
     if (opts.where) url.searchParams.set("$where", opts.where);
 
     const headers: Record<string, string> = {
