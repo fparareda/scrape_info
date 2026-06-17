@@ -271,7 +271,8 @@ export type ScrapeSource =
   | "yellowpages_ca"    // yellowpages.ca (CA)
   | "pagesjaunes"       // pagesjaunes.fr (FR)
   // 2026-06-05: new per-country sources
-  | "texas-bhec-psy";   // Texas BHEC psychologist CSV (~10k active licensees)
+  | "texas-bhec-psy"   // Texas BHEC psychologist CSV (~10k active licensees)
+  | "bcpharmacists-bc"; // College of Pharmacists of BC HTML roster (~7.4k)
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

@@ -264,6 +264,8 @@ import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
 import { coptocylToSource, runCoptocylTo } from "./sources/coptocyl-to-cyl.js";
+// 2026-06-05: new per-country sources
+import { bcpharmacistsBcSource, runBcpharmacistsBc } from "./sources/bcpharmacists-bc.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -516,6 +518,7 @@ async function main(): Promise<void> {
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
   const texasBhecPsyOn = texasBhecPsySource.enabled();
+  const bcpharmacistsBcOn = bcpharmacistsBcSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -718,7 +721,8 @@ async function main(): Promise<void> {
     !overtureOn &&
     !competitorNaOn &&
     !competitorEsMegaOn &&
-    !texasBhecPsyOn
+    !texasBhecPsyOn &&
+    !bcpharmacistsBcOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1504,6 +1508,7 @@ async function main(): Promise<void> {
     [peivmaPeiVetsOn, "peivma-pei-vets", runPeivmaPeiVets],
     // 2026-06-05: new per-country sources
     [texasBhecPsyOn, "texas-bhec-psy", runTexasBhecPsy],
+    [bcpharmacistsBcOn, "bcpharmacists-bc", runBcpharmacistsBc],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
