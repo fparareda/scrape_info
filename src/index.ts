@@ -371,6 +371,7 @@ import {
 import { irsEaFoiaSource, runIrsEaFoia } from "./sources/irs-ea-foia-us.js";
 // 2026-05-31: RII División B ES
 import { riiDivBElectricidadEsSource, runRiiDivBElectricidadEs } from "./sources/rii-div-b-electricidad-es.js";
+import { riiGasEsSource, runRiiGasEs } from "./sources/rii-gas-es.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -649,6 +650,7 @@ async function main(): Promise<void> {
   const irsEaFoiaOn = irsEaFoiaSource.enabled();
   const riiDivBElectricidadEsOn = riiDivBElectricidadEsSource.enabled();
   const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
+  const riiGasEsOn = riiGasEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -891,7 +893,8 @@ async function main(): Promise<void> {
     !cvbcBcVetsOn &&
     !ncarbArchitectsOn &&
     !mediadoresSegurosMadridOn &&
-    !lsmMbLawyersOn
+    !lsmMbLawyersOn &&
+    !riiGasEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1751,6 +1754,8 @@ async function main(): Promise<void> {
     [mediadoresSegurosMadridOn, "mediadores-seguros-madrid", runMediadoresSegurosMadrid],
     // 2026-05-26: CA lawyers — Law Society of Manitoba
     [lsmMbLawyersOn, "lsm-mb-lawyers", runLsmMbLawyers],
+    // 2026-05-27: ES RII gas installers (fontaneria)
+    [riiGasEsOn, "rii-gas-es", runRiiGasEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

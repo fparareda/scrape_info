@@ -362,7 +362,11 @@ export type ScrapeSource =
   // 2026-05-26: ES fiscal — Colegio de Mediadores de Seguros de Madrid
   | "mediadores-seguros-madrid"
   // 2026-05-26: CA lawyers — Law Society of Manitoba public Lawyer Lookup
-  | "lsm-mb-lawyers";
+  | "lsm-mb-lawyers"
+  // 2026-05-27: RII Gas ES — Spain's national registry of gas installer
+  // companies (Registro Integrado Industrial, Ministerio de Industria).
+  // XLSX bulk download, ~26k records, category: fontaneria.
+  | "rii-gas-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
