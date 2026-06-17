@@ -315,7 +315,9 @@ export type ScrapeSource =
   // Public FOIA CSV, bi-annual refresh, ~87k rows worldwide, ~70k US-based.
   | "irs-ea-foia"
   // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
-  | "rqci-qc-ca"; // Registre québécois des consultants en immigration
+  | "rqci-qc-ca" // Registre québécois des consultants en immigration
+  // 2026-06-11: scout wave — SK dentists
+  | "cdss-sk-dentists"; // College of Dental Surgeons of Saskatchewan (dentista)
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
