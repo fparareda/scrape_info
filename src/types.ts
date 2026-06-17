@@ -412,7 +412,8 @@ export type ScrapeSource =
   | "indiana-pla"
   | "rii-div-b-termicas-es"
   | "cvo-on-vets"
-  | "cgcfe-fisioterapeutas";
+  | "cgcfe-fisioterapeutas"
+  | "data-gov-ct-elicense";
   // 2026-05-20: data.gov Socrata sources with auto-city-creation
 
 /**

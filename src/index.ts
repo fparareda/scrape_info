@@ -404,6 +404,7 @@ import { indianaPlaSource, runIndianaPla } from "./sources/indiana-pla.js";
 import { riiDivBTermicasEsSource, runRiiDivBTermicasEs } from "./sources/rii-div-b-termicas-es.js";
 import { cvoOnVetsSource, runCvoOnVets } from "./sources/cvo-on-vets.js";
 import { cgcfeFisioterapeutasSource, runCgcfeFisioterapeutas } from "./sources/cgcfe-fisioterapeutas.js";
+import { ctElicenseSource, runCtElicense } from "./sources/data-gov-ct-elicense.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -665,6 +666,7 @@ async function main(): Promise<void> {
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
   const texasBhecPsyOn = texasBhecPsySource.enabled();
+  const ctElicenseOn = ctElicenseSource.enabled();
   const cgcfeFisioterapeutasOn = cgcfeFisioterapeutasSource.enabled();
   const cvoOnVetsOn = cvoOnVetsSource.enabled();
   const riiDivBTermicasEsOn = riiDivBTermicasEsSource.enabled();
@@ -1867,6 +1869,7 @@ async function main(): Promise<void> {
     [cvoOnVetsOn, "cvo-on-vets", runCvoOnVets],
     [cgcfeFisioterapeutasOn, "cgcfe-fisioterapeutas", runCgcfeFisioterapeutas],
     // 2026-05-20: international company registries
+    [ctElicenseOn, "data-gov-ct-elicense", runCtElicense],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
