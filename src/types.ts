@@ -345,7 +345,9 @@ export type ScrapeSource =
   // 2026-05-22: ICAC ROAC — ES fiscal (Registro Oficial de Auditores de Cuentas)
   | "icac-roac-es"
   // 2026-05-22: NSRDDA — Nova Scotia Regulator of Dentistry and Dental Assisting
-  | "nsrdda-ns-dentists";
+  | "nsrdda-ns-dentists"
+  // 2026-05-22: Nebraska Board of Engineers and Architects — US ingenieria + arquitecto
+  | "nebraska-ea";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

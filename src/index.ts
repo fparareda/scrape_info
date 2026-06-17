@@ -92,6 +92,7 @@ import {
   usptoPatentsViewEnabled,
   runUsptoPatentsView,
 } from "./sources/uspto-patentsview.js";
+import { nebraskaEaSource, runNebraskaEa } from "./sources/nebraska-ea.js";
 import { npiSource, runNpi } from "./sources/npi.js";
 import { floridaDbprSource, runFloridaDbpr } from "./sources/florida-dbpr.js";
 import { flDohMqaSource, runFlDohMqa } from "./sources/fl-doh-mqa.js";
@@ -400,6 +401,7 @@ async function main(): Promise<void> {
   const ukCompaniesHouseOn = ukCompaniesHouseSource.enabled();
   const secEdgarOn = secEdgarSource.enabled();
   const usptoPatentsViewOn = usptoPatentsViewEnabled();
+  const nebraskaEaOn = nebraskaEaSource.enabled();
   const npiOn = npiSource.enabled();
   const floridaDbprOn = floridaDbprSource.enabled();
   const flDohMqaOn = flDohMqaSource.enabled();
@@ -836,6 +838,7 @@ async function main(): Promise<void> {
     !copmPsicologosOn &&
     !maaArchitectsOn &&
     !icacRoacEsOn &&
+    !nebraskaEaOn &&
     !cgnNotariadoOn &&
     !cgcodEsOn &&
     !cgeEconomistasEsOn &&
@@ -1625,6 +1628,8 @@ async function main(): Promise<void> {
     [calgaryBusinessLicencesOn, "calgary-business-licences", runCalgaryBusinessLicences],
     // 2026-05-22: ES ICAC ROAC — Registro Oficial de Auditores de Cuentas (fiscal)
     [icacRoacEsOn, "icac-roac-es", runIcacRoacEs],
+    // 2026-05-22: Nebraska Board of Engineers and Architects — US ingenieria + arquitecto
+    [nebraskaEaOn, "nebraska-ea", runNebraskaEa],
     // 2026-05-20: international company registries
     [ukCompaniesHouseOn, "uk-companies-house", runUkCompaniesHouse],
     [secEdgarOn, "sec-edgar", runSecEdgar],
