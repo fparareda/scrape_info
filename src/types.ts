@@ -369,7 +369,9 @@ export type ScrapeSource =
   | "rii-gas-es"
   // 2026-05-27: CONO — College of Naturopaths of Ontario (Alinity tenant
   // `cono`, ~1,500 registered NDs; public directory, no auth required).
-  | "cono-naturopaths";
+  | "cono-naturopaths"
+  // 2026-05-28: US Alabama General Contractors (LBGC)
+  | "alabama-lbgc";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
