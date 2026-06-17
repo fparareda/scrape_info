@@ -320,6 +320,7 @@ import { statcanCbrSource, runStatcanCbr } from "./sources/statcan-cbr.js";
 import { torontoBusinessLicensesSource, runTorontoBusinessLicenses } from "./sources/toronto-business-licenses.js";
 import { vancouverBusinessLicensesSource, runVancouverBusinessLicenses } from "./sources/vancouver-business-licenses.js";
 import { calgaryBusinessLicencesSource, runCalgaryBusinessLicences } from "./sources/calgary-business-licences.js";
+import { copmPsicologosSource, runCopmPsicologos } from "./sources/copm-psicologos.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -585,6 +586,7 @@ async function main(): Promise<void> {
   const cdssSkDentistsOn = cdssSkDentistsSource.enabled();
   const okOsbepPsychologistsOn = okOsbepPsychologistsSource.enabled();
   const bcnaBcNotariesOn = bcnaBcNotariesSource.enabled();
+  const copmPsicologosOn = copmPsicologosSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -801,6 +803,7 @@ async function main(): Promise<void> {
     !iowaDialContractorsOn &&
     !aedafAsesoresFiscalesEsOn &&
     !riiInstaladorasGasEsOn &&
+    !copmPsicologosOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1648,6 +1651,7 @@ async function main(): Promise<void> {
     [okOsbepPsychologistsOn, "ok-osbep-psychologists", runOkOsbepPsychologists],
     // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
     [bcnaBcNotariesOn, "bcna-bc-notaries", runBcnaBcNotaries],
+    [copmPsicologosOn, "copm-psicologos", runCopmPsicologos],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
