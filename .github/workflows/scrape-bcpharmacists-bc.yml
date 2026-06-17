@@ -1,0 +1,13 @@
+name: Scrape · bcpharmacists bc
+# CA farmacia BC (~7.4k) — auto-wired bcpharmacists-bc. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 5 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: bcpharmacists-bc
+      timeout_minutes: 30

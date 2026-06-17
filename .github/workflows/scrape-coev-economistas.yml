@@ -1,0 +1,13 @@
+name: Scrape · coev economistas
+# ES economistas Valencia (~4.1k) — auto-wired coev-economistas. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 8 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: coev-economistas
+      timeout_minutes: 30

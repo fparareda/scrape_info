@@ -1,0 +1,13 @@
+name: Scrape · rii instaladores gas es
+# ES fontaneria gas (~8.6k) — auto-wired rii-instaladores-gas-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 18 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rii-instaladores-gas-es
+      timeout_minutes: 30

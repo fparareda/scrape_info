@@ -1,0 +1,13 @@
+name: Scrape · cptbc physio
+# CA fisioterapia BC (~5.4k) — auto-wired cptbc-physio. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 11 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cptbc-physio
+      timeout_minutes: 30

@@ -1,0 +1,13 @@
+name: Scrape · cphm mb pharmacists
+# CA farmacia MB (~3.1k) — auto-wired cphm-mb-pharmacists. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 10 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cphm-mb-pharmacists
+      timeout_minutes: 30

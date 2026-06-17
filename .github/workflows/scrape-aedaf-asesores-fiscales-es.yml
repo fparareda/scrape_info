@@ -1,0 +1,13 @@
+name: Scrape · aedaf asesores fiscales es
+# ES asesores fiscales (~664) — auto-wired aedaf-asesores-fiscales-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 4 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: aedaf-asesores-fiscales-es
+      timeout_minutes: 30

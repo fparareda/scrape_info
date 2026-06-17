@@ -1,0 +1,13 @@
+name: Scrape · wa cpa board
+# US fiscal WA CPAs (~30k) — auto-wired wa-cpa-board. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 19 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: wa-cpa-board
+      timeout_minutes: 60

@@ -1,0 +1,13 @@
+name: Scrape · nscp ns physio
+# CA fisioterapia NS (~780) — auto-wired nscp-ns-physio. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 17 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: nscp-ns-physio
+      timeout_minutes: 30

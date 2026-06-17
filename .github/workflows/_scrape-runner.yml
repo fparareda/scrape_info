@@ -276,6 +276,23 @@ jobs:
       PROLIO_RUN_PEIVMA_PEI_VETS:       ${{ inputs.source == 'peivma-pei-vets' && 'true' || 'false' }}
       PROLIO_RUN_TEXAS_BHEC_PSY:        ${{ inputs.source == 'texas-bhec-psy' && 'true' || 'false' }}
       PROLIO_RUN_DELAWARE_DPR:          ${{ inputs.source == 'delaware-dpr' && 'true' || 'false' }}
+      PROLIO_RUN_AEDAF_ASESORES_FISCALES: ${{ inputs.source == 'aedaf-asesores-fiscales-es' && 'true' || 'false' }}
+      PROLIO_RUN_BCPHARMACISTS_BC:      ${{ inputs.source == 'bcpharmacists-bc' && 'true' || 'false' }}
+      PROLIO_RUN_CA_DIR_ECU_ELECTRICIANS: ${{ inputs.source == 'ca-dir-ecu-electricians' && 'true' || 'false' }}
+      PROLIO_RUN_CDSA_AB_DENTISTS:      ${{ inputs.source == 'cdsa-ab-dentists' && 'true' || 'false' }}
+      PROLIO_RUN_COEV_ECONOMISTAS:      ${{ inputs.source == 'coev-economistas' && 'true' || 'false' }}
+      PROLIO_RUN_CONNECTICUT_DCP:       ${{ inputs.source == 'connecticut-dcp' && 'true' || 'false' }}
+      PROLIO_RUN_CPHM_MB_PHARMACISTS:   ${{ inputs.source == 'cphm-mb-pharmacists' && 'true' || 'false' }}
+      PROLIO_RUN_CPTBC_PHYSIO:          ${{ inputs.source == 'cptbc-physio' && 'true' || 'false' }}
+      PROLIO_RUN_FLORIDA_DBPR_VETS:     ${{ inputs.source == 'florida-dbpr-vets' && 'true' || 'false' }}
+      PROLIO_RUN_INSTALADORESOFICIALES_ES: ${{ inputs.source == 'instaladoresoficiales-es' && 'true' || 'false' }}
+      PROLIO_RUN_IOWA_DIAL_CONTRACTORS: ${{ inputs.source == 'iowa-dial-contractors' && 'true' || 'false' }}
+      PROLIO_RUN_JCYL_TALLERES_ES:      ${{ inputs.source == 'jcyl-talleres-es' && 'true' || 'false' }}
+      PROLIO_RUN_LSM_LAWYERS_MB:        ${{ inputs.source == 'lsm-lawyers-mb' && 'true' || 'false' }}
+      PROLIO_RUN_NSCP_NS_PHYSIO:        ${{ inputs.source == 'nscp-ns-physio' && 'true' || 'false' }}
+      PROLIO_RUN_RII_INSTALADORES_GAS_ES: ${{ inputs.source == 'rii-instaladores-gas-es' && 'true' || 'false' }}
+      PROLIO_RUN_WA_CPA_BOARD:          ${{ inputs.source == 'wa-cpa-board' && 'true' || 'false' }}
+      PROLIO_RUN_WA_DOH_PSYCHOLOGISTS:  ${{ inputs.source == 'wa-doh-psychologists' && 'true' || 'false' }}
 
       # 2026-05-13 wave 2: MX business directories (SIEM + COFEPRIS +
       # CNBV + Padrón Ganadero)

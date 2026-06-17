@@ -1,0 +1,13 @@
+name: Scrape · instaladoresoficiales es
+# ES electricidad FENIE (~12k) — auto-wired instaladoresoficiales-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 13 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: instaladoresoficiales-es
+      timeout_minutes: 30

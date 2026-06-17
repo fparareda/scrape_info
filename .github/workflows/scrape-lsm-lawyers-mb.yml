@@ -1,0 +1,13 @@
+name: Scrape · lsm lawyers mb
+# CA abogado MB (~3-4k) — auto-wired lsm-lawyers-mb. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 16 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: lsm-lawyers-mb
+      timeout_minutes: 30

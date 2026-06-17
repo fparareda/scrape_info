@@ -1,0 +1,13 @@
+name: Scrape · cdsa ab dentists
+# CA dentista AB (~5k) — auto-wired cdsa-ab-dentists. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 7 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cdsa-ab-dentists
+      timeout_minutes: 30

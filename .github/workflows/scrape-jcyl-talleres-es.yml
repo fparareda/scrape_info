@@ -1,0 +1,13 @@
+name: Scrape · jcyl talleres es
+# ES mecanica JCyL (~1k) — auto-wired jcyl-talleres-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 15 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: jcyl-talleres-es
+      timeout_minutes: 30

@@ -1,0 +1,13 @@
+name: Scrape · ca dir ecu electricians
+# US electricidad CA DIR (~55k) — auto-wired ca-dir-ecu-electricians. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 6 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ca-dir-ecu-electricians
+      timeout_minutes: 60

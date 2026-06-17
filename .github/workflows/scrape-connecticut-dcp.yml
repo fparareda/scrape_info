@@ -1,0 +1,13 @@
+name: Scrape · connecticut dcp
+# US multi-cat Connecticut DCP (~52k) — auto-wired connecticut-dcp. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 9 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: connecticut-dcp
+      timeout_minutes: 60

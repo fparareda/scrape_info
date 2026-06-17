@@ -1,0 +1,13 @@
+name: Scrape · wa doh psychologists
+# US psicologia WA (~7.6k) — auto-wired wa-doh-psychologists. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 20 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: wa-doh-psychologists
+      timeout_minutes: 30

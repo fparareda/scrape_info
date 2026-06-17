@@ -1,0 +1,13 @@
+name: Scrape · florida dbpr vets
+# US veterinario FL (~bulk CSV) — auto-wired florida-dbpr-vets. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 6 12 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: florida-dbpr-vets
+      timeout_minutes: 30
