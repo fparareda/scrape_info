@@ -275,7 +275,12 @@ export type ScrapeSource =
   | "bcpharmacists-bc" // College of Pharmacists of BC HTML roster (~7.4k)
   | "instaladoresoficiales-es" // instaladoresoficiales.com FENIE electricians (~12k ES)
   // 2026-06-06 scout wave: CA
-  | "cdsa-ab-dentists"; // CA: College of Dental Surgeons of Alberta (dentista)
+  | "cdsa-ab-dentists" // CA: College of Dental Surgeons of Alberta (dentista)
+  // 2026-06-07: Iowa DIAL — Active Construction Contractor Registrations
+  // (~60k active Iowa contractors, all trades, Socrata open-data)
+  | "iowa-dial-contractors"
+  // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members)
+  | "aedaf-asesores-fiscales-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
