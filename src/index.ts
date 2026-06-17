@@ -198,6 +198,7 @@ import { datosGobEsSource, runDatosGobEs } from "./sources/datos-gob-es.js";
 import { guiadentistasEsSource, runGuiadentistasEs } from "./sources/guiadentistas-es.js";
 import { dgtItvEsSource, runDgtItvEs } from "./sources/dgt-itv-es.js";
 import { rasicTalleresCatSource, runRasicTalleresCat } from "./sources/rasic-talleres-cat.js";
+import { jcylTalleresEsSource, runJcylTalleresEs } from "./sources/jcyl-talleres-es.js";
 import { cgpeProcuradoresSource, runCgpeProcuradores } from "./sources/cgpe-procuradores.js";
 import { droCdmxSource, runDroCdmx } from "./sources/dro-cdmx.js";
 import { profepaVerificentrosEdomexSource, runProfepaVerificentrosEdomex } from "./sources/profepa-verificentros-edomex.js";
@@ -539,6 +540,7 @@ async function main(): Promise<void> {
   const cphmMbPharmacistsOn = cphmMbPharmacistsSource.enabled();
   const caDirEcuElectriciansOn = caDirEcuElectriciansSource.enabled();
   const coevEconomistasOn = coevEconomistasSource.enabled();
+  const jcylTalleresEsOn = jcylTalleresEsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -764,7 +766,8 @@ async function main(): Promise<void> {
     !waCpaBoardOn &&
     !cphmMbPharmacistsOn &&
     !caDirEcuElectriciansOn &&
-    !coevEconomistasOn
+    !coevEconomistasOn &&
+    !jcylTalleresEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1571,6 +1574,8 @@ async function main(): Promise<void> {
     // 2026-06-13: CA DIR ECU — certified + trainee electricians (~55k)
     // 2026-06-13: ES — COEV economistas (Valencia licensed economists, fiscal, ~4120 rows)
     [coevEconomistasOn, "coev-economistas", runCoevEconomistas],
+    // 2026-06-14: ES Castilla y León — talleres reparación vehículos (mecanica)
+    [jcylTalleresEsOn, "jcyl-talleres-es", runJcylTalleresEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

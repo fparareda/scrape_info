@@ -271,6 +271,9 @@ export type ScrapeSource =
   | "delaware-dpr"
   // 2026-06-13: CA DIR ECU — certified + trainee electricians (~55k rows)
   | "ca-dir-ecu-electricians"
+  // 2026-06-14: ES Castilla y León — talleres reparación vehículos (mecanica)
+  // Open-data CSV from Junta de Castilla y León, ~1 000+ rows, CC BY 4.0.
+  | "jcyl-talleres-es"
   // 2026-05-31: local-pa yellow-pages scrapers (residential-IP, humanlike pacing)
   | "seccion_amarilla"   // seccionamarilla.com.mx (MX)
   | "yellowpages_us"    // yellowpages.com (US)
@@ -295,7 +298,9 @@ export type ScrapeSource =
   // 2026-06-12: US — Florida DBPR Board of Veterinary Medicine (~14k VM licences, bulk CSV)
   | "florida-dbpr-vets"
   // 2026-06-13: ES — Colegio Oficial de Economistas de Valencia (fiscal, ~4120 rows)
-  | "coev-economistas"; // coev.com/colegiados
+  | "coev-economistas" // coev.com/colegiados
+  // 2026-06-14: CA Quebec immigration consultants (MIFI open data)
+  | "rqci-qc-ca"; // Registre québécois des consultants en immigration
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
