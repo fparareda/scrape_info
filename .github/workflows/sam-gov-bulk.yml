@@ -1,0 +1,36 @@
+name: SAM.gov bulk re-ingest (manual)
+
+# SAM.gov entity-registration extract. The public Entity Management bulk
+# file requires a SAM.gov data-access arrangement, so this workflow is
+# manual-only: provide the extracted CSV URL (or pre-stage it) via the
+# csv_url input. Scheduled auto-download is intentionally NOT wired until
+# the SAM.gov extract source/URL is confirmed.
+on:
+  workflow_dispatch:
+    inputs:
+      csv_url:
+        description: "URL or local path to the SAM entity CSV (sets PROLIO_SAM_BULK_URL)"
+        required: true
+      limit:
+        description: "Max accepted rows (default 200000)"
+        required: false
+        default: "200000"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PROLIO_RUN_SAM_GOV_BULK: "true"
+      PROLIO_SAM_BULK_URL: ${{ github.event.inputs.csv_url }}
+      PROLIO_SAM_BULK_LIMIT: ${{ github.event.inputs.limit || '200000' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run sam-gov-bulk

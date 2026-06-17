@@ -1866,6 +1866,7 @@ async function main(): Promise<void> {
     [riiDivBTermicasEsOn, "rii-div-b-termicas-es", runRiiDivBTermicasEs],
     [cvoOnVetsOn, "cvo-on-vets", runCvoOnVets],
     [cgcfeFisioterapeutasOn, "cgcfe-fisioterapeutas", runCgcfeFisioterapeutas],
+    // 2026-05-20: international company registries
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

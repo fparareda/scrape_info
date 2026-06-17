@@ -24,7 +24,9 @@ const USER_AGENT =
 function specToCategory(s: string): CategoryKey | undefined {
   const d = s.toLowerCase();
   if (d.includes("electric")) return "electricidad";
-  if (d.includes("plumb") || d.includes("hvac")) return "fontaneria";
+  if (d.includes("hvac") || d.includes("air condition") || d.includes("refrigerat") || d.includes("heating"))
+    return "hvac";
+  if (d.includes("plumb")) return "fontaneria";
   if (d.includes("carpent")) return "carpinteria";
   if (d.includes("architect")) return "arquitecto";
   return undefined;

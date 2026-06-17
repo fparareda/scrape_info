@@ -413,6 +413,7 @@ export type ScrapeSource =
   | "rii-div-b-termicas-es"
   | "cvo-on-vets"
   | "cgcfe-fisioterapeutas";
+  // 2026-05-20: data.gov Socrata sources with auto-city-creation
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
@@ -436,6 +437,13 @@ export interface ScrapedProfessional {
    *  resolves to province granularity — the sink writes `city_slug = NULL`
    *  and you should populate `metadata.province_slug`. */
   citySlug: string;
+  /**
+   * ISO country code that pairs with citySlug to satisfy the composite
+   * FK `professionals.(city_country, city_slug) → cities.(country, slug)`.
+   * Older sources omitted it and relied on a backfill; new sources
+   * (data.gov path 2026-05-20+) populate it directly.
+   */
+  cityCountry?: "ES" | "CA" | "US" | "FR" | "MX";
   headline?: string;
   description?: string;
   email?: string;
