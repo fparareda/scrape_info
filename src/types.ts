@@ -309,7 +309,9 @@ export type ScrapeSource =
   // from datos.gob.es. Mapped to fontaneria (gas+fluidos = water+gas in Spain).
   | "rii-instaladores-gas-es"
   // 2026-06-16: WA DOH psychologist credentials — first US psicologia source
-  | "wa-doh-psychologists";
+  | "wa-doh-psychologists"
+  // 2026-06-16: CA Manitoba lawyers
+  | "lsm-lawyers-mb";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
