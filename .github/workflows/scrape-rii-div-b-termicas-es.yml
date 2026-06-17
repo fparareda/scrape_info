@@ -1,0 +1,13 @@
+name: Scrape · rii div b termicas es
+# rii div b termicas es — auto-wired rii-div-b-termicas-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 11 7 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rii-div-b-termicas-es
+      timeout_minutes: 45

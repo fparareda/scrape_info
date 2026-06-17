@@ -1,0 +1,13 @@
+name: Scrape · irs ptin
+# irs ptin — auto-wired irs-ptin. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 11 6 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: irs-ptin
+      timeout_minutes: 45

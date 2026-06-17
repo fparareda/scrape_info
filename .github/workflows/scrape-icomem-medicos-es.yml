@@ -1,0 +1,13 @@
+name: Scrape · icomem medicos es
+# icomem medicos es — auto-wired icomem-medicos-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 11 4 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: icomem-medicos-es
+      timeout_minutes: 45
