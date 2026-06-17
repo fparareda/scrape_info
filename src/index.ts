@@ -265,6 +265,11 @@ import {
   iowaDialContractorsSource,
   runIowaDialContractorsSource,
 } from "./sources/iowa-dial-contractors.js";
+import {
+  aedafAsesoresFiscalesEsSource,
+  aedafAsesoresFiscalesEsEnabled,
+  runAedafAsesoresFiscalesEs,
+} from "./sources/aedaf-asesores-fiscales-es.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -528,6 +533,7 @@ async function main(): Promise<void> {
   const bcpharmacistsBcOn = bcpharmacistsBcSource.enabled();
   const instaladoresoficialesEsOn = instaladoresoficialesEsSource.enabled();
   const iowaDialContractorsOn = iowaDialContractorsSource.enabled();
+  const aedafAsesoresFiscalesEsOn = aedafAsesoresFiscalesEsEnabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -728,6 +734,7 @@ async function main(): Promise<void> {
     !vancouverBusinessLicensesOn &&
     !calgaryBusinessLicencesOn &&
     !iowaDialContractorsOn &&
+    !aedafAsesoresFiscalesEsOn &&
     !cgnNotariadoOn &&
     !overtureOn &&
     !competitorNaOn &&
@@ -1526,6 +1533,8 @@ async function main(): Promise<void> {
     [cdsaAbDentistsOn, "cdsa-ab-dentists", runCdsaAbDentists],
     // 2026-06-07: Iowa DIAL contractor registrations (US, Socrata open-data)
     [iowaDialContractorsOn, "iowa-dial-contractors", runIowaDialContractorsSource],
+    // 2026-06-07: AEDAF fiscal advisors (ES)
+    [aedafAsesoresFiscalesEsOn, "aedaf-asesores-fiscales-es", runAedafAsesoresFiscalesEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

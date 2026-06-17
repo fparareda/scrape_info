@@ -280,6 +280,7 @@ export type ScrapeSource =
   // (~60k active Iowa contractors, all trades, Socrata open-data)
   | "iowa-dial-contractors"
   // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members)
+  // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members, fiscal)
   | "aedaf-asesores-fiscales-es";
 
 /**
