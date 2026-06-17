@@ -288,7 +288,9 @@ export type ScrapeSource =
   // 2026-06-08: CT DCP State Licenses and Credentials (electricidad/fontaneria/hvac/carpinteria/ingenieria/arquitecto)
   | "connecticut-dcp"
   // 2026-06-09: WA Board of Accountancy CPAs — first US `fiscal` source
-  | "wa-cpa-board"; // data.wa.gov / WA State Certified Public Accountants
+  | "wa-cpa-board" // data.wa.gov / WA State Certified Public Accountants
+  // 2026-06-12: US — Florida DBPR Board of Veterinary Medicine (~14k VM licences, bulk CSV)
+  | "florida-dbpr-vets";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

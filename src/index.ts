@@ -280,6 +280,8 @@ import { coptocylToSource, runCoptocylTo } from "./sources/coptocyl-to-cyl.js";
 import { bcpharmacistsBcSource, runBcpharmacistsBc } from "./sources/bcpharmacists-bc.js";
 import { instaladoresoficialesEsSource, runInstaladoresoficialesEs } from "./sources/instaladoresoficiales-electricidad-es.js";
 import { connecticutDcpSource, runConnecticutDcpSource } from "./sources/connecticut-dcp.js";
+// 2026-06-12: US — Florida DBPR Board of Veterinary Medicine (CSV bulk)
+import { floridaDbprVetsSource, runFloridaDbprVets } from "./sources/florida-dbpr-vets.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -539,6 +541,7 @@ async function main(): Promise<void> {
   const iowaDialContractorsOn = iowaDialContractorsSource.enabled();
   const aedafAsesoresFiscalesEsOn = aedafAsesoresFiscalesEsEnabled();
   const waCpaBoardOn = waCpaBoardSource.enabled();
+  const floridaDbprVetsOn = floridaDbprVetsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -727,6 +730,7 @@ async function main(): Promise<void> {
     !peivmaPeiVetsOn &&
     !cdsaAbDentistsOn &&
     !cptbcPhysioOn &&
+    !floridaDbprVetsOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1548,6 +1552,8 @@ async function main(): Promise<void> {
     [waCpaBoardOn, "wa-cpa-board", runWaCpaBoard],
     // 2026-06-12: CA CPTBC BC physiotherapists (Alinity)
     [cptbcPhysioOn, "cptbc-physio", runCptbcPhysio],
+    // 2026-06-12: US — Florida DBPR Board of Veterinary Medicine (CSV bulk)
+    [floridaDbprVetsOn, "florida-dbpr-vets", runFloridaDbprVets],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
