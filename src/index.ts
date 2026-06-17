@@ -252,6 +252,7 @@ import {
 import { ncarbArchitectsSource, runNcarbArchitects } from "./sources/ncarb-architects.js";
 import { mediadoresSegurosMadridSource, runMediadoresSegurosMadrid } from "./sources/mediadores-seguros-madrid.js";
 import { lsmMbLawyersSource, runLsmMbLawyers } from "./sources/lsm-mb-lawyers.js";
+import { conoNaturopathsSource, runConoNaturopaths } from "./sources/cono-naturopaths.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
@@ -564,6 +565,7 @@ async function main(): Promise<void> {
   const ncarbArchitectsOn = ncarbArchitectsSource.enabled();
   const mediadoresSegurosMadridOn = mediadoresSegurosMadridSource.enabled();
   const lsmMbLawyersOn = lsmMbLawyersSource.enabled();
+  const conoNaturopathsOn = conoNaturopathsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
@@ -804,6 +806,7 @@ async function main(): Promise<void> {
     !nebraskaDolConregOn &&
     !cpoOnPhysioOn &&
     !bccohpBcDentistsOn &&
+    !conoNaturopathsOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
     !nsrddaNsDentistsOn &&
@@ -1632,6 +1635,7 @@ async function main(): Promise<void> {
     [nebraskaDolConregOn, "nebraska-dol-conreg", runNebraskaDolConreg],
     [cpoOnPhysioOn, "cpo-on-physio", runCpoOnPhysio],
     [bccohpBcDentistsOn, "bccohp-bc-dentists", runBccohpBcDentists],
+    [conoNaturopathsOn, "cono-naturopaths", runConoNaturopaths],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [nsrddaNsDentistsOn, "nsrdda-ns-dentists", runNsrddaNsDentists],

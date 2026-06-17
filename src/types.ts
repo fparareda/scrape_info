@@ -366,7 +366,10 @@ export type ScrapeSource =
   // 2026-05-27: RII Gas ES — Spain's national registry of gas installer
   // companies (Registro Integrado Industrial, Ministerio de Industria).
   // XLSX bulk download, ~26k records, category: fontaneria.
-  | "rii-gas-es";
+  | "rii-gas-es"
+  // 2026-05-27: CONO — College of Naturopaths of Ontario (Alinity tenant
+  // `cono`, ~1,500 registered NDs; public directory, no auth required).
+  | "cono-naturopaths";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
