@@ -258,6 +258,7 @@ import {
   jcylInstaladoresEsSource,
   runJcylInstaladoresEs,
 } from "./sources/jcyl-instaladoras-es.js";
+import { hcraOnBuildersSource, runHcraOnBuilders } from "./sources/hcra-on-builders.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
@@ -583,6 +584,7 @@ async function main(): Promise<void> {
   const lsoBarOntarioOn = lsoBarOntarioSource.enabled();
   const oppqQuebecPhysioOn = oppqQuebecPhysioSource.enabled();
   const cvoVetsOntarioOn = cvoVetsOntarioSource.enabled();
+  const hcraOnBuildersOn = hcraOnBuildersSource.enabled();
   const antadAsociadosOn = antadAsociadosSource.enabled();
   const emaAcreditadosOn = emaAcreditadosSource.enabled();
   const imssDirectorioOn = imssDirectorioSource.enabled();
@@ -826,6 +828,7 @@ async function main(): Promise<void> {
     !lsoBarOntarioOn &&
     !oppqQuebecPhysioOn &&
     !cvoVetsOntarioOn &&
+    !hcraOnBuildersOn &&
     !antadAsociadosOn &&
     !emaAcreditadosOn &&
     !imssDirectorioOn &&
@@ -1645,6 +1648,7 @@ async function main(): Promise<void> {
     [cpoOnPhysioOn, "cpo-on-physio", runCpoOnPhysio],
     [bccohpBcDentistsOn, "bccohp-bc-dentists", runBccohpBcDentists],
     [conoNaturopathsOn, "cono-naturopaths", runConoNaturopaths],
+    [hcraOnBuildersOn, "hcra-on-builders", runHcraOnBuilders],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [nsrddaNsDentistsOn, "nsrdda-ns-dentists", runNsrddaNsDentists],

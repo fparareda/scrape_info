@@ -374,7 +374,10 @@ export type ScrapeSource =
   | "alabama-lbgc"
   // 2026-05-29 ES: Empresas Instaladoras y Mantenedoras de Castilla y León
   // (Junta de Castilla y León open-data XML, CC-BY 4.0; ~3,188 electricistas)
-  | "jcyl-instaladoras-es";
+  | "jcyl-instaladoras-es"
+  // 2026-05-29 CA: HCRA Ontario Builder Directory — licensed home builders
+  // and sellers in Ontario (~7,063 active records, open JSON API).
+  | "hcra-on-builders";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
