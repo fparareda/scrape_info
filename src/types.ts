@@ -356,7 +356,9 @@ export type ScrapeSource =
   // 2026-05-25: US NY DMV repair shops — Socrata open data, ~18k mecanica.
   | "ny-dmv-repair-shops"
   // 2026-05-25: CA CVBC — BC veterinary facility/practice registry (~670 active).
-  | "cvbc-bc-vets";
+  | "cvbc-bc-vets"
+  // 2026-05-26: US architects — NCARB certified architect directory
+  | "ncarb-architects";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
