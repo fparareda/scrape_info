@@ -352,7 +352,9 @@ export type ScrapeSource =
   | "bccohp-bc-dentists"
   // 2026-05-25: ES RII División A — national auto-repair workshop registry
   // (~19k talleres mecánicos), fills the `mecanica` gap for Spain.
-  | "rii-div-a-talleres-es";
+  | "rii-div-a-talleres-es"
+  // 2026-05-25: US NY DMV repair shops — Socrata open data, ~18k mecanica.
+  | "ny-dmv-repair-shops";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

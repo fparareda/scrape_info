@@ -241,6 +241,10 @@ import {
   riiDivATalleresEsSource,
   runRiiDivATalleresEs,
 } from "./sources/rii-div-a-talleres-es.js";
+import {
+  nyDmvRepairShopsSource,
+  runNyDmvRepairShops,
+} from "./sources/ny-dmv-repair-shops.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
@@ -545,6 +549,8 @@ async function main(): Promise<void> {
   const bccohpBcDentistsOn = bccohpBcDentistsSource.enabled();
   // 2026-05-25: ES RII División A talleres
   const riiDivATalleresEsOn = riiDivATalleresEsSource.enabled();
+  // 2026-05-25: US NY DMV repair shops
+  const nyDmvRepairShopsOn = nyDmvRepairShopsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
@@ -868,7 +874,8 @@ async function main(): Promise<void> {
     !riiDivBElectricidadEsOn &&
     !rhodeIslandCrbOn &&
     !riiInstaladoresEsOn &&
-    !riiDivATalleresEsOn
+    !riiDivATalleresEsOn &&
+    !nyDmvRepairShopsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1718,6 +1725,8 @@ async function main(): Promise<void> {
     [cgeEconomistasEsOn, "cge-economistas-es", runCgeEconomistasEs],
     // 2026-05-25: ES RII División A — national auto-repair workshop registry
     [riiDivATalleresEsOn, "rii-div-a-talleres-es", runRiiDivATalleresEs],
+    // 2026-05-25: US NY DMV repair shops (mecanica)
+    [nyDmvRepairShopsOn, "ny-dmv-repair-shops", runNyDmvRepairShops],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
