@@ -347,7 +347,9 @@ export type ScrapeSource =
   // 2026-05-22: NSRDDA — Nova Scotia Regulator of Dentistry and Dental Assisting
   | "nsrdda-ns-dentists"
   // 2026-05-22: Nebraska Board of Engineers and Architects — US ingenieria + arquitecto
-  | "nebraska-ea";
+  | "nebraska-ea"
+  // 2026-05-24: BC College of Oral Health Professionals — BC dentists (~4.3k)
+  | "bccohp-bc-dentists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

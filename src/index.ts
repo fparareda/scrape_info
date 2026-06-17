@@ -236,6 +236,7 @@ import { gphcUkSource, runGphcUk } from "./sources/gphc-uk-pharmacists.js";
 import { sepCedulasMxSource, runSepCedulasMx } from "./sources/sep-cedulas-mx.js";
 import { nebraskaDolConregSource, runNebraskaDolConreg } from "./sources/nebraska-dol-conreg.js";
 import { cpoOnPhysioSource, runCpoOnPhysio } from "./sources/cpo-on-physio.js";
+import { bccohpBcDentistsSource, runBccohpBcDentists } from "./sources/bccohp-bc-dentists.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
@@ -537,6 +538,7 @@ async function main(): Promise<void> {
   const sepCedulasMxOn = sepCedulasMxSource.enabled();
   const nebraskaDolConregOn = nebraskaDolConregSource.enabled();
   const cpoOnPhysioOn = cpoOnPhysioSource.enabled();
+  const bccohpBcDentistsOn = bccohpBcDentistsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
@@ -775,6 +777,7 @@ async function main(): Promise<void> {
     !sepCedulasMxOn &&
     !nebraskaDolConregOn &&
     !cpoOnPhysioOn &&
+    !bccohpBcDentistsOn &&
     !cpsnsNsPhysiciansOn &&
     !lsnbBarOn &&
     !nsrddaNsDentistsOn &&
@@ -1595,6 +1598,7 @@ async function main(): Promise<void> {
     [sepCedulasMxOn, "sep-cedulas-mx", runSepCedulasMx],
     [nebraskaDolConregOn, "nebraska-dol-conreg", runNebraskaDolConreg],
     [cpoOnPhysioOn, "cpo-on-physio", runCpoOnPhysio],
+    [bccohpBcDentistsOn, "bccohp-bc-dentists", runBccohpBcDentists],
     [cpsnsNsPhysiciansOn, "cpsns-ns-physicians", runCpsnsNsPhysicians],
     [lsnbBarOn, "lsnb-bar", runLsnbBar],
     [nsrddaNsDentistsOn, "nsrdda-ns-dentists", runNsrddaNsDentists],
