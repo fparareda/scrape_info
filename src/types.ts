@@ -74,6 +74,9 @@ export type ScrapeSource =
   | "architectes-fr"
   | "oec-fr"
   | "ordre-vet-fr"
+  | "annuaire-sante-ameli"
+  | "rhode-island-crb"
+  | "rpps-fr"
   | "doctoralia-mx"
   | "senasica-mx-vet"
   | "denue-mx"
@@ -95,8 +98,6 @@ export type ScrapeSource =
   | "apega"
   // 2026-05 wave: FR consolidation + data.gouv bulk sources
   | "annuaire-sante-ans"
-  | "annuaire-sante-ameli"
-  | "rpps-fr"
   | "sirene-insee"
   | "ademe-rge"
   | "finess"

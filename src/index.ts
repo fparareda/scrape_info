@@ -210,6 +210,7 @@ import { denueMxSource, runDenueMx } from "./sources/denue-mx.js";
 import { cluesSinaisMxSource, runCluesSinaisMx } from "./sources/clues-sinais-mx.js";
 import { oaaSource, runOaa } from "./sources/oaa.js";
 import { louisianaLslbcSource, runLouisianaLslbc } from "./sources/louisiana-lslbc.js";
+import { rhodeIslandCrbSource, runRhodeIslandCrb } from "./sources/rhode-island-crb.js";
 import { nycDobSource, runNycDob } from "./sources/nyc-dob.js";
 import { hifldUsSource, runHifldUs } from "./sources/hifld-us.js";
 import { reniecytMxSource, runReniecytMx } from "./sources/reniecyt-mx.js";
@@ -495,6 +496,7 @@ async function main(): Promise<void> {
   const cluesSinaisMxOn = cluesSinaisMxSource.enabled();
   const oaaOn = oaaSource.enabled();
   const louisianaLslbcOn = louisianaLslbcSource.enabled();
+  const rhodeIslandCrbOn = rhodeIslandCrbSource.enabled();
   const nycDobOn = nycDobSource.enabled();
   const hifldUsOn = hifldUsSource.enabled();
   const reniecytMxOn = reniecytMxSource.enabled();
@@ -814,7 +816,8 @@ async function main(): Promise<void> {
     !jcylTalleresEsOn &&
     !irsEaFoiaOn &&
     !cdssSkDentistsOn &&
-    !riiDivBElectricidadEsOn
+    !riiDivBElectricidadEsOn &&
+    !rhodeIslandCrbOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -902,6 +905,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
         "PROLIO_SCRAPE_OVERTURE=true, " +
         "PROLIO_RUN_IRS_EA_FOIA=true",
+        "PROLIO_RUN_RHODE_ISLAND_CRB=true, " +
+        "PROLIO_SCRAPE_OVERTURE=true",
     );
     return;
   }
@@ -1519,6 +1524,7 @@ async function main(): Promise<void> {
     [louisianaLslbcOn, "louisiana-lslbc", runLouisianaLslbc],
     [nycDobOn, "nyc-dob", runNycDob],
     [flDohMqaOn, "fl-doh-mqa", runFlDohMqa],
+    [rhodeIslandCrbOn, "rhode-island-crb", runRhodeIslandCrb],
     [cgnNotariadoOn, "cgn-notariado", runCgnNotariado],
     [cgcfeFisioOn, "cgcfe-fisio", runCgcfeFisio],
     [copPsicologiaOn, "cop-psicologia", runCopPsicologia],
