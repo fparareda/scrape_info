@@ -371,7 +371,10 @@ export type ScrapeSource =
   // `cono`, ~1,500 registered NDs; public directory, no auth required).
   | "cono-naturopaths"
   // 2026-05-28: US Alabama General Contractors (LBGC)
-  | "alabama-lbgc";
+  | "alabama-lbgc"
+  // 2026-05-29 ES: Empresas Instaladoras y Mantenedoras de Castilla y León
+  // (Junta de Castilla y León open-data XML, CC-BY 4.0; ~3,188 electricistas)
+  | "jcyl-instaladoras-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

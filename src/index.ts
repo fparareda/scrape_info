@@ -254,6 +254,10 @@ import { mediadoresSegurosMadridSource, runMediadoresSegurosMadrid } from "./sou
 import { lsmMbLawyersSource, runLsmMbLawyers } from "./sources/lsm-mb-lawyers.js";
 import { conoNaturopathsSource, runConoNaturopaths } from "./sources/cono-naturopaths.js";
 import { alabamaLbgcSource, runAlabamaLbgc } from "./sources/alabama-lbgc.js";
+import {
+  jcylInstaladoresEsSource,
+  runJcylInstaladoresEs,
+} from "./sources/jcyl-instaladoras-es.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
@@ -655,6 +659,7 @@ async function main(): Promise<void> {
   const riiDivBElectricidadEsOn = riiDivBElectricidadEsSource.enabled();
   const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
   const riiGasEsOn = riiGasEsSource.enabled();
+  const jcylInstaladoresEsOn = jcylInstaladoresEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -900,7 +905,8 @@ async function main(): Promise<void> {
     !ncarbArchitectsOn &&
     !mediadoresSegurosMadridOn &&
     !lsmMbLawyersOn &&
-    !riiGasEsOn
+    !riiGasEsOn &&
+    !jcylInstaladoresEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1763,6 +1769,8 @@ async function main(): Promise<void> {
     [lsmMbLawyersOn, "lsm-mb-lawyers", runLsmMbLawyers],
     // 2026-05-27: ES RII gas installers (fontaneria)
     [riiGasEsOn, "rii-gas-es", runRiiGasEs],
+    // 2026-05-29 ES: JCYL instaladoras electricidad (Castilla y León open data)
+    [jcylInstaladoresEsOn, "jcyl-instaladoras-es", runJcylInstaladoresEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
