@@ -343,7 +343,9 @@ export type ScrapeSource =
   // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
   | "kentucky-dhbc"
   // 2026-05-22: ICAC ROAC — ES fiscal (Registro Oficial de Auditores de Cuentas)
-  | "icac-roac-es";
+  | "icac-roac-es"
+  // 2026-05-22: NSRDDA — Nova Scotia Regulator of Dentistry and Dental Assisting
+  | "nsrdda-ns-dentists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
