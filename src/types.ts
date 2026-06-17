@@ -410,7 +410,8 @@ export type ScrapeSource =
   | "icomem-medicos-es"
   | "irs-ptin"
   | "indiana-pla"
-  | "rii-div-b-termicas-es";
+  | "rii-div-b-termicas-es"
+  | "cvo-on-vets";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

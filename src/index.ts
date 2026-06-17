@@ -402,6 +402,7 @@ import { icomemMedicosEsSource, runIcomemMedicosEs } from "./sources/icomem-medi
 import { irsPtinSource, runIrsPtin } from "./sources/irs-ptin.js";
 import { indianaPlaSource, runIndianaPla } from "./sources/indiana-pla.js";
 import { riiDivBTermicasEsSource, runRiiDivBTermicasEs } from "./sources/rii-div-b-termicas-es.js";
+import { cvoOnVetsSource, runCvoOnVets } from "./sources/cvo-on-vets.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -663,6 +664,7 @@ async function main(): Promise<void> {
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
   const texasBhecPsyOn = texasBhecPsySource.enabled();
+  const cvoOnVetsOn = cvoOnVetsSource.enabled();
   const riiDivBTermicasEsOn = riiDivBTermicasEsSource.enabled();
   const indianaPlaOn = indianaPlaSource.enabled();
   const irsPtinOn = irsPtinSource.enabled();
@@ -1860,6 +1862,7 @@ async function main(): Promise<void> {
     [irsPtinOn, "irs-ptin", runIrsPtin],
     [indianaPlaOn, "indiana-pla", runIndianaPla],
     [riiDivBTermicasEsOn, "rii-div-b-termicas-es", runRiiDivBTermicasEs],
+    [cvoOnVetsOn, "cvo-on-vets", runCvoOnVets],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
