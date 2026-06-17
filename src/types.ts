@@ -321,7 +321,9 @@ export type ScrapeSource =
   // 2026-05-31: RII División B ES — Spain MINCOTUR open data CSV (~50k+ installers).
   | "rii-div-b-electricidad-es"
   // 2026-05-31: Nebraska DOL contractor registration (~20k US contractors).
-  | "nebraska-dol-conreg";
+  | "nebraska-dol-conreg"
+  // 2026-05-31: College of Physiotherapists of Ontario — public register (~19k CA physiotherapists).
+  | "cpo-on-physio";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
