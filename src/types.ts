@@ -349,7 +349,10 @@ export type ScrapeSource =
   // 2026-05-22: Nebraska Board of Engineers and Architects — US ingenieria + arquitecto
   | "nebraska-ea"
   // 2026-05-24: BC College of Oral Health Professionals — BC dentists (~4.3k)
-  | "bccohp-bc-dentists";
+  | "bccohp-bc-dentists"
+  // 2026-05-25: ES RII División A — national auto-repair workshop registry
+  // (~19k talleres mecánicos), fills the `mecanica` gap for Spain.
+  | "rii-div-a-talleres-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

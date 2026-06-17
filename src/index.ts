@@ -237,6 +237,10 @@ import { sepCedulasMxSource, runSepCedulasMx } from "./sources/sep-cedulas-mx.js
 import { nebraskaDolConregSource, runNebraskaDolConreg } from "./sources/nebraska-dol-conreg.js";
 import { cpoOnPhysioSource, runCpoOnPhysio } from "./sources/cpo-on-physio.js";
 import { bccohpBcDentistsSource, runBccohpBcDentists } from "./sources/bccohp-bc-dentists.js";
+import {
+  riiDivATalleresEsSource,
+  runRiiDivATalleresEs,
+} from "./sources/rii-div-a-talleres-es.js";
 import { cpsnsNsPhysiciansSource, runCpsnsNsPhysicians } from "./sources/cpsns-ns-physicians.js";
 import { lsnbBarSource, runLsnbBar } from "./sources/lsnb-bar.js";
 import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns-dentists.js";
@@ -539,6 +543,8 @@ async function main(): Promise<void> {
   const nebraskaDolConregOn = nebraskaDolConregSource.enabled();
   const cpoOnPhysioOn = cpoOnPhysioSource.enabled();
   const bccohpBcDentistsOn = bccohpBcDentistsSource.enabled();
+  // 2026-05-25: ES RII División A talleres
+  const riiDivATalleresEsOn = riiDivATalleresEsSource.enabled();
   const cpsnsNsPhysiciansOn = cpsnsNsPhysiciansSource.enabled();
   const lsnbBarOn = lsnbBarSource.enabled();
   const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
@@ -861,7 +867,8 @@ async function main(): Promise<void> {
     !cdssSkDentistsOn &&
     !riiDivBElectricidadEsOn &&
     !rhodeIslandCrbOn &&
-    !riiInstaladoresEsOn
+    !riiInstaladoresEsOn &&
+    !riiDivATalleresEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1709,6 +1716,8 @@ async function main(): Promise<void> {
     [maaArchitectsOn, "maa-architects", runMaaArchitects],
     // 2026-05-20: ES colegios de economistas — CGE federation fan-out (fiscal)
     [cgeEconomistasEsOn, "cge-economistas-es", runCgeEconomistasEs],
+    // 2026-05-25: ES RII División A — national auto-repair workshop registry
+    [riiDivATalleresEsOn, "rii-div-a-talleres-es", runRiiDivATalleresEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
