@@ -117,6 +117,7 @@ import { copPsicologiaSource, runCopPsicologia } from "./sources/cop-psicologia.
 import { cogitiIngenierosSource, runCogitiIngenieros } from "./sources/cogiti-ingenieros.js";
 import { graduadosSocialesEsSource, runGraduadosSocialesEs } from "./sources/graduados-sociales-es.js";
 import { vucolvetSource, runVucolvet } from "./sources/vucolvet.js";
+import { riiDivACarpinteriaEsSource, runRiiDivACarpinteriaEs } from "./sources/rii-div-a-carpinteria-es.js";
 import { cgcooOpticosSource, runCgcooOpticos } from "./sources/cgcoo-opticos.js";
 import { cgeEnfermeriaSource, runCgeEnfermeria } from "./sources/cge-enfermeria.js";
 import { cgcofFarmaciaSource, runCgcofFarmacia } from "./sources/cgcof-farmacia.js";
@@ -455,6 +456,7 @@ async function main(): Promise<void> {
   const cogitiIngenierosOn = cogitiIngenierosSource.enabled();
   const graduadosSocialesEsOn = graduadosSocialesEsSource.enabled();
   const vucolvetOn = vucolvetSource.enabled();
+  const riiDivACarpinteriaEsOn = riiDivACarpinteriaEsSource.enabled();
   const cgcooOpticosOn = cgcooOpticosSource.enabled();
   const cgeEnfermeriaOn = cgeEnfermeriaSource.enabled();
   const cgcofFarmaciaOn = cgcofFarmaciaSource.enabled();
@@ -717,6 +719,7 @@ async function main(): Promise<void> {
     !cogitiIngenierosOn &&
     !graduadosSocialesEsOn &&
     !vucolvetOn &&
+    !riiDivACarpinteriaEsOn &&
     !cgcooOpticosOn &&
     !cgeEnfermeriaOn &&
     !cgcofFarmaciaOn &&
@@ -1814,6 +1817,9 @@ async function main(): Promise<void> {
     [maineAlmsElectriciansOn, "maine-alms-electricians", runMaineAlmsElectricians],
     // 2026-06-02: Vermont DFS — electricians + plumbers (~11k)
     [vermontDfsOn, "vermont-dfs", runVermontDfs],
+    // 2026-06-02: Vermont DFS — electricians + plumbers (~11k)
+    // 2026-06-02: ES RII División A — carpinterías (~780 active joinery workshops)
+    [riiDivACarpinteriaEsOn, "rii-div-a-carpinteria-es", runRiiDivACarpinteriaEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

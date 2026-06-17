@@ -390,7 +390,11 @@ export type ScrapeSource =
   | "mda-mb-dentists"  // manitobadentist.ca dentist registry (~856 records)
   // 2026-06-02: Vermont DFS — Department of Fire Safety licensing master list
   // (~11k electricians, plumbers, gas installers). Socrata open-data CSV.
-  | "vermont-dfs";
+  | "vermont-dfs"
+  // 2026-06-02: ES RII División A — carpinterías (joinery workshops).
+  // Same CSV as rii-div-a-talleres-es (División A open data) but filtered on
+  // Denominación containing "carpint" → ~780 active carpintería businesses.
+  | "rii-div-a-carpinteria-es";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
