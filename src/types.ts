@@ -335,7 +335,9 @@ export type ScrapeSource =
   // 2026-05-16: ES Ministerio de Industria — RII gas installers (fontaneria)
   | "rii-instaladores-es"
   // 2026-05-17: CA Manitoba Association of Architects
-  | "maa-architects";
+  | "maa-architects"
+  // 2026-05-20: NPI Physical Therapists — fisioterapia US (NPPES V2 API)
+  | "npi-physical-therapists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

@@ -253,6 +253,7 @@ import { comBarcelonaSource, runCombBarcelona } from "./sources/comb-barcelona.j
 import { npiBulkStreamSource, runNpiBulkStream } from "./sources/npi-bulk-stream.js";
 import { npiNursesSource, runNpiNurses } from "./sources/npi-nurses.js";
 import { npiPharmacistsSource, runNpiPharmacists } from "./sources/npi-pharmacists.js";
+import { npiPhysicalTherapistsSource, runNpiPhysicalTherapists } from "./sources/npi-physical-therapists.js";
 import { adaFindADentistSource, runAdaFindADentist } from "./sources/ada-find-a-dentist.js";
 import { usdaAphisVetsSource, runUsdaAphisVets } from "./sources/usda-aphis-vets.js";
 import { stateBarsBulkSource, runStateBarsBulk } from "./sources/state-bars-bulk.js";
@@ -558,6 +559,7 @@ async function main(): Promise<void> {
   const npiBulkStreamOn = npiBulkStreamSource.enabled();
   const npiNursesOn = npiNursesSource.enabled();
   const npiPharmacistsOn = npiPharmacistsSource.enabled();
+  const npiPhysicalTherapistsOn = npiPhysicalTherapistsSource.enabled();
   const adaFindADentistOn = adaFindADentistSource.enabled();
   const usdaAphisVetsOn = usdaAphisVetsSource.enabled();
   const stateBarsBulkOn = stateBarsBulkSource.enabled();
@@ -775,6 +777,7 @@ async function main(): Promise<void> {
     !npiBulkStreamOn &&
     !npiNursesOn &&
     !npiPharmacistsOn &&
+    !npiPhysicalTherapistsOn &&
     !adaFindADentistOn &&
     !usdaAphisVetsOn &&
     !stateBarsBulkOn &&
@@ -1573,6 +1576,7 @@ async function main(): Promise<void> {
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
     [npiNursesOn, "npi-nurses", runNpiNurses],
     [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
+    [npiPhysicalTherapistsOn, "npi-physical-therapists", runNpiPhysicalTherapists],
     [adaFindADentistOn, "ada-find-a-dentist", runAdaFindADentist],
     [usdaAphisVetsOn, "usda-aphis-vets", runUsdaAphisVets],
     [stateBarsBulkOn, "state-bars-bulk", runStateBarsBulk],
