@@ -319,7 +319,9 @@ export type ScrapeSource =
   // 2026-06-11: scout wave — SK dentists
   | "cdss-sk-dentists" // College of Dental Surgeons of Saskatchewan (dentista)
   // 2026-05-31: RII División B ES — Spain MINCOTUR open data CSV (~50k+ installers).
-  | "rii-div-b-electricidad-es";
+  | "rii-div-b-electricidad-es"
+  // 2026-05-31: Nebraska DOL contractor registration (~20k US contractors).
+  | "nebraska-dol-conreg";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
