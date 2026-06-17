@@ -260,6 +260,7 @@ import { montgomeryMdElectricianSource, runMontgomeryMdElectricianSource } from 
 import { delawareDprSource, runDelawareDprSource } from "./sources/delaware-dpr.js";
 import { cgfeFisioSource, runCgfeFisio } from "./sources/cgfe-fisio-es.js";
 import { peivmaPeiVetsSource, runPeivmaPeiVets } from "./sources/peivma-pei-vets.js";
+import { cdsaAbDentistsSource, runCdsaAbDentists } from "./sources/cdsa-ab-dentists.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -515,6 +516,7 @@ async function main(): Promise<void> {
   const delawareDprOn = delawareDprSource.enabled();
   const cgfeFisioOn = cgfeFisioSource.enabled();
   const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
+  const cdsaAbDentistsOn = cdsaAbDentistsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -706,6 +708,7 @@ async function main(): Promise<void> {
     !colfisiocvFisioOn &&
     !coptocylToOn &&
     !peivmaPeiVetsOn &&
+    !cdsaAbDentistsOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1513,6 +1516,8 @@ async function main(): Promise<void> {
     [texasBhecPsyOn, "texas-bhec-psy", runTexasBhecPsy],
     [bcpharmacistsBcOn, "bcpharmacists-bc", runBcpharmacistsBc],
     [instaladoresoficialesEsOn, "instaladoresoficiales-es", runInstaladoresoficialesEs],
+    // 2026-06-06 scout wave: CA
+    [cdsaAbDentistsOn, "cdsa-ab-dentists", runCdsaAbDentists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
