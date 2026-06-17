@@ -278,6 +278,7 @@ import { caDirEcuElectriciansSource, runCaDirEcuElectriciansSource } from "./sou
 // 2026-06-13: ES — COEV economistas (Valencia licensed economists, fiscal)
 import { coevEconomistasSource, runCoevEconomistas } from "./sources/coev-economistas.js";
 import { nscpNsPhysioSource, runNscpNsPhysio } from "./sources/nscp-ns-physio.js";
+import { waDohPsychologistsSource, runWaDohPsychologists } from "./sources/wa-doh-psychologists.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -548,6 +549,7 @@ async function main(): Promise<void> {
   const coevEconomistasOn = coevEconomistasSource.enabled();
   const jcylTalleresEsOn = jcylTalleresEsSource.enabled();
   const nscpNsPhysioOn = nscpNsPhysioSource.enabled();
+  const waDohPsychologistsOn = waDohPsychologistsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -749,6 +751,7 @@ async function main(): Promise<void> {
     !cptbcPhysioOn &&
     !floridaDbprVetsOn &&
     !nscpNsPhysioOn &&
+    !waDohPsychologistsOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1590,6 +1593,7 @@ async function main(): Promise<void> {
     [nscpNsPhysioOn, "nscp-ns-physio", runNscpNsPhysio],
     // 2026-06-15: ES fontanería — RII Instaladores Gas open CSV
     [riiInstaladorasGasEsOn, "rii-instaladores-gas-es", runRiiInstaladorasGasEs],
+    [waDohPsychologistsOn, "wa-doh-psychologists", runWaDohPsychologists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

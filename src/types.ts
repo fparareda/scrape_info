@@ -307,7 +307,9 @@ export type ScrapeSource =
   // 2026-06-15 wave: ES fontanería — RII Instaladores Gas (Ministerio Industria)
   // ~8.6k unique certified gas/fluid installer companies nationally; open CSV
   // from datos.gob.es. Mapped to fontaneria (gas+fluidos = water+gas in Spain).
-  | "rii-instaladores-gas-es";
+  | "rii-instaladores-gas-es"
+  // 2026-06-16: WA DOH psychologist credentials — first US psicologia source
+  | "wa-doh-psychologists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
