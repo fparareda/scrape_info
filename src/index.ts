@@ -328,6 +328,8 @@ import {
 } from "./sources/competitor-es-mega.js";
 // 2026-06-14: IRS FOIA — active Enrolled Agents (US fiscal)
 import { irsEaFoiaSource, runIrsEaFoia } from "./sources/irs-ea-foia-us.js";
+// 2026-05-31: RII División B ES
+import { riiDivBElectricidadEsSource, runRiiDivBElectricidadEs } from "./sources/rii-div-b-electricidad-es.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -578,6 +580,7 @@ async function main(): Promise<void> {
   const connecticutDcpOn = connecticutDcpSource.enabled();
   // 2026-06-14: IRS FOIA enrolled agents
   const irsEaFoiaOn = irsEaFoiaSource.enabled();
+  const riiDivBElectricidadEsOn = riiDivBElectricidadEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -796,7 +799,8 @@ async function main(): Promise<void> {
     !coevEconomistasOn &&
     !jcylTalleresEsOn &&
     !irsEaFoiaOn &&
-    !cdssSkDentistsOn
+    !cdssSkDentistsOn &&
+    !riiDivBElectricidadEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1616,6 +1620,8 @@ async function main(): Promise<void> {
     [rqciQcCaOn, "rqci-qc-ca", runRqciQcCa],
     // 2026-06-11: scout wave
     [cdssSkDentistsOn, "cdss-sk-dentists", runCdssSkDentists],
+    // 2026-05-31: RII División B ES
+    [riiDivBElectricidadEsOn, "rii-div-b-electricidad-es", runRiiDivBElectricidadEs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
