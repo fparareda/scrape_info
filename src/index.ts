@@ -400,6 +400,7 @@ import { codeCasLeonDentistasSource, runCodeCasLeonDentistas } from "./sources/c
 import { cptaAbPhysioSource, runCptaAbPhysio } from "./sources/cpta-ab-physio.js";
 import { icomemMedicosEsSource, runIcomemMedicosEs } from "./sources/icomem-medicos-es.js";
 import { irsPtinSource, runIrsPtin } from "./sources/irs-ptin.js";
+import { indianaPlaSource, runIndianaPla } from "./sources/indiana-pla.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -661,6 +662,7 @@ async function main(): Promise<void> {
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
   const texasBhecPsyOn = texasBhecPsySource.enabled();
+  const indianaPlaOn = indianaPlaSource.enabled();
   const irsPtinOn = irsPtinSource.enabled();
   const icomemMedicosEsOn = icomemMedicosEsSource.enabled();
   const cptaAbPhysioOn = cptaAbPhysioSource.enabled();
@@ -1854,6 +1856,7 @@ async function main(): Promise<void> {
     [cptaAbPhysioOn, "cpta-ab-physio", runCptaAbPhysio],
     [icomemMedicosEsOn, "icomem-medicos-es", runIcomemMedicosEs],
     [irsPtinOn, "irs-ptin", runIrsPtin],
+    [indianaPlaOn, "indiana-pla", runIndianaPla],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

@@ -408,7 +408,8 @@ export type ScrapeSource =
   | "code-cas-leon-dentistas"
   | "cpta-ab-physio"
   | "icomem-medicos-es"
-  | "irs-ptin";
+  | "irs-ptin"
+  | "indiana-pla";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
