@@ -274,6 +274,8 @@ import { waCpaBoardSource, runWaCpaBoard } from "./sources/wa-cpa-board.js";
 import { cptbcPhysioSource, runCptbcPhysio } from "./sources/cptbc-physio.js";
 import { cphmMbPharmacistsSource, runCphmMbPharmacists } from "./sources/cphm-mb-pharmacists.js";
 import { caDirEcuElectriciansSource, runCaDirEcuElectriciansSource } from "./sources/ca-dir-ecu-electricians.js";
+// 2026-06-13: ES — COEV economistas (Valencia licensed economists, fiscal)
+import { coevEconomistasSource, runCoevEconomistas } from "./sources/coev-economistas.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -536,6 +538,7 @@ async function main(): Promise<void> {
   const cptbcPhysioOn = cptbcPhysioSource.enabled();
   const cphmMbPharmacistsOn = cphmMbPharmacistsSource.enabled();
   const caDirEcuElectriciansOn = caDirEcuElectriciansSource.enabled();
+  const coevEconomistasOn = coevEconomistasSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -760,7 +763,8 @@ async function main(): Promise<void> {
     !connecticutDcpOn &&
     !waCpaBoardOn &&
     !cphmMbPharmacistsOn &&
-    !caDirEcuElectriciansOn
+    !caDirEcuElectriciansOn &&
+    !coevEconomistasOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1564,6 +1568,9 @@ async function main(): Promise<void> {
     [cphmMbPharmacistsOn, "cphm-mb-pharmacists", runCphmMbPharmacists],
     // 2026-06-13: CA DIR ECU — certified + trainee electricians (~55k)
     [caDirEcuElectriciansOn, "ca-dir-ecu-electricians", runCaDirEcuElectriciansSource],
+    // 2026-06-13: CA DIR ECU — certified + trainee electricians (~55k)
+    // 2026-06-13: ES — COEV economistas (Valencia licensed economists, fiscal, ~4120 rows)
+    [coevEconomistasOn, "coev-economistas", runCoevEconomistas],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

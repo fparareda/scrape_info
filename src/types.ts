@@ -288,13 +288,14 @@ export type ScrapeSource =
   // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members)
   // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members, fiscal)
   | "aedaf-asesores-fiscales-es"
-  | "pagesjaunes"      // pagesjaunes.fr (FR)
   // 2026-06-08: CT DCP State Licenses and Credentials (electricidad/fontaneria/hvac/carpinteria/ingenieria/arquitecto)
   | "connecticut-dcp"
   // 2026-06-09: WA Board of Accountancy CPAs — first US `fiscal` source
   | "wa-cpa-board" // data.wa.gov / WA State Certified Public Accountants
   // 2026-06-12: US — Florida DBPR Board of Veterinary Medicine (~14k VM licences, bulk CSV)
-  | "florida-dbpr-vets";
+  | "florida-dbpr-vets"
+  // 2026-06-13: ES — Colegio Oficial de Economistas de Valencia (fiscal, ~4120 rows)
+  | "coev-economistas"; // coev.com/colegiados
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
