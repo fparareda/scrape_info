@@ -1,0 +1,13 @@
+name: Scrape · cgcfe fisioterapeutas
+# cgcfe fisioterapeutas — auto-wired cgcfe-fisioterapeutas. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 12 4 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cgcfe-fisioterapeutas
+      timeout_minutes: 30

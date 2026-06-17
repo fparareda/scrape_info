@@ -1,0 +1,13 @@
+name: Scrape · cvo on vets
+# cvo on vets — auto-wired cvo-on-vets. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 12 5 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cvo-on-vets
+      timeout_minutes: 30

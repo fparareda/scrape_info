@@ -558,6 +558,8 @@ jobs:
       PROLIO_RUN_INDIANA_PLA:           ${{ inputs.source == 'indiana-pla' && 'true' || 'false' }}
       PROLIO_RUN_IRS_PTIN:              ${{ inputs.source == 'irs-ptin' && 'true' || 'false' }}
       PROLIO_RUN_RII_DIV_B_TERMICAS_ES: ${{ inputs.source == 'rii-div-b-termicas-es' && 'true' || 'false' }}
+      PROLIO_RUN_CGCFE_FISIOTERAPEUTAS: ${{ inputs.source == 'cgcfe-fisioterapeutas' && 'true' || 'false' }}
+      PROLIO_RUN_CVO_ON_VETS:           ${{ inputs.source == 'cvo-on-vets' && 'true' || 'false' }}
       PROLIO_FOURSQUARE_CATEGORY:   ${{ inputs.category }}
       PROLIO_FOURSQUARE_REQUESTS_PER_RUN: "800"
       FOURSQUARE_API_KEY:           ${{ secrets.FOURSQUARE_API_KEY }}
