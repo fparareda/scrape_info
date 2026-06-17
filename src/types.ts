@@ -407,7 +407,8 @@ export type ScrapeSource =
   | "apegnb-nb-engineers"
   | "code-cas-leon-dentistas"
   | "cpta-ab-physio"
-  | "icomem-medicos-es";
+  | "icomem-medicos-es"
+  | "irs-ptin";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
