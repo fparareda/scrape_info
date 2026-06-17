@@ -1,0 +1,13 @@
+name: Scrape · CA notarios BC
+# CA notarios BC — auto-wired bcna-bc-notaries. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 7 4 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: bcna-bc-notaries
+      timeout_minutes: 30

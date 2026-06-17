@@ -278,6 +278,14 @@ jobs:
       PROLIO_RUN_DELAWARE_DPR:          ${{ inputs.source == 'delaware-dpr' && 'true' || 'false' }}
       PROLIO_RUN_IRS_EA_FOIA:           ${{ inputs.source == 'irs-ea-foia' && 'true' || 'false' }}
       PROLIO_RUN_RQCI_QC_CA:            ${{ inputs.source == 'rqci-qc-ca' && 'true' || 'false' }}
+      PROLIO_RUN_BCNA_BC_NOTARIES:      ${{ inputs.source == 'bcna-bc-notaries' && 'true' || 'false' }}
+      PROLIO_RUN_CDSS_SK_DENTISTS:      ${{ inputs.source == 'cdss-sk-dentists' && 'true' || 'false' }}
+      PROLIO_RUN_COPM_PSICOLOGOS:       ${{ inputs.source == 'copm-psicologos' && 'true' || 'false' }}
+      PROLIO_RUN_CPO_ON_PHYSIO:         ${{ inputs.source == 'cpo-on-physio' && 'true' || 'false' }}
+      PROLIO_RUN_NEBRASKA_DOL_CONREG:   ${{ inputs.source == 'nebraska-dol-conreg' && 'true' || 'false' }}
+      PROLIO_RUN_OK_OSBEP_PSYCHOLOGISTS: ${{ inputs.source == 'ok-osbep-psychologists' && 'true' || 'false' }}
+      PROLIO_RUN_RHODE_ISLAND_CRB:      ${{ inputs.source == 'rhode-island-crb' && 'true' || 'false' }}
+      PROLIO_RUN_RII_DIV_B_ES:          ${{ inputs.source == 'rii-div-b-electricidad-es' && 'true' || 'false' }}
       PROLIO_RUN_AEDAF_ASESORES_FISCALES: ${{ inputs.source == 'aedaf-asesores-fiscales-es' && 'true' || 'false' }}
       PROLIO_RUN_BCPHARMACISTS_BC:      ${{ inputs.source == 'bcpharmacists-bc' && 'true' || 'false' }}
       PROLIO_RUN_CA_DIR_ECU_ELECTRICIANS: ${{ inputs.source == 'ca-dir-ecu-electricians' && 'true' || 'false' }}

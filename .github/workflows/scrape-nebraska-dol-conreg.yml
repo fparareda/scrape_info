@@ -1,0 +1,13 @@
+name: Scrape · US construccion NE
+# US construccion NE — auto-wired nebraska-dol-conreg. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 7 8 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: nebraska-dol-conreg
+      timeout_minutes: 30

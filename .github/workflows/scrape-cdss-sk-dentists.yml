@@ -1,0 +1,13 @@
+name: Scrape · CA dentista SK
+# CA dentista SK — auto-wired cdss-sk-dentists. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 7 5 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cdss-sk-dentists
+      timeout_minutes: 20
