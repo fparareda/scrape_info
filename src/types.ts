@@ -339,7 +339,6 @@ export type ScrapeSource =
   // 2026-05-20: NPI Physical Therapists — fisioterapia US (NPPES V2 API)
   | "npi-physical-therapists"
   // 2026-05-21 wave: ES electricidad + hvac — RII División B national installer registry
-  | "rii-div-b-es"
   // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
   | "kentucky-dhbc"
   // 2026-05-22: ICAC ROAC — ES fiscal (Registro Oficial de Auditores de Cuentas)

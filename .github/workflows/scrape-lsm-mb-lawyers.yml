@@ -1,0 +1,13 @@
+name: Scrape · lsm mb lawyers
+# lsm mb lawyers — auto-wired lsm-mb-lawyers. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 15 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: lsm-mb-lawyers
+      timeout_minutes: 30

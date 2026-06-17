@@ -1,0 +1,13 @@
+name: Scrape · rii instaladores es
+# rii instaladores es — auto-wired rii-instaladores-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 11 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rii-instaladores-es
+      timeout_minutes: 30

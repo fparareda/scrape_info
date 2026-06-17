@@ -1,0 +1,13 @@
+name: Scrape · alabama lbgc
+# alabama lbgc — auto-wired alabama-lbgc. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 4 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: alabama-lbgc
+      timeout_minutes: 30

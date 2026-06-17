@@ -1,0 +1,13 @@
+name: Scrape · ny dmv repair shops
+# ny dmv repair shops — auto-wired ny-dmv-repair-shops. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 6 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: ny-dmv-repair-shops
+      timeout_minutes: 30

@@ -1,0 +1,13 @@
+name: Scrape · maine alms electricians
+# maine alms electricians — auto-wired maine-alms-electricians. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 17 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: maine-alms-electricians
+      timeout_minutes: 30

@@ -1,0 +1,13 @@
+name: Scrape · oregon bcd
+# oregon bcd — auto-wired oregon-bcd. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 7 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: oregon-bcd
+      timeout_minutes: 30

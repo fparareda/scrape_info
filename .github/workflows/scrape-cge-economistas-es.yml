@@ -1,0 +1,13 @@
+name: Scrape · cge economistas es
+# cge economistas es — auto-wired cge-economistas-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 7 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cge-economistas-es
+      timeout_minutes: 30

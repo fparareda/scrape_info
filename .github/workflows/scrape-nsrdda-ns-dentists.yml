@@ -1,0 +1,13 @@
+name: Scrape · nsrdda ns dentists
+# nsrdda ns dentists — auto-wired nsrdda-ns-dentists. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 5 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: nsrdda-ns-dentists
+      timeout_minutes: 30

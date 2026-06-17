@@ -1,0 +1,13 @@
+name: Scrape · cono naturopaths
+# cono naturopaths — auto-wired cono-naturopaths. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 8 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: cono-naturopaths
+      timeout_minutes: 30

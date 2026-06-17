@@ -1,0 +1,13 @@
+name: Scrape · bccohp bc dentists
+# bccohp bc dentists — auto-wired bccohp-bc-dentists. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 5 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: bccohp-bc-dentists
+      timeout_minutes: 30

@@ -1,0 +1,13 @@
+name: Scrape · hcra on builders
+# hcra on builders — auto-wired hcra-on-builders. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 11 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: hcra-on-builders
+      timeout_minutes: 30

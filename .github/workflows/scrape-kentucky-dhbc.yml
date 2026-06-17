@@ -1,0 +1,13 @@
+name: Scrape · kentucky dhbc
+# kentucky dhbc — auto-wired kentucky-dhbc. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 14 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: kentucky-dhbc
+      timeout_minutes: 30

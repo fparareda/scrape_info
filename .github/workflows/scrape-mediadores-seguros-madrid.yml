@@ -1,0 +1,13 @@
+name: Scrape · mediadores seguros madrid
+# mediadores seguros madrid — auto-wired mediadores-seguros-madrid. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 18 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: mediadores-seguros-madrid
+      timeout_minutes: 30

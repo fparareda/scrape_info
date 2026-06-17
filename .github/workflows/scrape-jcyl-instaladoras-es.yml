@@ -1,0 +1,13 @@
+name: Scrape · jcyl instaladoras es
+# jcyl instaladoras es — auto-wired jcyl-instaladoras-es. One-shot, monthly.
+on:
+  schedule:
+    - cron: "0 8 13 * *"
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: jcyl-instaladoras-es
+      timeout_minutes: 30

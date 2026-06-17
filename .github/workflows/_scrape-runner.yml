@@ -286,6 +286,30 @@ jobs:
       PROLIO_RUN_OK_OSBEP_PSYCHOLOGISTS: ${{ inputs.source == 'ok-osbep-psychologists' && 'true' || 'false' }}
       PROLIO_RUN_RHODE_ISLAND_CRB:      ${{ inputs.source == 'rhode-island-crb' && 'true' || 'false' }}
       PROLIO_RUN_RII_DIV_B_ES:          ${{ inputs.source == 'rii-div-b-electricidad-es' && 'true' || 'false' }}
+      PROLIO_RUN_ALABAMA_LBGC:          ${{ inputs.source == 'alabama-lbgc' && 'true' || 'false' }}
+      PROLIO_RUN_BCCOHP_BC_DENTISTS:    ${{ inputs.source == 'bccohp-bc-dentists' && 'true' || 'false' }}
+      PROLIO_RUN_CGCOD_ES:              ${{ inputs.source == 'cgcod-es' && 'true' || 'false' }}
+      PROLIO_RUN_CGE_ECONOMISTAS_ES:    ${{ inputs.source == 'cge-economistas-es' && 'true' || 'false' }}
+      PROLIO_RUN_CONO_NATUROPATHS:      ${{ inputs.source == 'cono-naturopaths' && 'true' || 'false' }}
+      PROLIO_RUN_CPSNB_NB_PHYSICIANS:   ${{ inputs.source == 'cpsnb-nb-physicians' && 'true' || 'false' }}
+      PROLIO_RUN_CVBC_BC_VETS:          ${{ inputs.source == 'cvbc-bc-vets' && 'true' || 'false' }}
+      PROLIO_RUN_HCRA_ON_BUILDERS:      ${{ inputs.source == 'hcra-on-builders' && 'true' || 'false' }}
+      PROLIO_RUN_ICAC_ROAC_ES:          ${{ inputs.source == 'icac-roac-es' && 'true' || 'false' }}
+      PROLIO_RUN_JCYL_INSTALADORAS_ES:  ${{ inputs.source == 'jcyl-instaladoras-es' && 'true' || 'false' }}
+      PROLIO_RUN_KENTUCKY_DHBC:         ${{ inputs.source == 'kentucky-dhbc' && 'true' || 'false' }}
+      PROLIO_RUN_LSM_MB_LAWYERS:        ${{ inputs.source == 'lsm-mb-lawyers' && 'true' || 'false' }}
+      PROLIO_RUN_MAA_ARCHITECTS:        ${{ inputs.source == 'maa-architects' && 'true' || 'false' }}
+      PROLIO_RUN_MAINE_ALMS_ELECTRICIANS: ${{ inputs.source == 'maine-alms-electricians' && 'true' || 'false' }}
+      PROLIO_RUN_MEDIADORES_SEGUROS_MADRID: ${{ inputs.source == 'mediadores-seguros-madrid' && 'true' || 'false' }}
+      PROLIO_RUN_NCARB_ARCHITECTS:      ${{ inputs.source == 'ncarb-architects' && 'true' || 'false' }}
+      PROLIO_RUN_NEBRASKA_EA:           ${{ inputs.source == 'nebraska-ea' && 'true' || 'false' }}
+      PROLIO_RUN_NPI_PHYSICAL_THERAPISTS: ${{ inputs.source == 'npi-physical-therapists' && 'true' || 'false' }}
+      PROLIO_RUN_NSRDDA_NS_DENTISTS:    ${{ inputs.source == 'nsrdda-ns-dentists' && 'true' || 'false' }}
+      PROLIO_RUN_NY_DMV_REPAIR_SHOPS:   ${{ inputs.source == 'ny-dmv-repair-shops' && 'true' || 'false' }}
+      PROLIO_RUN_OREGON_BCD:            ${{ inputs.source == 'oregon-bcd' && 'true' || 'false' }}
+      PROLIO_RUN_RII_DIV_A_TALLERES_ES: ${{ inputs.source == 'rii-div-a-talleres-es' && 'true' || 'false' }}
+      PROLIO_RUN_RII_GAS_ES:            ${{ inputs.source == 'rii-gas-es' && 'true' || 'false' }}
+      PROLIO_RUN_RII_INSTALADORES_ES:   ${{ inputs.source == 'rii-instaladores-es' && 'true' || 'false' }}
       PROLIO_RUN_AEDAF_ASESORES_FISCALES: ${{ inputs.source == 'aedaf-asesores-fiscales-es' && 'true' || 'false' }}
       PROLIO_RUN_BCPHARMACISTS_BC:      ${{ inputs.source == 'bcpharmacists-bc' && 'true' || 'false' }}
       PROLIO_RUN_CA_DIR_ECU_ELECTRICIANS: ${{ inputs.source == 'ca-dir-ecu-electricians' && 'true' || 'false' }}
