@@ -301,6 +301,8 @@ import {
 } from "./sources/rii-instaladores-gas-es.js";
 // 2026-06-11: scout wave
 import { cdssSkDentistsSource, runCdssSkDentists } from "./sources/cdss-sk-dentists.js";
+// 2026-06-01: US psicologia — Oklahoma OSBEP psychologists
+import { okOsbepPsychologistsSource, runOkOsbepPsychologists } from "./sources/ok-osbep-psychologists.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -577,6 +579,7 @@ async function main(): Promise<void> {
   const floridaDbprVetsOn = floridaDbprVetsSource.enabled();
   const riiInstaladorasGasEsOn = riiInstaladorasGasEsSource.enabled();
   const cdssSkDentistsOn = cdssSkDentistsSource.enabled();
+  const okOsbepPsychologistsOn = okOsbepPsychologistsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -775,6 +778,7 @@ async function main(): Promise<void> {
     !waDohPsychologistsOn &&
     !lsmLawyersMbOn &&
     !rqciQcCaOn &&
+    !okOsbepPsychologistsOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1630,6 +1634,8 @@ async function main(): Promise<void> {
     [cdssSkDentistsOn, "cdss-sk-dentists", runCdssSkDentists],
     // 2026-05-31: RII División B ES
     [riiDivBElectricidadEsOn, "rii-div-b-electricidad-es", runRiiDivBElectricidadEs],
+    // 2026-06-01: US psicologia — Oklahoma OSBEP psychologists (~1,200 records)
+    [okOsbepPsychologistsOn, "ok-osbep-psychologists", runOkOsbepPsychologists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

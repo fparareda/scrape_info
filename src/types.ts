@@ -323,7 +323,9 @@ export type ScrapeSource =
   // 2026-05-31: Nebraska DOL contractor registration (~20k US contractors).
   | "nebraska-dol-conreg"
   // 2026-05-31: College of Physiotherapists of Ontario — public register (~19k CA physiotherapists).
-  | "cpo-on-physio";
+  | "cpo-on-physio"
+  // 2026-06-01: US psicologia — Oklahoma State Board of Examiners of Psychologists (~1,200 records)
+  | "ok-osbep-psychologists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
