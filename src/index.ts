@@ -338,6 +338,8 @@ import { cdssSkDentistsSource, runCdssSkDentists } from "./sources/cdss-sk-denti
 import { okOsbepPsychologistsSource, runOkOsbepPsychologists } from "./sources/ok-osbep-psychologists.js";
 // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
 import { bcnaBcNotariesSource, runBcnaBcNotaries } from "./sources/bcna-bc-notaries.js";
+// 2026-06-11: scout wave
+import { maineAlmsElectriciansSource, runMaineAlmsElectricians } from "./sources/maine-alms-electricians.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -654,6 +656,7 @@ async function main(): Promise<void> {
   const bcnaBcNotariesOn = bcnaBcNotariesSource.enabled();
   const copmPsicologosOn = copmPsicologosSource.enabled();
   const maaArchitectsOn = maaArchitectsSource.enabled();
+  const maineAlmsElectriciansOn = maineAlmsElectriciansSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const cgcodEsOn = cgcodEsEnabled();
   // 2026-05-20: ES colegios de economistas
@@ -917,7 +920,8 @@ async function main(): Promise<void> {
     !mediadoresSegurosMadridOn &&
     !lsmMbLawyersOn &&
     !riiGasEsOn &&
-    !jcylInstaladoresEsOn
+    !jcylInstaladoresEsOn &&
+    !maineAlmsElectriciansOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1802,6 +1806,8 @@ async function main(): Promise<void> {
     [riiGasEsOn, "rii-gas-es", runRiiGasEs],
     // 2026-05-29 ES: JCYL instaladoras electricidad (Castilla y León open data)
     [jcylInstaladoresEsOn, "jcyl-instaladoras-es", runJcylInstaladoresEs],
+    // 2026-06-11: scout wave
+    [maineAlmsElectriciansOn, "maine-alms-electricians", runMaineAlmsElectricians],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

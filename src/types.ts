@@ -384,7 +384,9 @@ export type ScrapeSource =
   // 2026-05-30: Oregon BCD — Building Codes Division individual trade
   // licenses (electricians, plumbers, boiler/HVAC operators). Socrata SODA
   // API, ~49k active records, distinct from oregon-ccb (contractor businesses).
-  | "oregon-bcd";
+  | "oregon-bcd"
+  // 2026-06-11: scout wave — ME electricians + SK dentists
+  | "maine-alms-electricians"; // Maine ALMS Electricians' Examining Board (electricidad)
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
