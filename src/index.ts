@@ -270,6 +270,7 @@ import {
   aedafAsesoresFiscalesEsEnabled,
   runAedafAsesoresFiscalesEs,
 } from "./sources/aedaf-asesores-fiscales-es.js";
+import { waCpaBoardSource, runWaCpaBoard } from "./sources/wa-cpa-board.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -535,6 +536,7 @@ async function main(): Promise<void> {
   const instaladoresoficialesEsOn = instaladoresoficialesEsSource.enabled();
   const iowaDialContractorsOn = iowaDialContractorsSource.enabled();
   const aedafAsesoresFiscalesEsOn = aedafAsesoresFiscalesEsEnabled();
+  const waCpaBoardOn = waCpaBoardSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -744,7 +746,8 @@ async function main(): Promise<void> {
     !texasBhecPsyOn &&
     !bcpharmacistsBcOn &&
     !instaladoresoficialesEsOn &&
-    !connecticutDcpOn
+    !connecticutDcpOn &&
+    !waCpaBoardOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1538,6 +1541,8 @@ async function main(): Promise<void> {
     [iowaDialContractorsOn, "iowa-dial-contractors", runIowaDialContractorsSource],
     // 2026-06-07: AEDAF fiscal advisors (ES)
     [aedafAsesoresFiscalesEsOn, "aedaf-asesores-fiscales-es", runAedafAsesoresFiscalesEs],
+    // 2026-06-09: WA Board of Accountancy CPAs — first US fiscal source
+    [waCpaBoardOn, "wa-cpa-board", runWaCpaBoard],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

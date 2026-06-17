@@ -284,7 +284,9 @@ export type ScrapeSource =
   | "aedaf-asesores-fiscales-es"
   | "pagesjaunes"      // pagesjaunes.fr (FR)
   // 2026-06-08: CT DCP State Licenses and Credentials (electricidad/fontaneria/hvac/carpinteria/ingenieria/arquitecto)
-  | "connecticut-dcp";
+  | "connecticut-dcp"
+  // 2026-06-09: WA Board of Accountancy CPAs — first US `fiscal` source
+  | "wa-cpa-board"; // data.wa.gov / WA State Certified Public Accountants
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
