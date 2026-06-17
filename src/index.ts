@@ -123,6 +123,7 @@ import { cgeEnfermeriaSource, runCgeEnfermeria } from "./sources/cge-enfermeria.
 import { cgcofFarmaciaSource, runCgcofFarmacia } from "./sources/cgcof-farmacia.js";
 import { ciccpIngenierosSource, runCiccpIngenieros } from "./sources/ciccp-ingenieros.js";
 import { coiimIngenierosSource, runCoiimIngenieros } from "./sources/coiim-ingenieros.js";
+import { riiDivBEsSource, runRiiDivBEs } from "./sources/rii-div-b-es.js";
 import { illinoisIdfprSource, runIllinoisIdfpr } from "./sources/illinois-idfpr.js";
 import { newYorkDosSource, runNewYorkDos } from "./sources/new-york-dos.js";
 import { northCarolinaLbcSource, runNorthCarolinaLbc } from "./sources/north-carolina-lbc.js";
@@ -364,6 +365,9 @@ import { copmPsicologosSource, runCopmPsicologos } from "./sources/copm-psicolog
 import { riiInstaladoresEsSource, runRiiInstaladoresEs } from "./sources/rii-instaladores-es.js";
 import { maaArchitectsSource, runMaaArchitects } from "./sources/maa-architects.js";
 import { icacRoacEsSource, runIcacRoacEs } from "./sources/icac-roac-es.js";
+// 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
+// 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
+import { cpbcBcPharmacistsSource, runCpbcBcPharmacists } from "./sources/cpbc-bc-pharmacists.js";
 import {
   cgnNotariadoEnabled,
   runCgnNotariado,
@@ -465,6 +469,7 @@ async function main(): Promise<void> {
   const cgcofFarmaciaOn = cgcofFarmaciaSource.enabled();
   const ciccpIngenierosOn = ciccpIngenierosSource.enabled();
   const coiimIngenierosOn = coiimIngenierosSource.enabled();
+  const riiDivBEsOn = riiDivBEsSource.enabled();
   const illinoisIdfprOn = illinoisIdfprSource.enabled();
   const newYorkDosOn = newYorkDosSource.enabled();
   const northCarolinaLbcOn = northCarolinaLbcSource.enabled();
@@ -619,6 +624,7 @@ async function main(): Promise<void> {
   const vancouverBusinessLicensesOn = vancouverBusinessLicensesSource.enabled();
   const calgaryBusinessLicencesOn = calgaryBusinessLicencesSource.enabled();
   const icacRoacEsOn = icacRoacEsSource.enabled();
+  const cpbcBcPharmacistsOn = cpbcBcPharmacistsSource.enabled();
   const habitissimoEsOn = habitissimoEsSource.enabled();
   const openDataBcnLocalesOn = openDataBcnLocalesSource.enabled();
   const farmaceuticosEsGuardiaOn = farmaceuticosEsGuardiaSource.enabled();
@@ -729,6 +735,7 @@ async function main(): Promise<void> {
     !cgcofFarmaciaOn &&
     !ciccpIngenierosOn &&
     !coiimIngenierosOn &&
+    !riiDivBEsOn &&
     !illinoisIdfprOn &&
     !newYorkDosOn &&
     !northCarolinaLbcOn &&
@@ -903,6 +910,7 @@ async function main(): Promise<void> {
     !maaArchitectsOn &&
     !icacRoacEsOn &&
     !nebraskaEaOn &&
+    !cpbcBcPharmacistsOn &&
     !cgnNotariadoOn &&
     !cgcodEsOn &&
     !cgeEconomistasEsOn &&
@@ -1709,6 +1717,7 @@ async function main(): Promise<void> {
     [ciccpIngenierosOn, "ciccp-ingenieros", runCiccpIngenieros],
     [coiimIngenierosOn, "coiim-ingenieros", runCoiimIngenieros],
     // 2026-05-21 wave: ES electricidad + hvac — RII División B
+    [riiDivBEsOn, "rii-div-b-es", runRiiDivBEs],
     // 2026-05-18 wave MX → 500k
     [sicSsMedicinaOn, "sic-ss-medicina", runSicSsMedicina],
     [cecmDentistasOn, "cecm-dentistas", runCecmDentistas],
@@ -1828,6 +1837,9 @@ async function main(): Promise<void> {
     // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
     // 2026-06-01: ES RASIC Cataluña — industrial installers
     [rasicInstaladorsCatOn, "rasic-instaladores-cat", runRasicInstaladorsCat],
+    // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
+    // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
+    [cpbcBcPharmacistsOn, "cpbc-bc-pharmacists", runCpbcBcPharmacists],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

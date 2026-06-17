@@ -398,7 +398,12 @@ export type ScrapeSource =
   // 2026-06-01: CA notario — BC Notaries Association public member directory (~458 records)
   // 2026-06-01: ES RASIC Cataluña — industrial installers (electricidad / fontaneria / hvac /
   // cerrajero); first government-backed ES cerrajero source (~800 alarm records + 19k total).
-  | "rasic-instaladores-cat";
+  | "rasic-instaladores-cat"
+  // 2026-05-21 wave: ES electricidad + hvac — RII División B national installer registry
+  | "rii-div-b-es"
+  // 2026-05-21: US Kentucky DHBC — electricians, HVAC, plumbers (KY)
+  // 2026-05-21: CA BC pharmacists — CPBC public register (~8k registrants)
+  | "cpbc-bc-pharmacists";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
