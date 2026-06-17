@@ -325,7 +325,9 @@ export type ScrapeSource =
   // 2026-05-31: College of Physiotherapists of Ontario — public register (~19k CA physiotherapists).
   | "cpo-on-physio"
   // 2026-06-01: US psicologia — Oklahoma State Board of Examiners of Psychologists (~1,200 records)
-  | "ok-osbep-psychologists";
+  | "ok-osbep-psychologists"
+  // 2026-06-01: CA notario — BC Notaries Association public member directory (~458 records)
+  | "bcna-bc-notaries";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

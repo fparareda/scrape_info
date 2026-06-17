@@ -303,6 +303,8 @@ import {
 import { cdssSkDentistsSource, runCdssSkDentists } from "./sources/cdss-sk-dentists.js";
 // 2026-06-01: US psicologia — Oklahoma OSBEP psychologists
 import { okOsbepPsychologistsSource, runOkOsbepPsychologists } from "./sources/ok-osbep-psychologists.js";
+// 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
+import { bcnaBcNotariesSource, runBcnaBcNotaries } from "./sources/bcna-bc-notaries.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -580,6 +582,7 @@ async function main(): Promise<void> {
   const riiInstaladorasGasEsOn = riiInstaladorasGasEsSource.enabled();
   const cdssSkDentistsOn = cdssSkDentistsSource.enabled();
   const okOsbepPsychologistsOn = okOsbepPsychologistsSource.enabled();
+  const bcnaBcNotariesOn = bcnaBcNotariesSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const overtureOn = overtureEnabled();
   const competitorNaOn = competitorNaSource.enabled();
@@ -779,6 +782,7 @@ async function main(): Promise<void> {
     !lsmLawyersMbOn &&
     !rqciQcCaOn &&
     !okOsbepPsychologistsOn &&
+    !bcnaBcNotariesOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1636,6 +1640,8 @@ async function main(): Promise<void> {
     [riiDivBElectricidadEsOn, "rii-div-b-electricidad-es", runRiiDivBElectricidadEs],
     // 2026-06-01: US psicologia — Oklahoma OSBEP psychologists (~1,200 records)
     [okOsbepPsychologistsOn, "ok-osbep-psychologists", runOkOsbepPsychologists],
+    // 2026-06-01: CA notario — BC Notaries Association (~458 BC notaries)
+    [bcnaBcNotariesOn, "bcna-bc-notaries", runBcnaBcNotaries],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
