@@ -281,7 +281,10 @@ export type ScrapeSource =
   | "iowa-dial-contractors"
   // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members)
   // 2026-06-07: AEDAF — Asociación Española de Asesores Fiscales (~664 members, fiscal)
-  | "aedaf-asesores-fiscales-es";
+  | "aedaf-asesores-fiscales-es"
+  | "pagesjaunes"      // pagesjaunes.fr (FR)
+  // 2026-06-08: CT DCP State Licenses and Credentials (electricidad/fontaneria/hvac/carpinteria/ingenieria/arquitecto)
+  | "connecticut-dcp";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw
