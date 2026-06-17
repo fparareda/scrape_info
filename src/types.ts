@@ -385,7 +385,12 @@ export type ScrapeSource =
   // API, ~49k active records, distinct from oregon-ccb (contractor businesses).
   | "oregon-bcd"
   // 2026-06-11: scout wave — ME electricians + SK dentists
-  | "maine-alms-electricians"; // Maine ALMS Electricians' Examining Board (electricidad)
+  | "maine-alms-electricians" // Maine ALMS Electricians' Examining Board (electricidad)
+  // 2026-06-02: Manitoba Dental Association — server-rendered HTML roster
+  | "mda-mb-dentists"  // manitobadentist.ca dentist registry (~856 records)
+  // 2026-06-02: Vermont DFS — Department of Fire Safety licensing master list
+  // (~11k electricians, plumbers, gas installers). Socrata open-data CSV.
+  | "vermont-dfs";
 
 /**
  * Normalised record emitted by every source. Sources convert their raw

@@ -265,6 +265,7 @@ import { nsrddaNsDentistsSource, runNsrddaNsDentists } from "./sources/nsrdda-ns
 import { cpsnbNbPhysiciansSource, runCpsnbNbPhysicians } from "./sources/cpsnb-nb-physicians.js";
 // 2026-05-30: Oregon BCD — US OR individual trade licenses (Socrata)
 import { oregonBcdSource, runOregonBcd } from "./sources/oregon-bcd.js";
+import { mdaMbDentistsSource, runMdaMbDentists } from "./sources/mda-mb-dentists.js";
 import { cnoOntarioSource, runCnoOntario } from "./sources/cno-ontario.js";
 import { oiiqQuebecSource, runOiiqQuebec } from "./sources/oiiq-quebec.js";
 import { bccnmBcSource, runBccnmBc } from "./sources/bccnm-bc.js";
@@ -339,6 +340,8 @@ import { okOsbepPsychologistsSource, runOkOsbepPsychologists } from "./sources/o
 import { bcnaBcNotariesSource, runBcnaBcNotaries } from "./sources/bcna-bc-notaries.js";
 // 2026-06-11: scout wave
 import { maineAlmsElectriciansSource, runMaineAlmsElectricians } from "./sources/maine-alms-electricians.js";
+// 2026-06-02: Vermont DFS — Socrata open-data CSV (~11k electricians + plumbers)
+import { vermontDfsSource, runVermontDfs } from "./sources/vermont-dfs.js";
 // 2026-05-18 wave MX → 500k: 8 new sources
 import { sicSsMedicinaSource, runSicSsMedicina } from "./sources/sic-ss-medicina.js";
 import { cecmDentistasSource, runCecmDentistas } from "./sources/cecm-dentistas.js";
@@ -582,6 +585,7 @@ async function main(): Promise<void> {
   const nsrddaNsDentistsOn = nsrddaNsDentistsSource.enabled();
   const cpsnbNbPhysiciansOn = cpsnbNbPhysiciansSource.enabled();
   const oregonBcdOn = oregonBcdSource.enabled();
+  const mdaMbDentistsOn = mdaMbDentistsSource.enabled();
   const cnoOntarioOn = cnoOntarioSource.enabled();
   const oiiqQuebecOn = oiiqQuebecSource.enabled();
   const bccnmBcOn = bccnmBcSource.enabled();
@@ -655,6 +659,7 @@ async function main(): Promise<void> {
   const copmPsicologosOn = copmPsicologosSource.enabled();
   const maaArchitectsOn = maaArchitectsSource.enabled();
   const maineAlmsElectriciansOn = maineAlmsElectriciansSource.enabled();
+  const vermontDfsOn = vermontDfsSource.enabled();
   const cgnNotariadoOn = cgnNotariadoEnabled();
   const cgcodEsOn = cgcodEsEnabled();
   // 2026-05-20: ES colegios de economistas
@@ -828,6 +833,7 @@ async function main(): Promise<void> {
     !nsrddaNsDentistsOn &&
     !cpsnbNbPhysiciansOn &&
     !oregonBcdOn &&
+    !mdaMbDentistsOn &&
     !cnoOntarioOn &&
     !oiiqQuebecOn &&
     !bccnmBcOn &&
@@ -918,7 +924,8 @@ async function main(): Promise<void> {
     !lsmMbLawyersOn &&
     !riiGasEsOn &&
     !jcylInstaladoresEsOn &&
-    !maineAlmsElectriciansOn
+    !maineAlmsElectriciansOn &&
+    !vermontDfsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1680,6 +1687,7 @@ async function main(): Promise<void> {
     [nsrddaNsDentistsOn, "nsrdda-ns-dentists", runNsrddaNsDentists],
     // 2026-05-30: CPSNB NB physicians
     [cpsnbNbPhysiciansOn, "cpsnb-nb-physicians", runCpsnbNbPhysicians],
+    [mdaMbDentistsOn, "mda-mb-dentists", runMdaMbDentists],
     [npiBulkStreamOn, "npi-bulk-stream", runNpiBulkStream],
     [npiNursesOn, "npi-nurses", runNpiNurses],
     [npiPharmacistsOn, "npi-pharmacists", runNpiPharmacists],
@@ -1804,6 +1812,8 @@ async function main(): Promise<void> {
     [jcylInstaladoresEsOn, "jcyl-instaladoras-es", runJcylInstaladoresEs],
     // 2026-06-11: scout wave
     [maineAlmsElectriciansOn, "maine-alms-electricians", runMaineAlmsElectricians],
+    // 2026-06-02: Vermont DFS — electricians + plumbers (~11k)
+    [vermontDfsOn, "vermont-dfs", runVermontDfs],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {
