@@ -271,6 +271,7 @@ import {
   runAedafAsesoresFiscalesEs,
 } from "./sources/aedaf-asesores-fiscales-es.js";
 import { waCpaBoardSource, runWaCpaBoard } from "./sources/wa-cpa-board.js";
+import { cptbcPhysioSource, runCptbcPhysio } from "./sources/cptbc-physio.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -528,6 +529,7 @@ async function main(): Promise<void> {
   const cgfeFisioOn = cgfeFisioSource.enabled();
   const peivmaPeiVetsOn = peivmaPeiVetsSource.enabled();
   const cdsaAbDentistsOn = cdsaAbDentistsSource.enabled();
+  const cptbcPhysioOn = cptbcPhysioSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -724,6 +726,7 @@ async function main(): Promise<void> {
     !coptocylToOn &&
     !peivmaPeiVetsOn &&
     !cdsaAbDentistsOn &&
+    !cptbcPhysioOn &&
     !sicSsMedicinaOn &&
     !cecmDentistasOn &&
     !cenadiEnfermeriaOn &&
@@ -1543,6 +1546,8 @@ async function main(): Promise<void> {
     [aedafAsesoresFiscalesEsOn, "aedaf-asesores-fiscales-es", runAedafAsesoresFiscalesEs],
     // 2026-06-09: WA Board of Accountancy CPAs — first US fiscal source
     [waCpaBoardOn, "wa-cpa-board", runWaCpaBoard],
+    // 2026-06-12: CA CPTBC BC physiotherapists (Alinity)
+    [cptbcPhysioOn, "cptbc-physio", runCptbcPhysio],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

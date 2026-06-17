@@ -242,6 +242,8 @@ export type ScrapeSource =
   // (Alinity tenant `mvma`, ~1k vets + ~600 techs; we keep vets only).
   | "mvma-mb-vets"
   | "peivma-pei-vets"
+  // 2026-06-12: CA — CPTBC BC physiotherapists (Alinity tenant cptbc)
+  | "cptbc-physio"
   // 2026-05-26: 411.ca — CA generalist business directory (~3M businesses,
   // Angular SSR, schema.org markup, free pagination ?p=N).
   | "411-ca"
