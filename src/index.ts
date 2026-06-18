@@ -960,7 +960,18 @@ async function main(): Promise<void> {
     !jcylInstaladoresEsOn &&
     !maineAlmsElectriciansOn &&
     !vermontDfsOn &&
-    !rasicInstaladorsCatOn
+    !rasicInstaladorsCatOn &&
+    !apegnbNbEngineersOn &&
+    !cgcfeFisioterapeutasOn &&
+    !codeCasLeonDentistasOn &&
+    !cptaAbPhysioOn &&
+    !ctElicenseOn &&
+    !cvoOnVetsOn &&
+    !iardcIlAttorneysOn &&
+    !icomemMedicosEsOn &&
+    !indianaPlaOn &&
+    !irsPtinOn &&
+    !riiDivBTermicasEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
