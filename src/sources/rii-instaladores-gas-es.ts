@@ -2,6 +2,8 @@ import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { withScrapeRun } from "../telemetry.js";
 
 /**
@@ -128,108 +130,6 @@ async function politeFetch(url: string): Promise<FetchResponse | null> {
     }
   }
   return null;
-}
-
-// ---------------------------------------------------------------------------
-// Province → city-slug fallback map
-// ---------------------------------------------------------------------------
-
-const PROVINCE_TO_CITY: Record<string, string> = {
-  "a coruna": "a-coruna",
-  "a coruña": "a-coruna",
-  coruña: "a-coruna",
-  coruna: "a-coruna",
-  alava: "vitoria-gasteiz",
-  albacete: "albacete",
-  alicante: "alicante",
-  almeria: "almeria",
-  asturias: "oviedo",
-  avila: "avila",
-  badajoz: "badajoz",
-  baleares: "palma",
-  "illes balears": "palma",
-  barcelona: "barcelona",
-  burgos: "burgos",
-  caceres: "caceres",
-  cadiz: "cadiz",
-  cantabria: "santander",
-  castellon: "castellon",
-  ceuta: "ceuta",
-  "ciudad real": "ciudad-real",
-  cordoba: "cordoba",
-  cuenca: "cuenca",
-  girona: "girona",
-  granada: "granada",
-  guadalajara: "guadalajara",
-  gipuzkoa: "san-sebastian",
-  guipuzcoa: "san-sebastian",
-  huelva: "huelva",
-  huesca: "huesca",
-  jaen: "jaen",
-  "la rioja": "logrono",
-  "las palmas": "las-palmas-de-gran-canaria",
-  leon: "leon",
-  lleida: "lleida",
-  lugo: "lugo",
-  madrid: "madrid",
-  malaga: "malaga",
-  melilla: "melilla",
-  murcia: "murcia",
-  navarra: "pamplona",
-  ourense: "ourense",
-  palencia: "palencia",
-  pontevedra: "pontevedra",
-  salamanca: "salamanca",
-  "santa cruz de tenerife": "santa-cruz-de-tenerife",
-  tenerife: "santa-cruz-de-tenerife",
-  segovia: "segovia",
-  sevilla: "sevilla",
-  soria: "soria",
-  tarragona: "tarragona",
-  teruel: "teruel",
-  toledo: "toledo",
-  valencia: "valencia",
-  valladolid: "valladolid",
-  vizcaya: "bilbao",
-  bizkaia: "bilbao",
-  zamora: "zamora",
-  zaragoza: "zaragoza",
-};
-
-function normaliseStr(s: string): string {
-  return s
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-}
-
-function slugifyCity(raw: string | undefined): string | undefined {
-  if (!raw) return undefined;
-  const s = normaliseStr(raw);
-  if (!s) return undefined;
-  return s.replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || undefined;
-}
-
-function citySlugFromMunicipality(
-  municipality: string | undefined,
-  province: string | undefined,
-): string | undefined {
-  // Try municipality first (direct slug)
-  if (municipality) {
-    const muniSlug = slugifyCity(municipality);
-    if (muniSlug) return muniSlug;
-  }
-  // Fall back to province → capital mapping
-  if (province) {
-    const pKey = normaliseStr(province);
-    if (PROVINCE_TO_CITY[pKey]) return PROVINCE_TO_CITY[pKey];
-    // Partial match
-    for (const [key, slug] of Object.entries(PROVINCE_TO_CITY)) {
-      if (pKey.includes(key) || key.includes(pKey)) return slug;
-    }
-  }
-  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -408,18 +308,28 @@ async function fetchRiiInstaladorasGas(
     `[rii_gas_es] after deduplication: ${dedupedRows.length} unique entities`,
   );
 
+  const client = getSupabaseClient();
   const out: ScrapedProfessional[] = [];
-  let droppedNoCity = 0;
+  let noCity = 0;
 
   for (let idx = 0; idx < dedupedRows.length; idx += 1) {
     if (out.length >= limit) break;
     const row = dedupedRows[idx];
 
-    const citySlug = citySlugFromMunicipality(row.municipio, row.provincia);
-    if (!citySlug) {
-      droppedNoCity += 1;
-      continue;
+    // Auto-seed the city by NAME so the row survives the sink. When no
+    // municipio, emit citySlug="" (sink writes city_slug=NULL, keeps the
+    // row) instead of dropping it. Do NOT map province→capital and emit a
+    // possibly-unseeded slug.
+    let citySlug = "";
+    if (row.municipio) {
+      const cityResult = await ensureCity(client, {
+        name: row.municipio,
+        state: row.provincia || row.ccaa || "España",
+        country: "ES",
+      });
+      if (cityResult) citySlug = cityResult.slug;
     }
+    if (!citySlug) noCity += 1;
 
     const sourceId = stableSourceId(row, idx);
 
@@ -456,7 +366,7 @@ async function fetchRiiInstaladorasGas(
 
   console.log(
     `[rii_gas_es] built ${out.length} records ` +
-      `(droppedNoCity=${droppedNoCity})`,
+      `(noCity=${noCity}, kept with city_slug=NULL)`,
   );
   return out;
 }
@@ -498,7 +408,7 @@ export async function runRiiInstaladorasGasEs(): Promise<void> {
       );
   }
 
-  const sink = getSink();
+  const sink = getSink({ trustCitySlugs: true });
 
   await withScrapeRun("rii-instaladores-gas-es", async () => {
     const rows = await fetchRiiInstaladorasGas(limit);

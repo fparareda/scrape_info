@@ -1,5 +1,5 @@
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
-import { normalise } from "../normalise.js";
+import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
 import { delay, toTitleCase } from "./_bulk-utils.js";
 
@@ -194,12 +194,19 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
             sourceId: `cgcoo-opticos:${prov.id}:${r.num}`,
             name: toTitleCase(r.name),
             categoryKey: "medicina",
-            citySlug: prov.citySlug,
+            // Geo is provincia-level only (the registry does not give a
+            // municipality per colegiado). Emit citySlug="" so the sink
+            // writes city_slug=NULL and KEEPS the row; surface the
+            // province in metadata.province_slug. The previous
+            // province→capital citySlug (e.g. "guadalajara-es",
+            // "leon-es") is not always seeded in `cities` → rows dropped.
+            citySlug: "",
             licenseNumber: r.num,
             metadata: {
               country: "ES",
               authority: "CGCOO",
               provincia: prov.cityName,
+              province_slug: slugify(prov.cityName),
               provincia_id: prov.id,
               profession: "optico-optometrista",
               verified_by_authority: true,

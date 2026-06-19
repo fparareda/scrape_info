@@ -4,8 +4,10 @@ import type {
   ScrapeSource,
   ScraperSource,
 } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
+import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { parseCsv } from "./_bulk-utils.js";
 
 /**
@@ -91,6 +93,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     return [];
   }
 
+  const client = getSupabaseClient();
   const rows = parseCsv(csv);
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
@@ -128,11 +131,18 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     const provincia = (row["provincia"] ?? "").trim();
     const ccaa = (row["comunidad_autonoma"] ?? "").trim();
 
-    const citySlug = municipio
-      ? slugify(municipio)
-      : provincia
-        ? slugify(provincia)
-        : "espana";
+    // Auto-seed the city by NAME so the row survives the sink. When no
+    // municipio, emit citySlug="" (sink writes city_slug=NULL, keeps the
+    // row). Do NOT fabricate slugify(provincia)/"espana" — not seeded.
+    let citySlug = "";
+    if (municipio) {
+      const cityResult = await ensureCity(client, {
+        name: municipio,
+        state: provincia || ccaa || "España",
+        country: "ES",
+      });
+      if (cityResult) citySlug = cityResult.slug;
+    }
 
     out.push(
       normalise({
@@ -195,7 +205,7 @@ export async function runRiiDivATalleresEs(): Promise<{
   if (records.length === 0)
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
 
-  const sink = getSink();
+  const sink = getSink({ trustCitySlugs: true });
   const { inserted, updated, skipped } = await sink.upsert(records);
   console.log(
     `[rii-div-a-talleres-es] upserted=${records.length} ` +

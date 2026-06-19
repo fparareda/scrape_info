@@ -1,10 +1,9 @@
 import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScrapeSource, ScraperSource } from "../types.js";
-import { normalise } from "../normalise.js";
+import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
 import { withScrapeRun } from "../telemetry.js";
 import { parseCsv } from "./_bulk-utils.js";
-import { mxStateToCity } from "./_mx-states.js";
 
 /**
  * CONAHCYT — SNII (Sistema Nacional de Investigadores e
@@ -108,7 +107,12 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       row["estado"] ||
       row["entidad_federativa"] ||
       row["entidad_inst"];
-    const citySlug = mxStateToCity(entidad) ?? "cdmx";
+    // SNII is a national padrón with only entidad (state) granularity per
+    // row. We MUST NOT fabricate a city slug (the old `mxStateToCity(...) ??
+    // "cdmx"` produced slugs not seeded in `cities`, dropping ~100% at the
+    // sink). Emit citySlug="" (sink writes city_slug=NULL) and surface the
+    // entidad as metadata.province_slug.
+    const provinceSlug = entidad ? slugify(entidad) : undefined;
 
     out.push(
       normalise({
@@ -117,7 +121,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         sourceId: `conahcyt-snii:${String(cvu).trim()}`,
         name: String(nombre).trim().replace(/\s+/g, " "),
         categoryKey: category,
-        citySlug,
+        citySlug: "",
         licenseNumber: String(cvu).trim(),
         metadata: {
           country: "MX",
@@ -130,6 +134,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           nivel: row["nivel"] || row["nivel_snii"],
           categoria: row["categoria"],
           entidad,
+          province_slug: provinceSlug,
         },
       }),
     );

@@ -1,8 +1,11 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ScrapedProfessional, ScraperSource, ScrapeSource } from "../types.js";
 import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
 import { withScrapeRun } from "../telemetry.js";
 import { getCities } from "../cities.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import {
   parseCsv,
   pick,
@@ -93,6 +96,7 @@ function isActiveStatus(status: string): boolean {
 // ---------------------------------------------------------------------------
 
 async function fetchAll(
+  client: SupabaseClient,
   cityIndex: Map<string, string>,
   limit: number,
 ): Promise<{
@@ -170,13 +174,21 @@ async function fetchAll(
       "number",
     ]);
 
-    // City resolution
+    // City resolution: prefer the pre-seeded CA index (canonical slugs +
+    // Ontario amalgamation aliases); otherwise auto-seed the city by name so
+    // long-tail ON municipalities are not dropped. Rows with no city at all
+    // keep citySlug:"" so the sink preserves them with a NULL city.
     const rawCity = pick(row, ["city", "municipality", "town"]);
-    const citySlug = resolveCity(cityIndex, rawCity);
-    if (!citySlug) {
-      droppedNoCity += 1;
-      continue;
+    let citySlug = resolveCity(cityIndex, rawCity) ?? "";
+    if (!citySlug && rawCity) {
+      const cityResult = await ensureCity(client, {
+        name: rawCity,
+        state: "ON",
+        country: "CA",
+      });
+      if (cityResult) citySlug = cityResult.slug;
     }
+    if (!citySlug) droppedNoCity += 1;
 
     // Address fields
     const street = pick(row, [
@@ -236,8 +248,10 @@ async function fetchAll(
     );
   }
 
+  const cs = getCityUpsertStats();
   console.log(
-    `[cpo-on-physio] parsed=${out.length} droppedNoCity=${droppedNoCity} droppedStatus=${droppedStatus} droppedNoName=${droppedNoName}`,
+    `[cpo-on-physio] parsed=${out.length} droppedNoCity=${droppedNoCity} droppedStatus=${droppedStatus} droppedNoName=${droppedNoName} ` +
+      `cities_created=${cs.inserted} geocoded=${cs.geocoded} ungeocoded=${cs.failedGeocode}`,
   );
 
   return { rows: out, droppedStatus, droppedNoName, droppedNoCity };
@@ -274,10 +288,11 @@ export async function runCpoOnPhysio(): Promise<{
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
 
   const cityIndex = await loadOnCityIndex();
+  const client = getSupabaseClient();
 
   return withScrapeRun("cpo-on-physio", async () => {
     const { rows, droppedStatus, droppedNoName, droppedNoCity } =
-      await fetchAll(cityIndex, limit);
+      await fetchAll(client, cityIndex, limit);
 
     if (rows.length === 0) {
       return {
@@ -291,7 +306,7 @@ export async function runCpoOnPhysio(): Promise<{
       };
     }
 
-    const sink = getSink();
+    const sink = getSink({ trustCitySlugs: true });
     const { inserted, updated, skipped } = await sink.upsert(rows);
 
     console.log(

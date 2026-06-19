@@ -4,8 +4,10 @@ import type {
   ScrapeSource,
   ScraperSource,
 } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
+import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { withScrapeRun } from "../telemetry.js";
 
 /**
@@ -87,6 +89,7 @@ async function fetchPage(offset: number): Promise<Record<string, string>[]> {
 }
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+  const client = getSupabaseClient();
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
   let offset = 0;
@@ -117,11 +120,19 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       const document = (row["document"] ?? "").trim() || undefined;
       const address =
         [adresa, cp, municipi].filter(Boolean).join(", ") || undefined;
-      const citySlug = municipi
-        ? slugify(municipi)
-        : cp
-          ? `cp-${cp}`
-          : "cataluna";
+      // Auto-seed the city by NAME so the row is not dropped at the sink.
+      // When there is no municipi, emit citySlug="" (sink writes
+      // city_slug=NULL and KEEPS the row). Do NOT fabricate slugs like
+      // "cp-{cp}" or "cataluna" — they are not in `cities` and dropped.
+      let citySlug = "";
+      if (municipi) {
+        const cityResult = await ensureCity(client, {
+          name: municipi,
+          state: "Cataluña",
+          country: "ES",
+        });
+        if (cityResult) citySlug = cityResult.slug;
+      }
 
       for (const { col, category } of FLAG_MAP) {
         if (!isYes(row[col])) continue;
@@ -199,7 +210,7 @@ export async function runRasicInstaladorsCat(): Promise<{
     if (records.length === 0) {
       return { rowsFetched: 0, rowsUpserted: 0, rowsSkipped: 0 };
     }
-    const sink = getSink();
+    const sink = getSink({ trustCitySlugs: true });
     const { inserted, updated, skipped } = await sink.upsert(records);
     console.log(
       `[rasic-instaladores-cat] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,

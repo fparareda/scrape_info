@@ -5,14 +5,10 @@ import type {
   ScraperSource,
 } from "../types.js";
 import { normalise, slugify } from "../normalise.js";
-import { getCities } from "../cities.js";
 import { getSink } from "../sink.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { parseCsv, pick } from "./_bulk-utils.js";
-import {
-  mxStateToCity,
-  mxMunicipioToCity,
-  MX_STATE_TO_CITY,
-} from "./_mx-states.js";
 
 /**
  * SIEM — Sistema de Información Empresarial Mexicano (Secretaría de
@@ -211,48 +207,6 @@ const GIRO_KEYWORD_TO_CATEGORY: Array<[RegExp, CategoryKey]> = [
   [/\bm[eé]dic/i, "medicina"],
 ];
 
-let MX_CITY_SLUGS_CACHE: Set<string> | undefined;
-
-async function ensureMxCitySlugs(): Promise<Set<string>> {
-  if (MX_CITY_SLUGS_CACHE) return MX_CITY_SLUGS_CACHE;
-  const cities = await getCities({ country: "MX" });
-  MX_CITY_SLUGS_CACHE = new Set(cities.map((c) => c.slug));
-  return MX_CITY_SLUGS_CACHE;
-}
-
-/**
- * Pick a city slug for a SIEM row. SIEM gives us both `municipio`
- * (free-text label) and `estado`. We try the municipio first against
- * the seeded MX cities; on miss, fall back to the state → metro
- * mapping used by other MX sources.
- */
-function siemRowToCitySlug(
-  municipio: string,
-  estado: string,
-  validSlugs: Set<string>,
-): string | null {
-  // 1. Alias map (chilpancingo-de-los-bravo → chilpancingo, etc.).
-  const aliased = mxMunicipioToCity(municipio);
-  if (aliased && validSlugs.has(aliased)) return aliased;
-
-  // 2. Direct slugify match against seeded MX cities.
-  const muniSlug = slugify(municipio);
-  if (muniSlug && validSlugs.has(muniSlug)) return muniSlug;
-
-  // 3. State → metro mapping (seeded preferred).
-  const stateMapped = mxStateToCity(estado);
-  if (stateMapped && validSlugs.has(stateMapped)) return stateMapped;
-
-  // 4. Final unconditional fallback: MX_STATE_TO_CITY covers every one
-  //    of the 32 estados; return the metro even if validSlugs check
-  //    misses (defensive — keeps records over dropping them).
-  const stateSlug = slugify(estado);
-  if (stateSlug && MX_STATE_TO_CITY[stateSlug]) {
-    return MX_STATE_TO_CITY[stateSlug];
-  }
-  return null;
-}
-
 function categoriseRow(scian: string, giro: string): CategoryKey | null {
   if (scian && SCIAN_TO_CATEGORY[scian]) return SCIAN_TO_CATEGORY[scian];
   if (!giro) return null;
@@ -322,12 +276,11 @@ export async function runSiem(): Promise<{
 
   const rows = parseCsv(text);
   console.log(`[siem] parsed ${rows.length} rows from ${url}`);
-  const validSlugs = await ensureMxCitySlugs();
+  const client = getSupabaseClient();
 
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
   let droppedNoCategory = 0;
-  let droppedNoCity = 0;
 
   for (const row of rows) {
     if (out.length >= limit) break;
@@ -345,11 +298,22 @@ export async function runSiem(): Promise<{
 
     const estado = pick(row, ["estado", "entidad"]);
     const municipio = pick(row, ["municipio", "nom_mun"]);
-    const citySlug = siemRowToCitySlug(municipio, estado, validSlugs);
-    if (!citySlug) {
-      droppedNoCity += 1;
-      continue;
+    // SIEM ships a real `municipio` per row. Auto-seed it via ensureCity
+    // (long-tail MX municipalities are not all pre-seeded) instead of
+    // inventing a state metro (the old siemRowToCitySlug fell back to
+    // MX_STATE_TO_CITY, fabricating slugs). On a missing/unusable municipio
+    // emit citySlug="" so the row survives with a NULL city + province_slug
+    // rather than being dropped.
+    let citySlug = "";
+    if (municipio) {
+      const cityResult = await ensureCity(client, {
+        name: municipio,
+        state: estado || undefined,
+        country: "MX",
+      });
+      if (cityResult) citySlug = cityResult.slug;
     }
+    const provinceSlug = estado ? slugify(estado) : undefined;
 
     // Stable dedupe key: SIEM doesn't ship a stable folio / RFC column,
     // so we hash razon_social + estado + municipio + cp.
@@ -382,6 +346,7 @@ export async function runSiem(): Promise<{
           giro: giro || undefined,
           estado: estado || undefined,
           municipio: municipio || undefined,
+          province_slug: provinceSlug,
           colonia: colonia || undefined,
           cp: cp || undefined,
           rango_empleados:
@@ -392,14 +357,16 @@ export async function runSiem(): Promise<{
     );
   }
 
+  const cs = getCityUpsertStats();
   console.log(
-    `[siem] kept=${out.length} dropped_no_category=${droppedNoCategory} dropped_no_city=${droppedNoCity}`,
+    `[siem] kept=${out.length} dropped_no_category=${droppedNoCategory} ` +
+      `cities_created=${cs.inserted} geocoded=${cs.geocoded}`,
   );
 
   if (out.length === 0)
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
 
-  const sink = getSink();
+  const sink = getSink({ trustCitySlugs: true });
   const { inserted, updated, skipped } = await sink.upsert(out);
   console.log(
     `[siem] done — fetched=${out.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,

@@ -1,6 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
+import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { normaliseNorthAmericanPhone } from "./_bulk-utils.js";
 
 /**
@@ -89,7 +92,10 @@ async function politeFetch(
  *   8: Issue Date
  *   9: Specialty
  */
-function parseTable(html: string): ScrapedProfessional[] {
+async function parseTable(
+  client: SupabaseClient,
+  html: string,
+): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
 
@@ -136,8 +142,18 @@ function parseTable(html: string): ScrapedProfessional[] {
     const fullName = [firstName, lastName].filter(Boolean).join(" ");
     if (!fullName) continue;
 
-    const citySlug = slugify(city);
-    if (!citySlug) continue;
+    // Auto-seed the city by NAME (OK municipalities are not all pre-seeded).
+    // When there is no city, emit citySlug:"" so the sink keeps the row with
+    // a NULL city instead of dropping it.
+    let citySlug = "";
+    if (city) {
+      const cityResult = await ensureCity(client, {
+        name: city,
+        state: stateCode || "OK",
+        country: "US",
+      });
+      if (cityResult) citySlug = cityResult.slug;
+    }
 
     const phone = normaliseNorthAmericanPhone(phoneRaw);
     const address = [city, stateCode, zip].filter(Boolean).join(", ");
@@ -170,7 +186,10 @@ function parseTable(html: string): ScrapedProfessional[] {
   return out;
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+async function fetchAll(
+  client: SupabaseClient,
+  limit: number,
+): Promise<ScrapedProfessional[]> {
   const formBody = new URLSearchParams({
     LAST_NAME: "",
     FIRST_NAME: "",
@@ -198,10 +217,12 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     return [];
   }
 
-  const records = parseTable(result.text);
+  const records = await parseTable(client, result.text);
   const capped = records.slice(0, limit);
+  const cs = getCityUpsertStats();
   console.log(
-    `[ok-osbep] parsed=${records.length} capped=${capped.length} limit=${limit}`,
+    `[ok-osbep] parsed=${records.length} capped=${capped.length} limit=${limit} ` +
+      `cities_created=${cs.inserted} geocoded=${cs.geocoded} ungeocoded=${cs.failedGeocode}`,
   );
   return capped;
 }
@@ -231,11 +252,12 @@ export async function runOkOsbepPsychologists(): Promise<{
   const limit =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
 
-  const records = await fetchAll(limit);
+  const client = getSupabaseClient();
+  const records = await fetchAll(client, limit);
   if (records.length === 0) {
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   }
-  const sink = getSink();
+  const sink = getSink({ trustCitySlugs: true });
   const { inserted, updated, skipped } = await sink.upsert(records);
   console.log(
     `[ok-osbep] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,

@@ -2,6 +2,8 @@ import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 
 /**
  * NYC Department of Buildings — License Info scraper.
@@ -37,9 +39,11 @@ import { getSink } from "../sink.js";
  *
  * City mapping: DOB uses NYC borough/neighbourhood names as city strings.
  * We map the five main ones (NEW YORK, BROOKLYN, BRONX, QUEENS, STATEN
- * ISLAND) to our seeded city slugs; all others are dropped (the sink
- * would reject them anyway for missing FK). This still covers ~53% of
- * active records (~2,800 rows).
+ * ISLAND) to our pre-seeded city slugs. Any other city (suburban NY, NJ,
+ * out-of-state licensees) is auto-seeded by name via ensureCity instead
+ * of being dropped — historically ~76% of active rows were lost to the
+ * borough-only whitelist. Rows with no city at all keep citySlug:"" so
+ * the sink preserves them with a NULL city.
  *
  * Off by default. Enable via PROLIO_RUN_NYC_DOB=true. Cap via
  * PROLIO_NYC_DOB_LIMIT (default 3000).
@@ -84,7 +88,8 @@ const LICENSE_TYPE_MAP = new Map<string, LicenseTypeEntry>(
  * DOB stores borough/neighbourhood names in `license_business_city`.
  * We map the five main NYC boroughs (and "Manhattan" alias) to the
  * city slugs we seeded in migrations 0021/0034/0045. Anything not in
- * this table is dropped — the sink would reject it for missing FK.
+ * this table is auto-seeded by name via ensureCity (see the run loop)
+ * rather than dropped.
  *
  * "NEW YORK" is the most common value (Manhattan licensees). Brooklyn
  * and the Bronx need disambiguation suffixes to avoid collision with
@@ -226,13 +231,13 @@ export async function runNycDob(): Promise<{
   const limit =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
 
-  const sink = getSink();
+  const client = getSupabaseClient();
+  const sink = getSink({ trustCitySlugs: true });
   const seen = new Set<string>();
   let totalFetched = 0;
   let totalInserted = 0;
   let totalUpdated = 0;
   let totalSkipped = 0;
-  let droppedNoCity = 0;
   let droppedNoName = 0;
   let droppedNoKey = 0;
 
@@ -266,10 +271,18 @@ export async function runNycDob(): Promise<{
           continue;
         }
 
-        const citySlug = mapDobCity(r.license_business_city);
-        if (!citySlug) {
-          droppedNoCity += 1;
-          continue;
+        // Prefer a pre-seeded borough slug; otherwise auto-seed the city by
+        // name. When there is no city at all, emit citySlug:"" so the sink
+        // keeps the row with a NULL city instead of dropping it.
+        const rawCity = r.license_business_city?.trim();
+        let citySlug = mapDobCity(rawCity) ?? "";
+        if (!citySlug && rawCity) {
+          const cityResult = await ensureCity(client, {
+            name: rawCity,
+            state: r.business_state?.trim() || "NY",
+            country: "US",
+          });
+          if (cityResult) citySlug = cityResult.slug;
         }
 
         const licenseEntry = LICENSE_TYPE_MAP.get(entry.type);
@@ -341,10 +354,12 @@ export async function runNycDob(): Promise<{
     }
   }
 
+  const cs = getCityUpsertStats();
   console.log(
     `[nyc-dob] done — fetched=${totalFetched} inserted=${totalInserted} ` +
       `updated=${totalUpdated} skipped=${totalSkipped} ` +
-      `droppedNoCity=${droppedNoCity} droppedNoName=${droppedNoName} droppedNoKey=${droppedNoKey}`,
+      `droppedNoName=${droppedNoName} droppedNoKey=${droppedNoKey} ` +
+      `cities_created=${cs.inserted} geocoded=${cs.geocoded} ungeocoded=${cs.failedGeocode}`,
   );
   return {
     fetched: totalFetched,

@@ -1,7 +1,10 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScrapeSource, ScraperSource } from "../types.js";
 import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { withScrapeRun } from "../telemetry.js";
 
 /**
@@ -144,9 +147,23 @@ function parseRows(html: string, alcaldia: string): Row[] {
   return out;
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+async function fetchAll(
+  client: SupabaseClient,
+  limit: number,
+): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
+  // All notarías here are in CDMX. Auto-seed the city slug via ensureCity
+  // rather than hardcoding "cdmx" (which may not be seeded → dropped at the
+  // sink). One ensureCity call; cached thereafter. Fall back to citySlug=""
+  // (NULL city) if the seed fails so rows are never dropped.
+  let cdmxSlug = "";
+  const cdmxResult = await ensureCity(client, {
+    name: "Ciudad de México",
+    state: "Ciudad de México",
+    country: "MX",
+  });
+  if (cdmxResult) cdmxSlug = cdmxResult.slug;
   for (const alcaldia of ALCALDIAS) {
     if (out.length >= limit) break;
     await sleep(REQUEST_DELAY_MS);
@@ -166,7 +183,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           sourceId: sid,
           name: r.name,
           categoryKey: CATEGORY,
-          citySlug: "cdmx",
+          citySlug: cdmxSlug,
           licenseNumber: r.num,
           phone: r.phone,
           address: r.address,
@@ -213,10 +230,15 @@ export async function runColegioNotariosCdmx(): Promise<{
       process.env.PROLIO_COLEGIO_NOTARIOS_CDMX_LIMIT ?? DEFAULT_LIMIT,
     );
     const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
-    const records = await fetchAll(limit);
+    const client = getSupabaseClient();
+    const records = await fetchAll(client, limit);
     if (records.length === 0)
       return { rowsFetched: 0, rowsUpserted: 0, rowsSkipped: 0 };
-    const sink = getSink();
+    const cs = getCityUpsertStats();
+    console.log(
+      `[colegio-notarios-cdmx] cities_created=${cs.inserted} geocoded=${cs.geocoded}`,
+    );
+    const sink = getSink({ trustCitySlugs: true });
     const { inserted, updated, skipped } = await sink.upsert(records);
     return {
       rowsFetched: records.length,
