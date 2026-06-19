@@ -92,7 +92,7 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const PAGE_SIZE = 200; // GLEIF v1 supports up to 200/page reliably.
 const REQUEST_DELAY_MS = 250; // ~4 req/s — well below any documented limit.
 const DEFAULT_LIMIT = 10_000;
-const COUNTRIES: ReadonlyArray<"ES" | "US" | "CA"> = ["ES", "US", "CA"];
+const COUNTRIES: ReadonlyArray<"ES" | "US" | "CA" | "CO"> = ["ES", "US", "CA", "CO"];
 
 // --- Types -----------------------------------------------------------------
 
