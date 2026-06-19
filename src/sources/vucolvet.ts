@@ -1,6 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { delay, toTitleCase } from "./_bulk-utils.js";
 
 /**
@@ -208,7 +211,10 @@ function selectProvincias(): ProvinciaConfig[] {
   return PROVINCIAS.filter((p) => wanted.has(p.id));
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+async function fetchAll(
+  client: SupabaseClient,
+  limit: number,
+): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
   let session: SessionState;
@@ -223,6 +229,18 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
 
   outer: for (const prov of targets) {
     let provHits = 0;
+    // Auto-seed the colegio capital city. The hardcoded `citySlug` values
+    // are not all present in the cities seed, so the old direct emit dropped
+    // entire provincias at the sink. ensureCity returns a stable slug for the
+    // capital; fall back to citySlug="" (NULL city) if seeding fails so rows
+    // are never lost.
+    let provCitySlug = "";
+    const provCity = await ensureCity(client, {
+      name: prov.cityName,
+      state: prov.cityName,
+      country: "ES",
+    });
+    if (provCity) provCitySlug = provCity.slug;
     for (const prefix of SURNAME_PREFIXES) {
       if (out.length >= limit) break outer;
       let rows: CardRow[] = [];
@@ -253,7 +271,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
             sourceId: `vucolvet:${prov.id}:${r.num}:${r.id}`,
             name: toTitleCase(r.name),
             categoryKey: "veterinario",
-            citySlug: prov.citySlug,
+            citySlug: provCitySlug,
             licenseNumber: r.num,
             metadata: {
               country: "ES",
@@ -302,11 +320,16 @@ export async function runVucolvet(): Promise<{
   }
   const raw = Number(process.env.PROLIO_VUCOLVET_LIMIT ?? DEFAULT_LIMIT);
   const limit = Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_LIMIT;
-  const records = await fetchAll(limit);
+  const client = getSupabaseClient();
+  const records = await fetchAll(client, limit);
   if (records.length === 0) {
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   }
-  const sink = getSink();
+  const cs = getCityUpsertStats();
+  console.log(
+    `[vucolvet] cities_created=${cs.inserted} geocoded=${cs.geocoded}`,
+  );
+  const sink = getSink({ trustCitySlugs: true });
   const { inserted, updated, skipped } = await sink.upsert(records);
   console.log(
     `[vucolvet] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,

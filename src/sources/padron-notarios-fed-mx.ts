@@ -1,9 +1,11 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ScrapedProfessional, ScrapeSource, ScraperSource } from "../types.js";
-import { normalise } from "../normalise.js";
+import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { withScrapeRun } from "../telemetry.js";
 import { parseCsv, pick } from "./_bulk-utils.js";
-import { mxStateToCity } from "./_mx-states.js";
 
 /**
  * Padrón de Notarios del Patrimonio Inmobiliario Federal — INDAABIN.
@@ -52,7 +54,10 @@ function buildAddress(row: Record<string, string>): string | undefined {
   return parts.length ? parts.join(", ") : undefined;
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+async function fetchAll(
+  client: SupabaseClient,
+  limit: number,
+): Promise<ScrapedProfessional[]> {
   const out: ScrapedProfessional[] = [];
   let response: Response;
   try {
@@ -89,12 +94,30 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     if (!id || !fullName) continue;
 
     const entidad = pick(row, ["entidad"]);
-    const citySlug = mxStateToCity(entidad) ?? "cdmx";
+    const municipio = pick(row, ["municipio"]);
 
     const status = pick(row, ["status", "estatus"]);
     // Only emit notarios "en funciones" — historical/inactive rows
     // pollute matching. Adjust later if needed.
     if (status && !status.toLowerCase().includes("funciones")) continue;
+
+    // The padrón ships a real `municipio` per row. Auto-seed it (long-tail
+    // MX municipalities are not all pre-seeded) instead of inventing a metro
+    // via mxStateToCity / hardcoding "cdmx" (which dropped rows at the sink).
+    // No usable municipio → emit citySlug="" so the row survives with a NULL
+    // city plus metadata.province_slug.
+    const muniClean =
+      municipio && municipio.toLowerCase() !== "sin dato" ? municipio : "";
+    let citySlug = "";
+    if (muniClean) {
+      const cityResult = await ensureCity(client, {
+        name: muniClean,
+        state: entidad || undefined,
+        country: "MX",
+      });
+      if (cityResult) citySlug = cityResult.slug;
+    }
+    const provinceSlug = entidad ? slugify(entidad) : undefined;
 
     out.push(
       normalise({
@@ -113,6 +136,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           correduria_o_notaria: pick(row, ["correduria_o_notaria"]),
           entidad,
           municipio: pick(row, ["municipio"]),
+          province_slug: provinceSlug,
           oficio_nombramiento: pick(row, ["oficio_nombramiento"]),
           fecha_comenzo_ejercer: pick(row, ["fecha_comenzo_ejercer"]),
           codigo_postal: pick(row, ["codigo_postal"]),
@@ -152,10 +176,15 @@ export async function runPadronNotariosFedMx(): Promise<{
     );
     const limit =
       Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
-    const records = await fetchAll(limit);
+    const client = getSupabaseClient();
+    const records = await fetchAll(client, limit);
     if (records.length === 0)
       return { rowsFetched: 0, rowsUpserted: 0, rowsSkipped: 0 };
-    const sink = getSink();
+    const cs = getCityUpsertStats();
+    console.log(
+      `[padron-notarios-fed-mx] cities_created=${cs.inserted} geocoded=${cs.geocoded}`,
+    );
+    const sink = getSink({ trustCitySlugs: true });
     const { inserted, updated, skipped } = await sink.upsert(records);
     return {
       rowsFetched: records.length,

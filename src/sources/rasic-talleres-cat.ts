@@ -4,8 +4,10 @@ import type {
   ScrapeSource,
   ScraperSource,
 } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
+import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { withScrapeRun } from "../telemetry.js";
 import { parseCsv } from "./_bulk-utils.js";
 
@@ -80,6 +82,7 @@ function pickService(row: Record<string, string>): string[] {
 }
 
 async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+  const client = getSupabaseClient();
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
   let offset = 0;
@@ -109,7 +112,18 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       const cp = (row["codi_postal"] ?? "").trim();
       const adre = (row["adre_a"] ?? "").trim();
       const address = [adre, cp, municipi, provincia].filter(Boolean).join(", ") || undefined;
-      const citySlug = municipi ? slugify(municipi) : provincia ? slugify(provincia) : "cataluna";
+      // Auto-seed the city by NAME so the row survives the sink. When no
+      // municipi, emit citySlug="" (sink writes city_slug=NULL, keeps the
+      // row). Do NOT fabricate slugify(provincia)/"cataluna" — not seeded.
+      let citySlug = "";
+      if (municipi) {
+        const cityResult = await ensureCity(client, {
+          name: municipi,
+          state: provincia || "Cataluña",
+          country: "ES",
+        });
+        if (cityResult) citySlug = cityResult.slug;
+      }
 
       out.push(
         normalise({
@@ -175,7 +189,7 @@ export async function runRasicTalleresCat(): Promise<{
     if (records.length === 0) {
       return { rowsFetched: 0, rowsUpserted: 0, rowsSkipped: 0 };
     }
-    const sink = getSink();
+    const sink = getSink({ trustCitySlugs: true });
     const { inserted, updated, skipped } = await sink.upsert(records);
     return {
       rowsFetched: records.length,

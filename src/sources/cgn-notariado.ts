@@ -2,6 +2,8 @@ import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
 import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { withScrapeRun } from "../telemetry.js";
 
 /**
@@ -302,121 +304,6 @@ function decodeEntities(s: string): string {
     });
 }
 
-/**
- * Derive a best-effort city slug from the raw "CIUDAD" or postal code
- * embedded in the address block.
- *
- * The directory doesn't give us a clean city name, but the provincial
- * capital of each entry's province is a reasonable approximation for
- * landing-page routing. We fall back to a static map of the 50
- * provinces + 2 autonomous cities.
- */
-const PROVINCE_TO_CITY: Record<string, string> = {
-  "a coruña": "a-coruna",
-  "álava": "vitoria-gasteiz",
-  alava: "vitoria-gasteiz",
-  albacete: "albacete",
-  alicante: "alicante",
-  almería: "almeria",
-  almeria: "almeria",
-  asturias: "oviedo",
-  ávila: "avila",
-  avila: "avila",
-  badajoz: "badajoz",
-  baleares: "palma",
-  "illes balears": "palma",
-  barcelona: "barcelona",
-  burgos: "burgos",
-  cáceres: "caceres",
-  caceres: "caceres",
-  cádiz: "cadiz",
-  cadiz: "cadiz",
-  cantabria: "santander",
-  castellón: "castellon",
-  castellon: "castellon",
-  ceuta: "ceuta",
-  "ciudad real": "ciudad-real",
-  córdoba: "cordoba",
-  cordoba: "cordoba",
-  cuenca: "cuenca",
-  girona: "girona",
-  granada: "granada",
-  guadalajara: "guadalajara",
-  gipuzkoa: "san-sebastian",
-  guipúzcoa: "san-sebastian",
-  huelva: "huelva",
-  huesca: "huesca",
-  jaén: "jaen",
-  jaen: "jaen",
-  "la rioja": "logrono",
-  "las palmas": "las-palmas-de-gran-canaria",
-  "palmas de gran canaria": "las-palmas-de-gran-canaria",
-  león: "leon",
-  leon: "leon",
-  lleida: "lleida",
-  lugo: "lugo",
-  madrid: "madrid",
-  málaga: "malaga",
-  malaga: "malaga",
-  melilla: "melilla",
-  murcia: "murcia",
-  navarra: "pamplona",
-  ourense: "ourense",
-  palencia: "palencia",
-  pontevedra: "pontevedra",
-  salamanca: "salamanca",
-  "santa cruz de tenerife": "santa-cruz-de-tenerife",
-  tenerife: "santa-cruz-de-tenerife",
-  segovia: "segovia",
-  sevilla: "sevilla",
-  soria: "soria",
-  tarragona: "tarragona",
-  teruel: "teruel",
-  toledo: "toledo",
-  valencia: "valencia",
-  valladolid: "valladolid",
-  vizcaya: "bilbao",
-  bizkaia: "bilbao",
-  zamora: "zamora",
-  zaragoza: "zaragoza",
-};
-
-/**
- * Slugify a free-text city/province name (e.g. "Vilanova i la Geltrú")
- * into the canonical kebab-case form used throughout the cities catalog.
- * Returns undefined for empty input.
- */
-function slugifyCity(input: string | undefined): string | undefined {
-  if (!input) return undefined;
-  const slug = input
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  return slug || undefined;
-}
-
-function citySlugFromAddress(address: string | undefined): string | undefined {
-  if (!address) return undefined;
-  // Pattern: "28001 - Madrid" or "28001-Madrid"
-  const cpProvMatch = address.match(/\d{5}\s*[-–]\s*([^,\n]+)/);
-  if (!cpProvMatch) return undefined;
-  const prov = cpProvMatch[1]
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-  // Direct lookup
-  if (PROVINCE_TO_CITY[prov]) return PROVINCE_TO_CITY[prov];
-  // Partial match
-  for (const [key, slug] of Object.entries(PROVINCE_TO_CITY)) {
-    if (prov.includes(key) || key.includes(prov)) return slug;
-  }
-  return undefined;
-}
-
 // --- Community IDs for the directory (autonomous communities) -----------
 // comunidad=0 returns all Spain; individual CCAA IDs allow chunked fetches
 // if needed. We try comunidad=0 first (single full-census request) and fall
@@ -431,21 +318,31 @@ const PROVINCIA_IDS: number[] = Array.from({ length: 52 }, (_, i) => i + 1);
 async function fetchAllNotarios(
   limit: number,
 ): Promise<ScrapedProfessional[]> {
+  const client = getSupabaseClient();
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
 
   // Dedup + normalise a parsed record into `out`. Returns true if added.
-  const pushRecord = (
+  // Auto-seed the city by NAME (the directory gives a real city per row)
+  // so the row survives the sink. When no city is parseable, emit
+  // citySlug="" (sink writes city_slug=NULL, keeps the row) instead of
+  // dropping it. Do NOT fall back to a province→capital slug that may not
+  // be seeded in `cities`.
+  const pushRecord = async (
     r: NotarioRecord,
     extra: Record<string, unknown>,
-  ): boolean => {
+  ): Promise<boolean> => {
     if (seen.has(r.sourceId)) return false;
     seen.add(r.sourceId);
-    const citySlug =
-      slugifyCity(r.city) ??
-      slugifyCity(r.province) ??
-      citySlugFromAddress(r.address);
-    if (!citySlug) return false;
+    let citySlug = "";
+    if (r.city) {
+      const cityResult = await ensureCity(client, {
+        name: r.city,
+        state: r.province || undefined,
+        country: "ES",
+      });
+      if (cityResult) citySlug = cityResult.slug;
+    }
     out.push(
       normalise({
         source: "cgn-notariado",
@@ -486,7 +383,7 @@ async function fetchAllNotarios(
     let added = 0;
     for (const r of records) {
       if (out.length >= limit) break;
-      if (pushRecord(r, {})) added += 1;
+      if (await pushRecord(r, {})) added += 1;
     }
     console.log(
       `[cgn_notariado] all-Spain parsed=${records.length} added=${added} total=${out.length}`,
@@ -513,7 +410,7 @@ async function fetchAllNotarios(
     let added = 0;
     for (const r of records) {
       if (out.length >= limit) break;
-      if (pushRecord(r, { provincia })) added += 1;
+      if (await pushRecord(r, { provincia })) added += 1;
     }
     console.log(
       `[cgn_notariado] provincia=${provincia} parsed=${records.length} added=${added} total=${out.length}`,

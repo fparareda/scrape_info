@@ -77,16 +77,15 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     if (seen.has(clave)) continue;
     seen.add(clave);
 
-    // representacion is e.g. "Ciudad de México", "Jalisco", "Guadalajara"
-    // — sometimes a state, sometimes the actual city. slugify normalises
-    // both. The cities seed handles "Ciudad de México" → "ciudad-de-mexico"
-    // (which won't match) and "Ciudad de México" alt slug "cdmx" (which
-    // also won't match). Manual cleanup table below catches the common
-    // state→city mappings.
+    // `representacion` is e.g. "Ciudad de México", "Jalisco", "Guadalajara"
+    // — sometimes a state, sometimes a city, and not reliably one of the
+    // seeded MX city slugs. The old `STATE_TO_CITY[slug] ?? slug` path
+    // emitted slugs not present in `cities`, which the sink dropped. SENASICA
+    // is a national roster with only state/representacion granularity we can
+    // trust, so emit citySlug="" (sink writes city_slug=NULL) and surface the
+    // representacion as metadata.province_slug.
     const repRaw = row["representacion"]?.trim() ?? "";
-    const slug = slugify(repRaw);
-    const citySlug = STATE_TO_CITY[slug] ?? slug;
-    if (!citySlug) continue;
+    const provinceSlug = repRaw ? slugify(repRaw) : undefined;
 
     out.push(
       normalise({
@@ -95,7 +94,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         sourceId: `senasica-mx-vet:${clave}`,
         name: nombre,
         categoryKey: "veterinario",
-        citySlug,
+        citySlug: "",
         phone: row["telefono"] || undefined,
         email: row["correo"] || undefined,
         licenseNumber: clave,
@@ -105,6 +104,7 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           verified_by_authority: true,
           area: row["area"],
           representacion: repRaw,
+          province_slug: provinceSlug,
           vigencia_inicio: row["vigencia_inicio"],
           vigencia_fin: vigenciaFin,
         },
@@ -114,43 +114,6 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
   console.log(`[senasica-mx-vet] parsed=${out.length}`);
   return out;
 }
-
-/**
- * Hand-curated mapping from common SENASICA `representacion` strings
- * (state name or city) to one of the 30 seeded MX city slugs. Anything
- * that doesn't match here goes through slugify and is dropped at sink
- * if it's not a valid city slug.
- */
-const STATE_TO_CITY: Record<string, string> = {
-  // Direct state-name → capital metro
-  "ciudad-de-mexico": "cdmx",
-  "estado-de-mexico": "tlalnepantla",
-  jalisco: "guadalajara",
-  "nuevo-leon": "monterrey",
-  baja: "tijuana",
-  "baja-california": "tijuana",
-  "baja-california-sur": "mazatlan",
-  guanajuato: "leon-mx",
-  yucatan: "merida-mx",
-  veracruz: "veracruz-mx",
-  "veracruz-de-ignacio-de-la-llave": "veracruz-mx",
-  michoacan: "morelia",
-  "san-luis-potosi": "san-luis-potosi",
-  sonora: "hermosillo",
-  sinaloa: "culiacan",
-  chihuahua: "chihuahua",
-  morelos: "cuernavaca",
-  tabasco: "villahermosa",
-  tamaulipas: "reynosa",
-  coahuila: "saltillo",
-  "quintana-roo": "cancun",
-  "quintana-roode-cordoba": "cancun",
-  guerrero: "acapulco",
-  // Some entries already use the city directly
-  "guadalajara": "guadalajara",
-  "monterrey": "monterrey",
-  puebla: "puebla",
-};
 
 export const senasicaMxVetSource: ScraperSource = {
   name: "senasica-mx-vet",
