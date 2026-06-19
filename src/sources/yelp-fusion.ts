@@ -87,6 +87,7 @@ const LOCALE_BY_COUNTRY: Record<ScrapeTarget["country"], string> = {
   FR: "fr_FR",
   MX: "es_MX",
   GB: "en_GB",
+  CO: "es_CO",
 };
 
 function delay(ms: number): Promise<void> {

@@ -55,6 +55,7 @@ const PA_CATEGORY_SLUG: Record<CategoryKey, string> = {
   enfermeria: "enfermeros",
   farmacia: "farmacias",
   abogado: "abogados",
+  empresa: "",
 };
 
 const ENDPOINT = "https://www.paginasamarillas.es";

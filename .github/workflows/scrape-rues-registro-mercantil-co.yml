@@ -1,0 +1,15 @@
+name: Scrape · RUES registro mercantil (datos.gov.co CO)
+# RUES / Registro Mercantil (Socrata c82u-588k). ~9.3M companies. CIIU→vertical,
+# rest → empresa. Geo via camara_comercio. Active matrículas only by default
+# (set PROLIO_RUES_ALL_STATES=true to ingest cancelled too). Auto-seeds cities.
+on:
+  schedule:
+    - cron: "0 2 1 * *"   # 1st of month 02:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: rues-registro-mercantil-co
+      timeout_minutes: 350

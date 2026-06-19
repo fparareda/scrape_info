@@ -405,6 +405,16 @@ import { riiDivBTermicasEsSource, runRiiDivBTermicasEs } from "./sources/rii-div
 import { cvoOnVetsSource, runCvoOnVets } from "./sources/cvo-on-vets.js";
 import { cgcfeFisioterapeutasSource, runCgcfeFisioterapeutas } from "./sources/cgcfe-fisioterapeutas.js";
 import { ctElicenseSource, runCtElicense } from "./sources/data-gov-ct-elicense.js";
+// 2026-06-19: Colombia bulk company registries (datos.gov.co Socrata)
+import { repsSaludCoSource, runRepsSaludCoSource } from "./sources/reps-salud-co.js";
+import {
+  ruesRegistroMercantilCoSource,
+  runRuesRegistroMercantilCoSource,
+} from "./sources/rues-registro-mercantil-co.js";
+import {
+  secopProveedoresCoSource,
+  runSecopProveedoresCoSource,
+} from "./sources/secop-proveedores-co.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -667,6 +677,9 @@ async function main(): Promise<void> {
   // 2026-06-05: new per-country sources
   const texasBhecPsyOn = texasBhecPsySource.enabled();
   const ctElicenseOn = ctElicenseSource.enabled();
+  const repsSaludCoOn = repsSaludCoSource.enabled();
+  const ruesCoOn = ruesRegistroMercantilCoSource.enabled();
+  const secopCoOn = secopProveedoresCoSource.enabled();
   const cgcfeFisioterapeutasOn = cgcfeFisioterapeutasSource.enabled();
   const cvoOnVetsOn = cvoOnVetsSource.enabled();
   const riiDivBTermicasEsOn = riiDivBTermicasEsSource.enabled();
@@ -966,6 +979,9 @@ async function main(): Promise<void> {
     !codeCasLeonDentistasOn &&
     !cptaAbPhysioOn &&
     !ctElicenseOn &&
+    !repsSaludCoOn &&
+    !ruesCoOn &&
+    !secopCoOn &&
     !cvoOnVetsOn &&
     !iardcIlAttorneysOn &&
     !icomemMedicosEsOn &&
@@ -1881,6 +1897,10 @@ async function main(): Promise<void> {
     [cgcfeFisioterapeutasOn, "cgcfe-fisioterapeutas", runCgcfeFisioterapeutas],
     // 2026-05-20: international company registries
     [ctElicenseOn, "data-gov-ct-elicense", runCtElicense],
+    // 2026-06-19: Colombia bulk company registries
+    [repsSaludCoOn, "reps-salud-co", runRepsSaludCoSource],
+    [ruesCoOn, "rues-registro-mercantil-co", runRuesRegistroMercantilCoSource],
+    [secopCoOn, "secop-proveedores-co", runSecopProveedoresCoSource],
   ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async () => {

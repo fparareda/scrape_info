@@ -1,0 +1,14 @@
+name: Scrape · SECOP proveedores (datos.gov.co CO)
+# SECOP II Proveedores Registrados (Socrata qmzu-gj57). ~1.58M state
+# providers → category empresa, with municipio + contact. Auto-seeds municipios.
+on:
+  schedule:
+    - cron: "0 5 8 * *"   # 8th of month 05:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: secop-proveedores-co
+      timeout_minutes: 300

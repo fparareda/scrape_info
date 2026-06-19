@@ -22,7 +22,11 @@ export type CategoryKey =
   | "ingenieria"
   | "enfermeria"
   | "farmacia"
-  | "abogado";
+  | "abogado"
+  // Generic catch-all so bulk company registries (RUES, SECOP…) can store
+  // every business, including those whose activity doesn't map to a
+  // profession vertical. See docs/SCRAPING_CO_20260619.md §3.
+  | "empresa";
 
 export type ClaimStatus = "unclaimed" | "claimed" | "verified";
 export type Tier = "free" | "featured";

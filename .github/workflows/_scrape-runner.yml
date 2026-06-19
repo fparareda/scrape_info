@@ -561,6 +561,9 @@ jobs:
       PROLIO_RUN_CGCFE_FISIOTERAPEUTAS: ${{ inputs.source == 'cgcfe-fisioterapeutas' && 'true' || 'false' }}
       PROLIO_RUN_CVO_ON_VETS:           ${{ inputs.source == 'cvo-on-vets' && 'true' || 'false' }}
       PROLIO_RUN_CT_ELICENSE:           ${{ inputs.source == 'data-gov-ct-elicense' && 'true' || 'false' }}
+      PROLIO_RUN_REPS_SALUD_CO:         ${{ inputs.source == 'reps-salud-co' && 'true' || 'false' }}
+      PROLIO_RUN_RUES_CO:               ${{ inputs.source == 'rues-registro-mercantil-co' && 'true' || 'false' }}
+      PROLIO_RUN_SECOP_CO:              ${{ inputs.source == 'secop-proveedores-co' && 'true' || 'false' }}
       PROLIO_FOURSQUARE_CATEGORY:   ${{ inputs.category }}
       PROLIO_FOURSQUARE_REQUESTS_PER_RUN: "800"
       FOURSQUARE_API_KEY:           ${{ secrets.FOURSQUARE_API_KEY }}
