@@ -1,4 +1,4 @@
-export type CountryCode = "ES" | "CA" | "US" | "FR" | "MX" | "GB";
+export type CountryCode = "ES" | "CA" | "US" | "FR" | "MX" | "GB" | "CO";
 
 export interface ScraperCity {
   slug: string;
@@ -36,6 +36,9 @@ function fr(c: Base): ScraperCity {
 }
 function mx(c: Base): ScraperCity {
   return { ...c, country: "MX", queryLocale: "es" };
+}
+function co(c: Base): ScraperCity {
+  return { ...c, country: "CO", queryLocale: "es" };
 }
 
 /**
@@ -230,12 +233,51 @@ export const MEXICAN_CITIES: ScraperCity[] = [
   mx({ slug: "villahermosa",    name: "Villahermosa",         lat: 17.9892, lng: -92.9281 }),
 ];
 
+// Colombia — curated "marked" set shown on the web. The DB `public.cities`
+// table already holds the full DANE gazetteer (~1,119 municipios); this
+// static list is the deliberate display whitelist (top ~30 by population).
+// The long tail stays stored-but-hidden until promoted. See
+// docs/SCRAPING_CO_20260619.md §1b.
+export const COLOMBIAN_CITIES: ScraperCity[] = [
+  co({ slug: "bogota",          name: "Bogotá",          lat: 4.7110,  lng: -74.0721 }),
+  co({ slug: "medellin",        name: "Medellín",        lat: 6.2442,  lng: -75.5812 }),
+  co({ slug: "cali",            name: "Cali",            lat: 3.4516,  lng: -76.5320 }),
+  co({ slug: "barranquilla",    name: "Barranquilla",    lat: 10.9685, lng: -74.7813 }),
+  co({ slug: "cartagena",       name: "Cartagena",       lat: 10.3910, lng: -75.4794 }),
+  co({ slug: "cucuta",          name: "Cúcuta",          lat: 7.8939,  lng: -72.5078 }),
+  co({ slug: "soledad",         name: "Soledad",         lat: 10.9170, lng: -74.7646 }),
+  co({ slug: "soacha",          name: "Soacha",          lat: 4.5790,  lng: -74.2169 }),
+  co({ slug: "bucaramanga",     name: "Bucaramanga",     lat: 7.1193,  lng: -73.1227 }),
+  co({ slug: "bello",           name: "Bello",           lat: 6.3373,  lng: -75.5550 }),
+  co({ slug: "villavicencio",   name: "Villavicencio",   lat: 4.1420,  lng: -73.6266 }),
+  co({ slug: "pereira",         name: "Pereira",         lat: 4.8133,  lng: -75.6961 }),
+  co({ slug: "valledupar",      name: "Valledupar",      lat: 10.4631, lng: -73.2532 }),
+  co({ slug: "monteria",        name: "Montería",        lat: 8.7479,  lng: -75.8814 }),
+  co({ slug: "ibague",          name: "Ibagué",          lat: 4.4389,  lng: -75.2322 }),
+  co({ slug: "pasto",           name: "Pasto",           lat: 1.2136,  lng: -77.2811 }),
+  co({ slug: "manizales",       name: "Manizales",       lat: 5.0703,  lng: -75.5138 }),
+  co({ slug: "neiva",           name: "Neiva",           lat: 2.9273,  lng: -75.2819 }),
+  co({ slug: "palmira",         name: "Palmira",         lat: 3.5394,  lng: -76.3036 }),
+  co({ slug: "popayan",         name: "Popayán",         lat: 2.4448,  lng: -76.6147 }),
+  co({ slug: "sincelejo",       name: "Sincelejo",       lat: 9.3047,  lng: -75.3978 }),
+  co({ slug: "itagui",          name: "Itagüí",          lat: 6.1719,  lng: -75.6111 }),
+  co({ slug: "floridablanca",   name: "Floridablanca",   lat: 7.0625,  lng: -73.0864 }),
+  co({ slug: "envigado",        name: "Envigado",        lat: 6.1666,  lng: -75.5833 }),
+  co({ slug: "tulua",           name: "Tuluá",           lat: 4.0847,  lng: -76.1954 }),
+  co({ slug: "dosquebradas",    name: "Dosquebradas",    lat: 4.8333,  lng: -75.6667 }),
+  co({ slug: "barrancabermeja", name: "Barrancabermeja", lat: 7.0653,  lng: -73.8547 }),
+  co({ slug: "santa-marta",     name: "Santa Marta",     lat: 11.2408, lng: -74.1990 }),
+  co({ slug: "riohacha",        name: "Riohacha",        lat: 11.5444, lng: -72.9072 }),
+  co({ slug: "tunja",           name: "Tunja",           lat: 5.5353,  lng: -73.3678 }),
+];
+
 export const ALL_CITIES: ScraperCity[] = [
   ...SPANISH_CITIES,
   ...CANADIAN_CITIES,
   ...US_CITIES,
   ...FRENCH_CITIES,
   ...MEXICAN_CITIES,
+  ...COLOMBIAN_CITIES,
 ];
 
 // ---------------------------------------------------------------------------
@@ -304,7 +346,7 @@ const QC_KNOWN_SLUGS = new Set([
 ]);
 
 function deriveQueryLocale(country: CountryCode, slug: string): "es" | "en" | "fr" {
-  if (country === "ES" || country === "MX") return "es";
+  if (country === "ES" || country === "MX" || country === "CO") return "es";
   if (country === "FR") return "fr";
   if (country !== "CA") return "en";
   if (QC_KNOWN_SLUGS.has(slug)) return "fr";
@@ -321,6 +363,7 @@ function staticByCountry(country: CountryCode | "all"): ScraperCity[] {
   if (country === "US") return US_CITIES;
   if (country === "FR") return FRENCH_CITIES;
   if (country === "MX") return MEXICAN_CITIES;
+  if (country === "CO") return COLOMBIAN_CITIES;
   return CANADIAN_CITIES;
 }
 
@@ -381,7 +424,8 @@ async function loadFromDb(): Promise<ScraperCity[]> {
         country !== "US" &&
         country !== "CA" &&
         country !== "FR" &&
-        country !== "MX"
+        country !== "MX" &&
+        country !== "CO"
       )
         continue;
       // Defensive dedup — see comment above the loop.

@@ -113,4 +113,6 @@ export const CATEGORY_SYNONYMS: Record<CategoryKey, Record<QueryLocale, string[]
     en: ["lawyer", "attorney", "law firm", "barrister", "legal counsel"],
     fr: ["avocat", "avocate", "cabinet d'avocats"],
   },
+  // Generic catch-all category — never used as a search target.
+  empresa: { es: [], en: [], fr: [] },
 };

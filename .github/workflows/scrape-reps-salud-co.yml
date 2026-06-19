@@ -1,0 +1,14 @@
+name: Scrape · REPS salud (datos.gov.co CO)
+# Registro Especial de Prestadores de Servicios de Salud (Socrata c36g-9fc2).
+# ~77k health providers/sedes → category medicina. Auto-seeds municipios.
+on:
+  schedule:
+    - cron: "0 4 7 * *"   # 7th of month 04:00 UTC
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_scrape-runner.yml
+    secrets: inherit
+    with:
+      source: reps-salud-co
+      timeout_minutes: 60

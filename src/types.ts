@@ -433,7 +433,7 @@ export interface ScrapedProfessional {
    *  Multi-country sources (google_places, osm, overture, wikidata,
    *  paginas-amarillas, gleif…) must set this per-row from the data
    *  they are emitting. */
-  country: "ES" | "CA" | "US" | "FR" | "MX" | "GB";
+  country: "ES" | "CA" | "US" | "FR" | "MX" | "GB" | "CO";
   /** Slug within `country`. Pass empty string when the source only
    *  resolves to province granularity — the sink writes `city_slug = NULL`
    *  and you should populate `metadata.province_slug`. */
@@ -444,7 +444,7 @@ export interface ScrapedProfessional {
    * Older sources omitted it and relied on a backfill; new sources
    * (data.gov path 2026-05-20+) populate it directly.
    */
-  cityCountry?: "ES" | "CA" | "US" | "FR" | "MX";
+  cityCountry?: "ES" | "CA" | "US" | "FR" | "MX" | "CO";
   headline?: string;
   description?: string;
   email?: string;
@@ -472,7 +472,7 @@ export interface ScrapeTarget {
   /** ISO country code — ES, CA, US, FR, MX today. Sources can choose
    *  to skip (e.g. CCAA Spain-only registries) or adapt queries
    *  (e.g. EN/FR synonyms per locale). */
-  country: "ES" | "CA" | "US" | "FR" | "MX" | "GB";
+  country: "ES" | "CA" | "US" | "FR" | "MX" | "GB" | "CO";
   /** Language to form the textQuery in for this city. */
   queryLocale: "es" | "en" | "fr";
 }

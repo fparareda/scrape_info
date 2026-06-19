@@ -195,6 +195,8 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
     "despacho de abogados",
     "bufete",
   ],
+  // Generic catch-all category — not a BORME keyword filter target.
+  empresa: [],
 };
 
 /** Strip diacritics, lowercase, collapse whitespace. */

@@ -1,0 +1,24 @@
+name: Promote cities (display whitelist)
+# Metric-driven promotion: any city with >= PROLIO_PROMOTE_MIN_COUNT
+# professionals gets added to city_whitelist (shown on the web). Storage
+# stays a superset; this only flips visibility. See docs/SCRAPING_CO_20260619.md.
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+  workflow_dispatch:
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run promote-cities
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PROLIO_PROMOTE_MIN_COUNT: "50"

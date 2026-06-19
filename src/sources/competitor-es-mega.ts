@@ -90,6 +90,7 @@ const HABITISSIMO_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
   enfermeria: undefined,
   farmacia: undefined,
   abogado: undefined,
+  empresa: undefined,
 };
 
 const CRONOSHARE_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
@@ -113,6 +114,7 @@ const CRONOSHARE_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
   enfermeria: undefined,
   farmacia: undefined,
   abogado: undefined,
+  empresa: undefined,
 };
 
 const PAGINAS_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
@@ -136,6 +138,7 @@ const PAGINAS_CATEGORY_SLUG: Record<CategoryKey, string | undefined> = {
   enfermeria: undefined,
   farmacia: undefined,
   abogado: undefined,
+  empresa: undefined,
 };
 
 const DEFAULT_LIMIT = 1500;

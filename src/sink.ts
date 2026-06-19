@@ -8,7 +8,7 @@ import { generateProfileCopy } from "./seo-copy.js";
 // fallback map: every scraper has to declare its country explicitly.
 function resolveCountry(
   record: ScrapedProfessional,
-): "ES" | "CA" | "US" | "FR" | "MX" | "GB" {
+): "ES" | "CA" | "US" | "FR" | "MX" | "GB" | "CO" {
   return record.country;
 }
 
@@ -22,7 +22,7 @@ interface Sink {
   }>;
 }
 
-export function getSink(_opts?: { trustCitySlugs?: boolean }): Sink {
+export function getSink(opts: { trustCitySlugs?: boolean } = {}): Sink {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRoleKey) {
@@ -127,18 +127,30 @@ export function getSink(_opts?: { trustCitySlugs?: boolean }): Sink {
 
   return {
     upsert: async (records) => {
-      const validKeys = await loadCityKeys();
+      // trustCitySlugs (bulk opt-in): the source guarantees every
+      // citySlug already exists in `cities` — it called ensureCity()
+      // per row to auto-seed unknown municipalities. So we SKIP the
+      // drop filter entirely; bulk national sources must not lose rows
+      // for cities that weren't pre-seeded. Contract: a trusted source
+      // that emits a slug with no matching cities row will hit an FK
+      // violation at upsert (that's the source's bug to fix, not a
+      // silent drop). Search-by-city sources omit the flag and keep the
+      // strict drop, where an unseeded slug signals a bad target.
+      const validKeys = opts.trustCitySlugs ? null : await loadCityKeys();
       let droppedSlug = 0;
-      const filtered = records.filter((r) => {
-        // Empty citySlug = province-granularity row (sink writes
-        // city_slug=NULL, populates metadata.province_slug instead).
-        if (r.citySlug === "") return true;
-        if (!validKeys.has(`${r.country}::${r.citySlug}`)) {
-          droppedSlug += 1;
-          return false;
-        }
-        return true;
-      });
+      const filtered =
+        validKeys === null
+          ? records
+          : records.filter((r) => {
+              // Empty citySlug = province-granularity row (sink writes
+              // city_slug=NULL, populates metadata.province_slug instead).
+              if (r.citySlug === "") return true;
+              if (!validKeys.has(`${r.country}::${r.citySlug}`)) {
+                droppedSlug += 1;
+                return false;
+              }
+              return true;
+            });
       if (droppedSlug > 0) {
         console.log(
           `[sink] dropped ${droppedSlug}/${records.length} rows with unseeded (country, city_slug)`,

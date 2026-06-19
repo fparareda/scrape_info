@@ -151,6 +151,8 @@ const OSM_TAGS: Record<CategoryKey, Array<[string, string]>> = {
   abogado: [
     ["office", "lawyer"],
   ],
+  // Generic catch-all category — no OSM tag query.
+  empresa: [],
 };
 
 interface OverpassElement {
