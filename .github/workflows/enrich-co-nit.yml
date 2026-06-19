@@ -1,0 +1,22 @@
+name: Enrich · CO by NIT (RUES x SECOP)
+# Upgrades contactable SECOP rows to the profession vertical RUES knows for
+# the same NIT. Free merge of the two open datasets. See docs/SCRAPING_CO_20260619.md.
+on:
+  schedule:
+    - cron: "0 7 * * *"   # daily 07:00 UTC (after SECOP 05:00)
+  workflow_dispatch:
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run enrich-co-nit
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
