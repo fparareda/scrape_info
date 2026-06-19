@@ -21,4 +21,4 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          PROLIO_PROMOTE_MIN_COUNT: "50"
+          PROLIO_PROMOTE_MIN_COUNT: "5"
