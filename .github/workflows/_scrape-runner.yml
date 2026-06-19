@@ -83,6 +83,7 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
       GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
       YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
       YELP_DAILY_BUDGET: ${{ inputs.source == 'yelp' && inputs.budget || '' }}
@@ -92,6 +93,10 @@ jobs:
       # only covers ~12 of ~50 cities per day).
       PROLIO_SINK_BATCH: ${{ inputs.source == 'yelp' && '500' || '' }}
       PROLIO_DAILY_ROTATE: ${{ inputs.source == 'yelp' && 'true' || 'false' }}
+      # CO bulk registries: skip the SELECT-existing lookup (brand-new sources,
+      # no claimed rows) and per-row SEO copy → much faster million-row ingest.
+      PROLIO_SINK_SKIP_LOOKUP: ${{ (inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co') && 'true' || '' }}
+      PROLIO_SINK_SKIP_SEOCOPY: ${{ (inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co') && 'true' || '' }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       PROLIO_SCRAPE_SHARD: ${{ inputs.shard }}

@@ -102,6 +102,7 @@ export async function runRuesRegistroMercantilCo(
     pageSize: 1000,
     maxRows: opts.maxRows,
     where: whereClause(),
+    appToken: process.env.SOCRATA_APP_TOKEN,
   })) {
     for (const row of page) {
       if (scanned > 0 && scanned % 20000 === 0) {
