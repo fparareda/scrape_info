@@ -1,7 +1,10 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScraperSource } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
+import { normalise } from "../normalise.js";
 import { getSink } from "../sink.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { parseCsv, pick } from "./_bulk-utils.js";
 
 /**
@@ -49,7 +52,10 @@ function isActive(expDate: string): boolean {
   return exp >= new Date();
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
+async function fetchAll(
+  client: SupabaseClient,
+  limit: number,
+): Promise<ScrapedProfessional[]> {
   let response: Response;
   try {
     response = await fetch(DATASET_URL, {
@@ -86,13 +92,23 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     const licenseNumber = pick(row, ["license_number"]);
     if (!licenseNumber) continue;
 
-    const city = pick(row, ["city"]);
-    const citySlug = slugify(city);
-    if (!citySlug) continue;
-
     const dedupeKey = `${licenseNumber}:${category}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
+
+    // Auto-seed the city by NAME (long-tail VT municipalities are not all
+    // pre-seeded). When there is no city, emit citySlug:"" so the sink keeps
+    // the row with a NULL city instead of dropping it.
+    const city = pick(row, ["city"]);
+    let citySlug = "";
+    if (city) {
+      const cityResult = await ensureCity(client, {
+        name: city,
+        state: "VT",
+        country: "US",
+      });
+      if (cityResult) citySlug = cityResult.slug;
+    }
 
     // Compose full name from first + last
     const firstName = pick(row, ["first_name"]);
@@ -130,7 +146,11 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     );
   }
 
-  console.log(`[vermont-dfs] parsed=${out.length}`);
+  const cs = getCityUpsertStats();
+  console.log(
+    `[vermont-dfs] parsed=${out.length} cities_created=${cs.inserted} ` +
+      `geocoded=${cs.geocoded} ungeocoded=${cs.failedGeocode}`,
+  );
   return out;
 }
 
@@ -163,12 +183,13 @@ export async function runVermontDfs(): Promise<{
   const limit =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
 
-  const records = await fetchAll(limit);
+  const client = getSupabaseClient();
+  const records = await fetchAll(client, limit);
   if (records.length === 0) {
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   }
 
-  const sink = getSink();
+  const sink = getSink({ trustCitySlugs: true });
   const { inserted, updated, skipped } = await sink.upsert(records);
   console.log(
     `[vermont-dfs] done -- fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,

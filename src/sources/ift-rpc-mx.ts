@@ -45,9 +45,9 @@ import { withScrapeRun } from "../telemetry.js";
  * tiene N concesiones aparece como una sola entidad con metadata.servicios
  * agregando todos sus servicios.
  *
- * citySlug: "cdmx" — IFT es federal, los concesionarios son a nivel
- * nacional y la sede corporativa abrumadoramente vive en CDMX. Downstream
- * geocoding puede refinar con SIEM/DENUE si hace falta.
+ * citySlug: "" (city_slug=NULL) — IFT es federal y el RPC no publica
+ * domicilio ni entidad por concesionario, así que es una fuente de
+ * granularidad país. Downstream geocoding puede refinar con SIEM/DENUE.
  *
  * Categoría: `fiscal` (proxy comercial — IFT no encaja en construcción/
  * salud; fiscal es la misma elección que CNBV, CNSF, CONDUSEF para
@@ -421,9 +421,13 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         sourceId: `ift-rpc-mx:${opKey}`,
         name: agg.nombreOperador,
         categoryKey: CATEGORY,
-        // IFT is federal; concesionarios sin domicilio publicado. Anclamos
-        // a CDMX por consistencia con CNBV/CNSF; refinable downstream.
-        citySlug: "cdmx",
+        // IFT es federal; el RPC no publica domicilio ni entidad por
+        // concesionario (registro telecom nacional). Emitimos citySlug=""
+        // → el sink escribe city_slug=NULL y CONSERVA la fila. Antes
+        // hardcodeábamos "cdmx", que no existe en `cities`, y el sink
+        // descartaba el ~100% de las filas. Refinable downstream vía
+        // SIEM/DENUE.
+        citySlug: "",
         website: agg.liga || undefined,
         licenseNumber: agg.idOperador || undefined,
         metadata: {

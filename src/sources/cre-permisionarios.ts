@@ -4,11 +4,10 @@ import type {
   ScrapeSource,
   ScraperSource,
 } from "../types.js";
-import { normalise } from "../normalise.js";
+import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
 import { withScrapeRun } from "../telemetry.js";
 import { parseCsv, pick } from "./_bulk-utils.js";
-import { mxStateToCity } from "./_mx-states.js";
 
 /**
  * CRE — Comisión Reguladora de Energía (Mexico).
@@ -239,10 +238,13 @@ async function fetchPadron(
 
     const entidad = parseEstado(row);
     const municipio = parseCity(row);
-    // Prefer estado-based mapping (most reliable). Municipio rarely
-    // matches the seeded city slug verbatim, but we still record it
-    // in metadata for downstream geocoding.
-    const citySlug = mxStateToCity(entidad) ?? "cdmx";
+    // State-granular registry: the municipio rarely matches a seeded
+    // city slug verbatim, and mapping the entidad to a fabricated city
+    // slug (or "cdmx", which isn't even seeded) dropped ~100% of rows at
+    // the sink. Emit citySlug="" (sink writes city_slug=NULL) and record
+    // the state in metadata.province_slug; municipio stays in metadata
+    // for downstream geocoding.
+    const provinceSlug = entidad ? slugify(entidad) : undefined;
 
     const fechaOtorgamiento =
       pick(row, [
@@ -269,7 +271,7 @@ async function fetchPadron(
         sourceId: `cre:${numeroPermiso}`,
         name: razonSocial,
         categoryKey: mapCategory(padron.tipo, modalidad),
-        citySlug,
+        citySlug: "",
         licenseNumber: numeroPermiso,
         cif: rfc,
         phone: telefono,
@@ -287,6 +289,7 @@ async function fetchPadron(
           fecha_otorgamiento: fechaOtorgamiento,
           fecha_termino: fechaTermino || undefined,
           entidad,
+          province_slug: provinceSlug,
           municipio,
         },
       }),
