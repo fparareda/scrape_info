@@ -269,6 +269,27 @@ export const COLOMBIAN_CITIES: ScraperCity[] = [
   co({ slug: "santa-marta",     name: "Santa Marta",     lat: 11.2408, lng: -74.1990 }),
   co({ slug: "riohacha",        name: "Riohacha",        lat: 11.5444, lng: -72.9072 }),
   co({ slug: "tunja",           name: "Tunja",           lat: 5.5353,  lng: -73.3678 }),
+  // 2026-06-19: expanded to the 50 largest CO municipalities.
+  co({ slug: "buenaventura",    name: "Buenaventura",    lat: 3.8801,  lng: -77.0312 }),
+  co({ slug: "armenia",         name: "Armenia",         lat: 4.5339,  lng: -75.6811 }),
+  co({ slug: "tumaco",          name: "Tumaco",          lat: 1.7986,  lng: -78.8156 }),
+  co({ slug: "apartado",        name: "Apartadó",        lat: 7.8833,  lng: -76.6256 }),
+  co({ slug: "florencia",       name: "Florencia",       lat: 1.6144,  lng: -75.6062 }),
+  co({ slug: "piedecuesta",     name: "Piedecuesta",     lat: 6.9874,  lng: -73.0498 }),
+  co({ slug: "giron",           name: "Girón",           lat: 7.0689,  lng: -73.1698 }),
+  co({ slug: "jamundi",         name: "Jamundí",         lat: 3.2614,  lng: -76.5419 }),
+  co({ slug: "maicao",          name: "Maicao",          lat: 11.3776, lng: -72.2389 }),
+  co({ slug: "turbo",           name: "Turbo",           lat: 8.0915,  lng: -76.7283 }),
+  co({ slug: "zipaquira",       name: "Zipaquirá",       lat: 5.0221,  lng: -74.0048 }),
+  co({ slug: "fusagasuga",      name: "Fusagasugá",      lat: 4.3377,  lng: -74.3644 }),
+  co({ slug: "facatativa",      name: "Facatativá",      lat: 4.8136,  lng: -74.3553 }),
+  co({ slug: "chia",            name: "Chía",            lat: 4.8614,  lng: -74.0586 }),
+  co({ slug: "ipiales",         name: "Ipiales",         lat: 0.8302,  lng: -77.6450 }),
+  co({ slug: "rionegro",        name: "Rionegro",        lat: 6.1556,  lng: -75.3739 }),
+  co({ slug: "cartago",         name: "Cartago",         lat: 4.7464,  lng: -75.9116 }),
+  co({ slug: "yumbo",           name: "Yumbo",           lat: 3.5347,  lng: -76.4966 }),
+  co({ slug: "quibdo",          name: "Quibdó",          lat: 5.6919,  lng: -76.6583 }),
+  co({ slug: "magangue",        name: "Magangué",        lat: 9.2417,  lng: -74.7547 }),
 ];
 
 export const ALL_CITIES: ScraperCity[] = [
