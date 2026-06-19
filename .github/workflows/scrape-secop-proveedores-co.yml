@@ -3,7 +3,7 @@ name: Scrape · SECOP proveedores (datos.gov.co CO)
 # providers → category empresa, with municipio + contact. Auto-seeds municipios.
 on:
   schedule:
-    - cron: "0 5 8 * *"   # 8th of month 05:00 UTC
+    - cron: "0 5 * * *"   # daily 05:00 UTC (resume-checkpointed backfill; dial back after full pass)
   workflow_dispatch:
 jobs:
   run:

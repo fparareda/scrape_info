@@ -47,6 +47,8 @@ export interface SocrataPageOptions {
   maxRows?: number;
   /** Optional Socrata app token (lifts rate-limit; not required for low volume). */
   appToken?: string;
+  /** Resume from this $offset instead of 0 (for checkpointed bulk runs). */
+  startOffset?: number;
 }
 
 export interface SocrataRow {
@@ -63,7 +65,7 @@ export async function* fetchSocrataJson(
 ): AsyncGenerator<SocrataRow[], void, undefined> {
   const pageSize = opts.pageSize ?? DEFAULT_PAGE_SIZE;
   const maxRows = opts.maxRows ?? Number.POSITIVE_INFINITY;
-  let offset = 0;
+  let offset = opts.startOffset ?? 0;
   let yielded = 0;
   for (;;) {
     if (yielded >= maxRows) return;

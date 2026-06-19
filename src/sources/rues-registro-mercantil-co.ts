@@ -122,6 +122,19 @@ export async function runRuesRegistroMercantilCo(
       const rawName = clean(socrataPick(row, ["razon_social"]));
       if (!rawName) continue;
 
+      // Value filter: RUES has no contact data, so a row that doesn't even
+      // map to a profession vertical (CIIU → 'empresa') is a contactless,
+      // uncategorised shell — ~93% of the 9.3M. Skip those by default; the
+      // useful ~7% (mechanics, lawyers, …) stay. PROLIO_RUES_INCLUDE_GENERIC=true
+      // ingests everything. Compute BEFORE ensureCity to skip its geocode cost.
+      const ciiuPri = socrataPick(row, ["cod_ciiu_act_econ_pri", "ciiu4"]);
+      const category = mapCiiu(ciiuPri);
+      if (
+        category === "empresa" &&
+        process.env.PROLIO_RUES_INCLUDE_GENERIC !== "true"
+      )
+        continue;
+
       // Coarse geo: the chamber's seat city is the best location available.
       const camara = clean(socrataPick(row, ["camara_comercio"]));
       if (!camara) continue;
@@ -131,13 +144,11 @@ export async function runRuesRegistroMercantilCo(
       });
       if (!cityResult) continue;
 
-      const ciiuPri = socrataPick(row, ["cod_ciiu_act_econ_pri", "ciiu4"]);
-
       buffer.push({
         source: SOURCE_NAME as ScrapeSource,
         sourceId: `rues-co:${id}`,
         name: titleCase(rawName),
-        categoryKey: mapCiiu(ciiuPri),
+        categoryKey: category,
         country: "CO",
         citySlug: cityResult.slug,
         metadata: {
