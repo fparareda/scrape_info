@@ -171,10 +171,19 @@ interface SeoLookups {
   categoryByKey: Map<CategoryKey, Pick<Category, "names" | "pluralNames">>;
 }
 
+// Bulk ingest can skip per-row SEO copy generation (3 large TEXT columns +
+// CPU per row). Pages fall back to generating copy at request time when
+// seo_copy_* is null, so this is lossless for the reader and a big write
+// saving for million-row registries. Toggle via PROLIO_SINK_SKIP_SEOCOPY.
+const SKIP_SEO_COPY = process.env.PROLIO_SINK_SKIP_SEOCOPY === "true";
+
 function seoCopyFields(
   record: ScrapedProfessional,
   lookups: SeoLookups,
 ): Record<string, string | null> {
+  if (SKIP_SEO_COPY) {
+    return { seo_copy_es: null, seo_copy_en: null, seo_copy_fr: null };
+  }
   const cityName = lookups.cityNameBySlug.get(record.citySlug);
   const category = lookups.categoryByKey.get(record.categoryKey);
   // If either lookup misses we skip SEO copy for this row rather than

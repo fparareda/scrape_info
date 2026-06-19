@@ -83,19 +83,36 @@ export async function* fetchSocrataJson(
     if (opts.appToken) headers["X-App-Token"] = opts.appToken;
 
     // Retry transient network failures (fetch failed, ECONNRESET,
-    // timeouts) — Socrata occasionally drops the connection on long
-    // streams. We back off exponentially up to 5 attempts. 4xx/5xx
-    // codes are NOT retried (those are caller bugs or genuine outages
-    // that won't recover in 30s).
-    const MAX_ATTEMPTS = 5;
+    // timeouts) AND transient HTTP statuses (429 rate-limit, 408, 5xx).
+    // Socrata anonymous traffic gets throttled and intermittently returns
+    // 500s on long streams; a single one used to crash the whole bulk run
+    // mid-pagination (observed killing SECOP at offset ~20k). We back off
+    // exponentially. Non-retryable 4xx (e.g. 400 bad SoQL, 404) still throw.
+    const MAX_ATTEMPTS = 6;
+    const isRetryableStatus = (s: number): boolean =>
+      s === 429 || s === 408 || s >= 500;
     let res: Response | null = null;
     let lastErr: Error | null = null;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
       try {
-        res = await fetch(url.toString(), {
+        const r = await fetch(url.toString(), {
           headers,
           signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
         });
+        if (!r.ok && isRetryableStatus(r.status) && attempt < MAX_ATTEMPTS) {
+          const body = await r.text().catch(() => "");
+          lastErr = new Error(
+            `[socrata] ${r.status} ${opts.host}/${opts.viewId}: ${body.slice(0, 160)}`,
+          );
+          const wait = Math.min(60_000, 2_000 * 2 ** (attempt - 1));
+          console.warn(
+            `[socrata] HTTP ${r.status} (attempt ${attempt}/${MAX_ATTEMPTS}) ` +
+              `${opts.host}/${opts.viewId} offset=${offset}; retrying in ${wait}ms`,
+          );
+          await new Promise((r2) => setTimeout(r2, wait));
+          continue;
+        }
+        res = r;
         lastErr = null;
         break;
       } catch (err) {
