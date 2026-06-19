@@ -93,9 +93,8 @@ jobs:
       # only covers ~12 of ~50 cities per day).
       PROLIO_SINK_BATCH: ${{ inputs.source == 'yelp' && '500' || '' }}
       PROLIO_DAILY_ROTATE: ${{ inputs.source == 'yelp' && 'true' || 'false' }}
-      # CO bulk registries: skip the SELECT-existing lookup (brand-new sources,
-      # no claimed rows) and per-row SEO copy → much faster million-row ingest.
-      PROLIO_SINK_SKIP_LOOKUP: ${{ (inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co') && 'true' || '' }}
+      # CO bulk registries: skip per-row SEO copy → faster million-row ingest.
+      # (SKIP_LOOKUP for CO is folded into the shared definition further below.)
       PROLIO_SINK_SKIP_SEOCOPY: ${{ (inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co') && 'true' || '' }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -407,7 +406,7 @@ jobs:
       # Fast-path sink for bulk first-imports — skips SELECT-existing
       # round-trips. Only safe for sources that don't share their
       # (source,source_id) namespace with prior rows.
-      PROLIO_SINK_SKIP_LOOKUP:           ${{ inputs.source == 'denue-mx-bulk' && 'true' || 'false' }}
+      PROLIO_SINK_SKIP_LOOKUP:           ${{ (inputs.source == 'denue-mx-bulk' || inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co') && 'true' || 'false' }}
 
       # 2026-05-18 wave CA bulk open-data → 500k
       PROLIO_RUN_STATCAN_CBR:                  ${{ inputs.source == 'statcan-cbr' && 'true' || 'false' }}
