@@ -193,10 +193,13 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
     // como 69-B-EFOS hasta que aparezca un endpoint para la bis.
     const riskFlag = "69-B-EFOS";
 
-    // No hay información de localización en el listado del SAT, así
-    // que todos los registros van a "cdmx" como placeholder federal.
-    // El consumidor cruzará por RFC/CIF, no por ciudad.
-    const citySlug = "cdmx";
+    // No hay información de localización en el listado del SAT (lista
+    // negra fiscal nacional 69-B): no hay ciudad ni entidad por fila.
+    // Emitimos citySlug="" → el sink escribe city_slug=NULL y CONSERVA
+    // la fila (antes hardcodeábamos "cdmx", que no existe en `cities`,
+    // y el sink descartaba el ~100% de las filas). El consumidor cruza
+    // por RFC/CIF, no por ciudad.
+    const citySlug = "";
 
     out.push(
       normalise({

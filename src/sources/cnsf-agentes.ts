@@ -1,10 +1,9 @@
 import type { CategoryKey } from "../prolio-types.js";
 import type { ScrapedProfessional, ScrapeSource, ScraperSource } from "../types.js";
-import { normalise } from "../normalise.js";
+import { normalise, slugify } from "../normalise.js";
 import { getSink } from "../sink.js";
 import { withScrapeRun } from "../telemetry.js";
 import { parseCsv } from "./_bulk-utils.js";
-import { mxStateToCity } from "./_mx-states.js";
 
 /**
  * CNSF — Comisión Nacional de Seguros y Fianzas.
@@ -102,7 +101,11 @@ async function fetchAgentesCkan(limit: number): Promise<ScrapedProfessional[]> {
   // Schema (2026-05-13 snapshot of Busca_tu_agente_ok.csv):
   //   nombre, apellido_paterno, apellido_materno, no_cedula,
   //   tipo_cedula, tipo_agente, descripcion, fecha_vigencia
-  // There is no entidad column → all routed to cdmx (CNSF is federal).
+  // There is no entidad column. CNSF is a federal registry with no
+  // per-row city — emit citySlug="" (sink writes city_slug=NULL) and
+  // surface the state in metadata.province_slug when one ever appears.
+  // We MUST NOT fabricate a city slug ("cdmx" is not even seeded), which
+  // dropped ~100% of rows at the sink.
   for (const row of rows) {
     if (out.length >= limit) break;
     const clave =
@@ -127,7 +130,7 @@ async function fetchAgentesCkan(limit: number): Promise<ScrapedProfessional[]> {
 
     const entidad =
       row["entidad"] || row["estado"] || row["entidad_federativa"];
-    const citySlug = mxStateToCity(entidad) ?? "cdmx";
+    const provinceSlug = entidad ? slugify(entidad) : undefined;
 
     out.push(
       normalise({
@@ -136,7 +139,7 @@ async function fetchAgentesCkan(limit: number): Promise<ScrapedProfessional[]> {
         sourceId: `cnsf-agentes:${String(clave).trim()}`,
         name: nombre,
         categoryKey: CATEGORY,
-        citySlug,
+        citySlug: "",
         licenseNumber: String(clave).trim(),
         cif: row["rfc"] || undefined,
         phone: row["telefono"] || undefined,
@@ -149,6 +152,7 @@ async function fetchAgentesCkan(limit: number): Promise<ScrapedProfessional[]> {
           subtipo: row["tipo_agente"] || row["tipo_cedula"] || row["tipo"],
           descripcion: row["descripcion"],
           entidad,
+          province_slug: provinceSlug,
           vigencia_fin: fin,
         },
       }),
@@ -161,7 +165,9 @@ async function fetchAgentesCkan(limit: number): Promise<ScrapedProfessional[]> {
 /**
  * Ajustadores vigentes — Transparencia CSV, ~12k rows.
  * Columns: Nombre, Apellido_Paterno, Apellido_Materno, Descripción, Fecha_de_Vigencia.
- * No state/entidad column → CNSF is federal → cdmx slug. No RFC, no phone.
+ * No state/entidad column → CNSF is federal → no per-row geo. Emit
+ * citySlug="" (sink writes city_slug=NULL); do NOT fabricate "cdmx"
+ * (not seeded → dropped). No RFC, no phone.
  * sourceId composite (name + descripción hash) because there is no unique
  * cedula column; one ajustador can have N rows (one per ramo / tipo AJ-x).
  */
@@ -208,7 +214,7 @@ async function fetchAjustadores(limit: number): Promise<ScrapedProfessional[]> {
         sourceId: `cnsf-ajustador:${key}`,
         name: nombre,
         categoryKey: CATEGORY,
-        citySlug: "cdmx",
+        citySlug: "",
         metadata: {
           country: "MX",
           authority: "CNSF",
@@ -231,7 +237,9 @@ async function fetchAjustadores(limit: number): Promise<ScrapedProfessional[]> {
  * Columns: DENOMINACIÓN, CALLE_Y_NUMERO, COLONIA, CODIGO_POSTAL_Y_CIUDAD,
  *          TELÉFONO, EMAIL/WEB, SUCURSALES_1, SUCURSALES_2.
  * CODIGO_POSTAL_Y_CIUDAD is a free-text string like "66224, SAN PEDRO ..., N.L."
- * — we extract the trailing state abbreviation to route via mxStateToCity().
+ * — we extract the trailing state abbreviation and record it as
+ * metadata.province_slug. The row is state-granular, so citySlug="" (the
+ * city name inside the free-text string is not reliably a seeded slug).
  */
 const MX_STATE_ABBR_TO_NAME: Record<string, string> = {
   "ags": "aguascalientes", "b.c.": "baja-california", "b.c.s.": "baja-california-sur",
@@ -290,8 +298,7 @@ async function fetchPersonaMoral(limit: number): Promise<ScrapedProfessional[]> 
       continue;
     }
     const cpCiudad = row["codigo_postal_y_ciudad"] || "";
-    const stateSlug = extractMxStateFromCpString(cpCiudad);
-    const citySlug = mxStateToCity(stateSlug) ?? "cdmx";
+    const provinceSlug = extractMxStateFromCpString(cpCiudad);
     const phone = splitPhones(row["telefono"] || row["teléfono"] || "");
     const email = splitEmail(row["email_web"] || row["email/web"] || "");
     const calle = row["calle_y_numero"] || row["calle"] || "";
@@ -304,7 +311,7 @@ async function fetchPersonaMoral(limit: number): Promise<ScrapedProfessional[]> 
         sourceId: `cnsf-pm:${key}`,
         name: nombre,
         categoryKey: CATEGORY,
-        citySlug,
+        citySlug: "",
         phone,
         email,
         metadata: {
@@ -312,6 +319,7 @@ async function fetchPersonaMoral(limit: number): Promise<ScrapedProfessional[]> 
           authority: "CNSF",
           verified_by_authority: true,
           tipo: "agente-pm",
+          province_slug: provinceSlug,
           direccion: [calle, colonia, cpCiudad].filter(Boolean).join(", "),
           cp_ciudad: cpCiudad,
           sucursales_1: row["sucursales_1"] && row["sucursales_1"] !== "---" ? row["sucursales_1"] : undefined,

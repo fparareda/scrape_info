@@ -150,10 +150,13 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
           sourceId: `profeco-rpca:${numero}`,
           name,
           categoryKey: CATEGORY,
-          // RPCA listing doesn't expose state at this endpoint; the
-          // detail page (getDoc?p=…) is a PDF. Use cdmx as neutral
-          // anchor — downstream enrichment can refine via crossmatch.
-          citySlug: "cdmx",
+          // RPCA listing doesn't expose city or state at this endpoint;
+          // the detail page (getDoc?p=…) is a PDF. National-granularity
+          // source → emit citySlug="" so the sink writes city_slug=NULL
+          // and KEEPS the row. Previously we hardcoded "cdmx", which has
+          // no row in `cities`, so the sink dropped ~100% of rows.
+          // Downstream enrichment can refine via crossmatch.
+          citySlug: "",
           description: naturaleza || undefined,
           metadata: {
             country: "MX",
