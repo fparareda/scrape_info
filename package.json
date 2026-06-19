@@ -18,7 +18,8 @@
     "promote-cities": "tsx src/run-promote-cities.ts",
     "osm-locksmith-worldwide": "tsx src/run-osm-locksmith-worldwide.ts",
     "sam-gov-bulk": "tsx src/run-sam-gov-bulk.ts",
-    "irs-bmf-bulk": "tsx src/run-irs-bmf-bulk.ts"
+    "irs-bmf-bulk": "tsx src/run-irs-bmf-bulk.ts",
+    "enrich-co-nit": "tsx src/run-enrich-co-nit.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
