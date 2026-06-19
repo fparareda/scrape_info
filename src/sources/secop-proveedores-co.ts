@@ -118,8 +118,12 @@ export async function runSecopProveedoresCo(
       }
       scanned += 1;
 
-      const nit = clean(socrataPick(row, ["nit"]));
-      if (!nit) continue;
+      // SECOP NITs arrive dirty (leading junk: ". ", "´", "|"). Keep the raw
+      // value for a stable sourceId, but store a digits-only NIT in metadata
+      // for display + the RUES NIT cross-match.
+      const rawNit = clean(socrataPick(row, ["nit"]));
+      if (!rawNit) continue;
+      const nit = rawNit.replace(/\D/g, "");
       const rawName = clean(socrataPick(row, ["nombre"]));
       if (!rawName) continue;
 
@@ -136,7 +140,7 @@ export async function runSecopProveedoresCo(
 
       buffer.push({
         source: SOURCE_NAME as ScrapeSource,
-        sourceId: `secop-co:${nit}`,
+        sourceId: `secop-co:${rawNit}`,
         name: titleCase(rawName),
         categoryKey: "empresa",
         country: "CO",
