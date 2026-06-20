@@ -1,7 +1,5 @@
 name: Scrape · Missouri DPR
 on:
-  schedule:
-    - cron: "0 16 * * 6"
   workflow_dispatch:
 jobs:
   run:

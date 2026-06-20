@@ -1,7 +1,5 @@
 name: Scrape · Arizona ROC
 on:
-  schedule:
-    - cron: "0 2 * * 6"
   workflow_dispatch:
 jobs:
   run:

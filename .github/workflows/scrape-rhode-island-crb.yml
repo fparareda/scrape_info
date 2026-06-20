@@ -1,8 +1,6 @@
 name: Scrape · US construccion RI
 # US construccion RI — auto-wired rhode-island-crb. One-shot, monthly.
 on:
-  schedule:
-    - cron: "0 7 10 * *"
   workflow_dispatch:
 jobs:
   run:

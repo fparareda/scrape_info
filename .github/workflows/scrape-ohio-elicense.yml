@@ -1,7 +1,5 @@
 name: Scrape · Ohio eLicense
 on:
-  schedule:
-    - cron: "0 17 * * 6"
   workflow_dispatch:
 jobs:
   run:
