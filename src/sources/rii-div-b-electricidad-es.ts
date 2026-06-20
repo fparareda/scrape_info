@@ -22,6 +22,13 @@ import { SPANISH_CITIES } from "../cities.js";
 const DEFAULT_URL =
   "https://www6.serviciosmin.gob.es/Aplicaciones/OpenDataModule_AC202101/UbicacionRIII/Consulta%20RII%20division%20B.csv";
 const DEFAULT_LIMIT = 5000;
+// Inactivity (idle) timeout, NOT a total wall-clock deadline. This CSV is
+// the same ~202 MB División B export the termicas sibling reads; a fixed
+// 60s AbortSignal.timeout counted the whole body-read against the budget
+// and aborted with "operation aborted due to timeout". We instead stream
+// the body and only abort if NO bytes arrive for IDLE_TIMEOUT_MS, so a slow
+// but steady download from the Ministry's origin always completes.
+const IDLE_TIMEOUT_MS = 120_000; // 2 min with zero progress → give up
 const USER_AGENT =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 
@@ -83,6 +90,49 @@ function isElectricidad(actividadRaw: string | undefined): boolean {
   );
 }
 
+// ─── Fetch with idle (inactivity) timeout ─────────────────────────────────────
+
+/**
+ * Stream a large response body, aborting only if the stream stalls (no bytes
+ * for IDLE_TIMEOUT_MS). Resets the deadline on every chunk so a slow-but-
+ * steady download of the ~202 MB Ministry CSV completes instead of being
+ * killed by a fixed total timeout.
+ */
+async function fetchWithIdleTimeout(
+  url: string,
+  headers: Record<string, string>,
+): Promise<string> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const arm = (): void => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => controller.abort(), IDLE_TIMEOUT_MS);
+  };
+  arm();
+  try {
+    const response = await fetch(url, { headers, signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} on ${url}`);
+    }
+    if (!response.body) {
+      return await response.text();
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let out = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      arm(); // progress → reset the idle deadline
+      if (value) out += decoder.decode(value, { stream: true });
+    }
+    out += decoder.decode();
+    return out;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 // ─── Fetch & parse ────────────────────────────────────────────────────────────
 
 async function fetchAll(limit: number): Promise<{
@@ -91,12 +141,9 @@ async function fetchAll(limit: number): Promise<{
   droppedFiltered: number;
 }> {
   const url = process.env.PROLIO_RII_DIV_B_ES_CSV ?? DEFAULT_URL;
-  let response: Response;
+  let csvText: string;
   try {
-    response = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(60_000),
-    });
+    csvText = await fetchWithIdleTimeout(url, { "User-Agent": USER_AGENT });
   } catch (err) {
     console.error(
       `[rii-div-b-es] network error: ${(err as Error).message}`,
@@ -104,12 +151,7 @@ async function fetchAll(limit: number): Promise<{
     return { records: [], droppedNoCity: 0, droppedFiltered: 0 };
   }
 
-  if (!response.ok) {
-    console.error(`[rii-div-b-es] HTTP ${response.status} on ${url}`);
-    return { records: [], droppedNoCity: 0, droppedFiltered: 0 };
-  }
-
-  const rows = parseCsv(await response.text());
+  const rows = parseCsv(csvText);
   const out: ScrapedProfessional[] = [];
   const seen = new Set<string>();
   let droppedFiltered = 0;
