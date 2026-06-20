@@ -1,7 +1,5 @@
 name: Scrape · Tennessee TDCI
 on:
-  schedule:
-    - cron: "0 21 * * 6"
   workflow_dispatch:
 jobs:
   run:

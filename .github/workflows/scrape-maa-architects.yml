@@ -1,8 +1,6 @@
 name: Scrape · maa architects
 # maa architects — auto-wired maa-architects. One-shot, monthly.
 on:
-  schedule:
-    - cron: "0 8 16 * *"
   workflow_dispatch:
 jobs:
   run:

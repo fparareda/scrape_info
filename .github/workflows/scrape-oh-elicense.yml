@@ -1,7 +1,5 @@
 name: Scrape · OH eLicense
 on:
-  schedule:
-    - cron: "0 4 29 * *"
   workflow_dispatch:
 jobs:
   run:
