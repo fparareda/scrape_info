@@ -11,8 +11,26 @@ import {
 /**
  * Michigan LARA — Department of Licensing and Regulatory Affairs.
  *
- * Bulk CSV via michigan.gov/lara. Override `PROLIO_MICHIGAN_LARA_CSV`.
- * `PROLIO_RUN_MICHIGAN_LARA=true` to enable.
+ * STATUS (2026-06-19): NO FREE BULK SOURCE — non-recoverable.
+ *
+ * Investigated for a real open dataset and found none that is downloadable
+ * in bulk without auth/FOIA:
+ *   - License verification is a per-record web app only:
+ *     https://val.apps.lara.state.mi.us/  (query one licence/name at a time,
+ *     no list export, no API).
+ *   - The Bureau of Professional Licensing "License Lists and Reports"
+ *     (MiPLUS) excludes the skilled trades (electricians, etc.), which are
+ *     handled separately by the Bureau of Construction Codes with no public
+ *     dataset.
+ *   - Bulk electrician/plumber/HVAC data is only obtainable via a paid
+ *     FOIA request to LARA — not a free, automatable endpoint.
+ *   - Michigan is NOT on data.gov / a Socrata host for these professions.
+ *
+ * The original `DEFAULT_URL` below (michigan.gov/lara/data/active_licenses.csv)
+ * is a template placeholder that 404s. Code is retained (off by default) so
+ * a future FOIA-export drop can be wired via `PROLIO_MICHIGAN_LARA_CSV`, but
+ * there is no live default source today. `PROLIO_RUN_MICHIGAN_LARA=true` to
+ * enable once a real CSV URL is supplied.
  */
 
 const DEFAULT_URL =

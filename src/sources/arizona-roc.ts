@@ -11,10 +11,27 @@ import {
 /**
  * Arizona ROC — Registrar of Contractors.
  *
- * Public dataset: ~50k active commercial + residential contractors
- * (electrical L-11/C-11, plumbing L-37/C-37, HVAC L-39/C-39, etc.).
- * Default endpoint must be verified on first run; override with
- * `PROLIO_ARIZONA_ROC_CSV`. Off by default, `PROLIO_RUN_ARIZONA_ROC=true`.
+ * STATUS (2026-06-19): real file EXISTS but is NON-RECOVERABLE for an
+ * automated scraper — the whole roc.az.gov site sits behind a Cloudflare
+ * "Just a moment…" JS challenge.
+ *
+ * The ROC does publish free "Posting List" CSVs of all ~45k active
+ * residential + commercial contractors (License No, Business Name, DBA,
+ * Class, Class Detail, Address, City, State, Zip, Qualifying Party, Issued
+ * Date, Expiration Date, Status), date-stamped, e.g.:
+ *   https://roc.az.gov/sites/default/files/ROC_Posting-List_Commercial_2026-04-20.csv
+ *   https://roc.az.gov/sites/default/files/ROC_Posting-List_Residential_2026-04-10.csv
+ *   (index page: https://roc.az.gov/posting-list)
+ * BUT every request — even with a browser User-Agent — returns HTTP 403
+ * with a Cloudflare interstitial; the CSV cannot be fetched without a
+ * headless browser that solves the JS challenge. So there is no plain-fetch
+ * bulk endpoint we can wire here. Arizona is NOT on data.gov / Socrata for
+ * ROC data either.
+ *
+ * Code retained (off by default). If a Cloudflare-bypassing fetch path is
+ * added later, point `PROLIO_ARIZONA_ROC_CSV` at the current dated CSV
+ * (URL changes ~every few weeks). The `DEFAULT_URL` below is a placeholder
+ * and 404s. `PROLIO_RUN_ARIZONA_ROC=true` to enable.
  */
 
 const DEFAULT_URL =
