@@ -32,16 +32,23 @@
  * Off by default. Enable via PROLIO_RUN_IOWA_DIAL_CONTRACTORS=true.
  * Monthly cron — registrations renew annually.
  *
- * ⚠️ BROKEN as of 2026-06 — dataset id `dpf3-iz94` returns HTTP 404 on both
- * data.iowa.gov and mydata.iowa.gov. The Iowa open-data portal migrated to
- * a new "Iowa Data Hub" (a Next.js app) and the classic Socrata
- * `/resource/<id>.json` view for this dataset is gone. The Socrata
- * discovery API (api.us.socrata.com) no longer federates the Iowa domain,
- * and catalog.data.gov's CKAN API is also retired, so no replacement 4x4
- * id could be resolved programmatically. The VIEW_ID below is left as-is
- * (NOT replaced with a guessed id). To restore: locate the dataset's new
- * resource id on the Iowa Data Hub and update VIEW_ID + HOST accordingly,
- * or switch to whatever bulk export the new portal exposes.
+ * ⚠️ NON-RECOVERABLE as of 2026-06-19 — re-verified: dataset id
+ * `dpf3-iz94` returns HTTP 404 on the Socrata REST surface of
+ * data.iowa.gov for BOTH the row endpoint
+ * (`/resource/dpf3-iz94.json` → 404) and the view-metadata endpoint
+ * (`/api/views/dpf3-iz94.json` → 404). The host now serves a Next.js
+ * "Iowa Data Hub" SPA (the row URL returns the app's HTML error shell,
+ * not JSON), i.e. the classic Socrata `/resource/<id>` API for this
+ * dataset is gone. The Socrata discovery API (api.us.socrata.com) no
+ * longer federates the Iowa domain and catalog.data.gov's CKAN API is
+ * retired, so no replacement 4x4 Socrata id can be resolved
+ * programmatically — the new portal exposes no equivalent free bulk
+ * JSON/CSV API (the dataset is now only browsable interactively in the
+ * SPA at data.iowa.gov, plus a non-machine-readable "story" view
+ * i9vv-c85r). The VIEW_ID below is left as-is (NOT replaced with a
+ * guessed id). To restore once Iowa republishes a machine-readable bulk
+ * export: update VIEW_ID + HOST (and the fetch path if it is no longer
+ * Socrata-shaped) accordingly.
  *   Landing (was): data.iowa.gov/Workforce/Active-Iowa-Construction-Contractor-Registrations/dpf3-iz94
  */
 

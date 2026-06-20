@@ -1,112 +1,194 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategoryKey } from "../prolio-types.js";
-import type { ScrapedProfessional, ScraperSource } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
+import type { ScrapedProfessional, ScraperSource, ScrapeSource } from "../types.js";
+import { fetchSocrataJson, socrataPick, type SocrataRow } from "./_socrata-utils.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { getSink } from "../sink.js";
-import {
-  parseCsv,
-  pick,
-  normaliseNorthAmericanPhone,
-} from "./_bulk-utils.js";
 
 /**
  * Illinois IDFPR — Department of Financial and Professional Regulation.
  *
- * Bulk CSV download of active licensees across 200+ professions.
- * Default endpoint must be verified on first run; override with
- * `PROLIO_ILLINOIS_IDFPR_CSV`. `PROLIO_RUN_ILLINOIS_IDFPR=true` to enable.
+ * Real dataset: "Professional Licensing" `pzzh-kp68` on data.illinois.gov
+ * (Socrata). "Search, connect, and download all Illinois professional
+ * license holders." ~4.17M total rows; ~1.35M `license_status='ACTIVE'`.
+ *
+ *   https://data.illinois.gov/dataset (IDFPR Professional Licensing)
+ *
+ * Pre-flight (2026-06-19):
+ *   - Socrata SODA JSON API, no auth, no captcha.
+ *   - Verified live: GET /resource/pzzh-kp68.json?$limit=1 → HTTP 200.
+ *   - Columns: license_type, description, license_number, license_status,
+ *     business, title, first_name, middle, last_name, prefix, suffix,
+ *     business_name, businessdba, original_issue_date, effective_date,
+ *     expiration_date, city, state, zip, county, ever_disciplined, …
+ *   - No street address column (city/state/zip only) and no phone.
+ *
+ * IMPORTANT scope note: IDFPR does NOT license electricians, plumbers, or
+ * HVAC techs in Illinois — electricians are licensed by municipalities and
+ * plumbers/HVAC by other agencies (IDPH). So the categories present in
+ * THIS dataset are the design/health/trade professions IDFPR regulates:
+ *   ROOFING CONTRACTOR (33.6k) → carpinteria
+ *   ARCHITECT          (25.2k) → arquitecto
+ *   PHYSICAL THERAPY   (40.8k) → fisioterapia
+ *   VETERINARY         (28.2k) → veterinario
+ *   DENTAL             (83.3k) → dentista
+ *   PROF. ENGINEER / STRUCTURAL ENGINEER (109.6k) → ingenieria
+ * (`license_type` values are UPPER-case; matched server-side by keyword.)
+ *
+ * Off by default. Enable via `PROLIO_RUN_ILLINOIS_IDFPR=true`.
+ * Cap via `PROLIO_ILLINOIS_IDFPR_LIMIT` (default 50000).
  */
 
-const DEFAULT_URL =
-  "https://idfpr.illinois.gov/content/dam/soi/en/web/idfpr/applications/licenselookup/active_licenses.csv";
-const DEFAULT_LIMIT = 2000;
-const USER_AGENT =
-  "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
+const HOST = "data.illinois.gov";
+const VIEW_ID = "pzzh-kp68";
+const SOURCE_NAME = "illinois-idfpr" as const;
+const DEFAULT_LIMIT = 50_000;
 
-function professionToCategory(p: string): CategoryKey | undefined {
-  const d = p.toLowerCase();
-  if (d.includes("electric")) return "electricidad";
-  if (d.includes("hvac") || d.includes("mechanical") || d.includes("air condition") || d.includes("refrigerat") || d.includes("heating"))
-    return "hvac";
-  if (d.includes("plumb")) return "fontaneria";
-  if (d.includes("carpent")) return "carpinteria";
-  if (d.includes("architect")) return "arquitecto";
-  if (d.includes("dentist")) return "dentista";
-  if (d.includes("physical therap")) return "fisioterapia";
-  if (d.includes("veterinar")) return "veterinario";
-  if (d.includes("locksmith")) return "cerrajero";
-  return undefined;
+// Server-side SoQL: active licences in the license_types we cover.
+const WHERE_CLAUSE =
+  "license_status='ACTIVE' AND (" +
+  "license_type like '%ROOFING%'" +
+  " OR license_type like '%ARCHITECT%'" +
+  " OR license_type like '%PHYSICAL THERAP%'" +
+  " OR license_type like '%VETERINAR%'" +
+  " OR license_type like '%DENTAL%'" +
+  " OR license_type like '%ENGINEER%'" +
+  ")";
+
+interface CategoryRule {
+  test: RegExp;
+  category: CategoryKey;
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
-  const url = process.env.PROLIO_ILLINOIS_IDFPR_CSV || DEFAULT_URL;
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(60_000),
-    });
-  } catch (error) {
-    console.error(`[illinois-idfpr] network error: ${(error as Error).message}`);
-    return [];
+const CATEGORY_RULES: CategoryRule[] = [
+  { test: /roofing/i, category: "carpinteria" },
+  { test: /architect/i, category: "arquitecto" },
+  { test: /physical therap/i, category: "fisioterapia" },
+  { test: /veterinar/i, category: "veterinario" },
+  { test: /dental/i, category: "dentista" },
+  { test: /engineer/i, category: "ingenieria" },
+];
+
+function mapLicenseType(licType: string | undefined): CategoryKey | null {
+  if (!licType) return null;
+  for (const rule of CATEGORY_RULES) {
+    if (rule.test.test(licType)) return rule.category;
   }
-  if (!response.ok) {
-    console.error(`[illinois-idfpr] ${response.status} on ${url}`);
-    return [];
-  }
-  const rows = parseCsv(await response.text());
-  const out: ScrapedProfessional[] = [];
+  return null;
+}
+
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function buildName(row: SocrataRow): string | undefined {
+  const business = socrataPick(row, ["business_name"]);
+  const dba = socrataPick(row, ["businessdba"]);
+  if (business) return titleCase(business);
+  if (dba) return titleCase(dba);
+  const first = socrataPick(row, ["first_name"]);
+  const middle = socrataPick(row, ["middle"]);
+  const last = socrataPick(row, ["last_name"]);
+  const parts = [first, middle, last].filter(Boolean) as string[];
+  return parts.length > 0 ? titleCase(parts.join(" ")) : undefined;
+}
+
+interface RunOptions {
+  maxRows?: number;
+  batchSize?: number;
+}
+
+export async function runIllinoisIdfprSocrata(
+  client: SupabaseClient,
+  opts: RunOptions = {},
+): Promise<{ scanned: number; accepted: number; written: number }> {
+  const batchSize = opts.batchSize ?? 500;
+  const sink = getSink({ trustCitySlugs: true });
+  let scanned = 0;
+  let accepted = 0;
+  let written = 0;
+  let buffer: ScrapedProfessional[] = [];
   const seen = new Set<string>();
 
-  for (const row of rows) {
-    if (out.length >= limit) break;
-    const status = pick(row, ["status", "license_status"]).toLowerCase();
-    if (status && !status.includes("active")) continue;
-    const licence = pick(row, ["license_number", "license_no", "licensenumber"]);
-    if (!licence) continue;
-    const profession = pick(row, ["profession", "license_type", "type"]);
-    const category = professionToCategory(profession);
-    if (!category) continue;
-    const city = pick(row, ["city", "addr_city"]);
-    const citySlug = slugify(city);
-    if (!citySlug) continue;
-    const key = `${licence}:${category}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+  const flush = async (): Promise<void> => {
+    if (buffer.length === 0) return;
+    const res = await sink.upsert(buffer);
+    written += res.inserted + res.updated;
+    buffer = [];
+  };
 
-    const name = pick(row, ["business_name", "company_name", "full_name", "name"]);
-    if (!name) continue;
-    const street = pick(row, ["address", "street"]);
-    const zip = pick(row, ["zip", "zip_code"]);
-    const stateRaw = pick(row, ["state"]) || "IL";
-    const address = [street, city, stateRaw, zip].filter(Boolean).join(", ");
+  for await (const page of fetchSocrataJson({
+    host: HOST,
+    viewId: VIEW_ID,
+    pageSize: 1000,
+    maxRows: opts.maxRows,
+    where: WHERE_CLAUSE,
+  })) {
+    for (const row of page) {
+      scanned += 1;
+      const licType = socrataPick(row, ["license_type"]);
+      const category = mapLicenseType(licType);
+      if (!category) continue;
 
-    out.push(
-      normalise({
-        source: "illinois-idfpr",
-        country: "US",
-        sourceId: `illinois-idfpr:${licence}:${category}`,
+      const licNum = socrataPick(row, ["license_number"]);
+      const name = buildName(row);
+      if (!licNum || !name) continue;
+
+      const cityRaw = socrataPick(row, ["city"]);
+      const stateRaw = socrataPick(row, ["state"]) || "IL";
+      let citySlug = "";
+      if (cityRaw && stateRaw.toUpperCase() === "IL") {
+        const cityResult = await ensureCity(client, {
+          name: titleCase(cityRaw),
+          state: "IL",
+          country: "US",
+        });
+        if (cityResult) citySlug = cityResult.slug;
+      }
+
+      const dedupeKey = `${licNum}:${category}`;
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+
+      const zip = socrataPick(row, ["zip"]);
+      const address = [cityRaw, stateRaw, zip].filter(Boolean).join(", ");
+
+      buffer.push({
+        source: SOURCE_NAME as ScrapeSource,
+        sourceId: `illinois-idfpr:${licNum}:${category}`,
         name,
         categoryKey: category,
+        country: "US",
         citySlug,
-        phone: normaliseNorthAmericanPhone(pick(row, ["phone"])),
         address: address || undefined,
-        licenseNumber: licence,
+        licenseNumber: licNum,
         metadata: {
           country: "US",
           state: "IL",
           authority: "Illinois IDFPR",
           verified_by_authority: true,
-          idfpr_profession: profession,
+          idfpr_license_type: licType,
+          idfpr_description: socrataPick(row, ["description"]),
+          expiration_date: socrataPick(row, ["expiration_date"]),
         },
-      }),
-    );
+      });
+      accepted += 1;
+      if (buffer.length >= batchSize) await flush();
+    }
   }
-  console.log(`[illinois-idfpr] parsed=${out.length}`);
-  return out;
+  await flush();
+
+  const cs = getCityUpsertStats();
+  console.log(
+    `[illinois-idfpr] done — scanned=${scanned} accepted=${accepted} written=${written} ` +
+      `cities_created=${cs.inserted} geocoded=${cs.geocoded} ungeocoded=${cs.failedGeocode}`,
+  );
+  return { scanned, accepted, written };
 }
 
 export const illinoisIdfprSource: ScraperSource = {
-  name: "illinois-idfpr",
+  name: SOURCE_NAME as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_ILLINOIS_IDFPR === "true";
   },
@@ -127,15 +209,16 @@ export async function runIllinoisIdfpr(): Promise<{
   const rawLimit = Number(
     process.env.PROLIO_ILLINOIS_IDFPR_LIMIT ?? DEFAULT_LIMIT,
   );
-  const limit =
+  const maxRows =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
-  const records = await fetchAll(limit);
-  if (records.length === 0)
-    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-  const sink = getSink();
-  const { inserted, updated, skipped } = await sink.upsert(records);
-  console.log(
-    `[illinois-idfpr] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
-  );
-  return { fetched: records.length, inserted, updated, skipped };
+  const client = getSupabaseClient();
+  const { scanned, accepted, written } = await runIllinoisIdfprSocrata(client, {
+    maxRows,
+  });
+  return {
+    fetched: accepted,
+    inserted: written,
+    updated: 0,
+    skipped: scanned - accepted,
+  };
 }

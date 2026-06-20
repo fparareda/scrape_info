@@ -1,108 +1,210 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CategoryKey } from "../prolio-types.js";
-import type { ScrapedProfessional, ScraperSource } from "../types.js";
-import { normalise, slugify } from "../normalise.js";
+import type { ScrapedProfessional, ScraperSource, ScrapeSource } from "../types.js";
+import { fetchSocrataJson, socrataPick, type SocrataRow } from "./_socrata-utils.js";
+import { ensureCity, getCityUpsertStats } from "../lib/city-upsert.js";
+import { getSupabaseClient } from "../lib/supabase-client.js";
 import { getSink } from "../sink.js";
-import {
-  parseCsv,
-  pick,
-  normaliseNorthAmericanPhone,
-} from "./_bulk-utils.js";
 
 /**
  * Washington L&I — Department of Labor & Industries contractor and
- * trades licensee dataset (data.wa.gov).
+ * trades licensee dataset (data.wa.gov, Socrata).
  *
- * Default endpoint must be verified on first run; override with
- * `PROLIO_WASHINGTON_LI_CSV`. Off by default,
- * `PROLIO_RUN_WASHINGTON_LI=true`.
+ * Dataset `m8qx-ubtq` ("L&I Contractor License Data - General") on
+ * data.wa.gov. ~75k ACTIVE registered construction contractors covering
+ * every trade specialty. Updated daily.
+ *
+ *   https://data.wa.gov/Labor/L-I-Contractor-License-Data-General/m8qx-ubtq
+ *
+ * Verified (2026-06-19) via `?$limit=1` (HTTP 200). Real columns:
+ *   businessname, contractorlicensenumber, contractorlicensetypecodedesc,
+ *   specialtycode1desc, address1, city, state, zip, phonenumber,
+ *   primaryprincipalname, ubi, contractorlicensestatus (ACTIVE/…).
+ *
+ * The previous default URL
+ * (lni.wa.gov/.../active-contractors.csv) was fabricated and returned no
+ * usable rows. Replaced with the real Socrata JSON endpoint.
+ *
+ * CategoryKey mapping is keyed off `specialtycode1desc` (the contractor's
+ * primary specialty), falling back to `contractorlicensetypecodedesc`.
+ * Records that match no trade vertical fall back to `carpinteria`
+ * (general construction), matching the Iowa DIAL convention.
+ *
+ * Off by default. Enable via `PROLIO_RUN_WASHINGTON_LI=true`.
+ * Cap via `PROLIO_WASHINGTON_LI_LIMIT` (default 80000).
  */
 
-const DEFAULT_URL =
-  "https://lni.wa.gov/licensing-permits/_docs/active-contractors.csv";
-const DEFAULT_LIMIT = 2000;
-const USER_AGENT =
-  "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
+const HOST = "data.wa.gov";
+const VIEW_ID = "m8qx-ubtq";
+const SOURCE_NAME = "washington-li" as const;
+const DEFAULT_LIMIT = 80_000;
 
-function specialtyToCategory(s: string): CategoryKey | undefined {
-  const d = s.toLowerCase();
-  if (d.includes("electric")) return "electricidad";
-  if (d.includes("hvac") || d.includes("mechanical") || d.includes("heating") || d.includes("air condition") || d.includes("refrigerat"))
+const WHERE_CLAUSE = "contractorlicensestatus='ACTIVE'";
+
+function specialtyToCategory(raw: string | undefined): CategoryKey {
+  const d = (raw ?? "").toLowerCase();
+  if (d.includes("electric") || d.includes("limited energy")) return "electricidad";
+  if (
+    d.includes("hvac") ||
+    d.includes("heating") ||
+    d.includes("air-condition") ||
+    d.includes("air condition") ||
+    d.includes("refrig") ||
+    d.includes("boiler")
+  )
     return "hvac";
-  if (d.includes("plumb")) return "fontaneria";
-  if (d.includes("carpent") || d.includes("finish")) return "carpinteria";
+  if (
+    d.includes("plumb") ||
+    d.includes("drain") ||
+    d.includes("piping") ||
+    d.includes("backflow") ||
+    d.includes("pump")
+  )
+    return "fontaneria";
+  // Everything else (general, masonry, carpentry, roofing, siding, …) →
+  // general construction.
+  return "carpinteria";
+}
+
+function buildName(row: SocrataRow): string | undefined {
+  const biz = socrataPick(row, ["businessname", "business_name"]);
+  if (biz) return titleCase(biz);
+  const principal = socrataPick(row, ["primaryprincipalname"]);
+  if (principal) return titleCase(principal);
   return undefined;
 }
 
-async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
-  const url = process.env.PROLIO_WASHINGTON_LI_CSV || DEFAULT_URL;
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(60_000),
-    });
-  } catch (error) {
-    console.error(`[washington-li] network error: ${(error as Error).message}`);
-    return [];
-  }
-  if (!response.ok) {
-    console.error(`[washington-li] ${response.status} on ${url}`);
-    return [];
-  }
-  const rows = parseCsv(await response.text());
-  const out: ScrapedProfessional[] = [];
+function buildAddress(row: SocrataRow): string | undefined {
+  const parts: string[] = [];
+  const street = socrataPick(row, ["address1", "address"]);
+  const city = socrataPick(row, ["city"]);
+  const state = socrataPick(row, ["state"]) || "WA";
+  const zip = socrataPick(row, ["zip", "zip_code"]);
+  if (street) parts.push(street);
+  if (city) parts.push(city);
+  if (state) parts.push(state);
+  if (zip) parts.push(zip);
+  return parts.length > 0 ? parts.join(", ") : undefined;
+}
+
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function normalisePhone(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return undefined;
+}
+
+interface RunOptions {
+  maxRows?: number;
+  batchSize?: number;
+}
+
+export async function runWashingtonLiBulk(
+  client: SupabaseClient,
+  opts: RunOptions = {},
+): Promise<{ scanned: number; accepted: number; written: number }> {
+  const batchSize = opts.batchSize ?? 500;
+  const sink = getSink({ trustCitySlugs: true });
+  let scanned = 0;
+  let accepted = 0;
+  let written = 0;
+  let buffer: ScrapedProfessional[] = [];
   const seen = new Set<string>();
 
-  for (const row of rows) {
-    if (out.length >= limit) break;
-    const status = pick(row, ["status", "license_status"]).toLowerCase();
-    if (status && !status.includes("active")) continue;
-    const licence = pick(row, ["license_number", "ubi", "registration"]);
-    if (!licence) continue;
-    const specialty = pick(row, ["specialty", "license_type", "type", "trade"]);
-    const category = specialtyToCategory(specialty);
-    if (!category) continue;
-    const city = pick(row, ["city"]);
-    const citySlug = slugify(city);
-    if (!citySlug) continue;
-    const key = `${licence}:${category}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+  const flush = async (): Promise<void> => {
+    if (buffer.length === 0) return;
+    const res = await sink.upsert(buffer);
+    written += res.inserted + res.updated;
+    buffer = [];
+  };
 
-    const name = pick(row, ["business_name", "company_name", "name", "owner_name"]);
-    if (!name) continue;
-    const street = pick(row, ["address", "street"]);
-    const zip = pick(row, ["zip", "zip_code"]);
-    const stateRaw = pick(row, ["state"]) || "WA";
-    const address = [street, city, stateRaw, zip].filter(Boolean).join(", ");
+  const PROGRESS_EVERY = 1000;
+  let lastProgressTs = Date.now();
 
-    out.push(
-      normalise({
-        source: "washington-li",
+  for await (const page of fetchSocrataJson({
+    host: HOST,
+    viewId: VIEW_ID,
+    pageSize: 1000,
+    maxRows: opts.maxRows,
+    where: WHERE_CLAUSE,
+  })) {
+    for (const row of page) {
+      if (scanned > 0 && scanned % PROGRESS_EVERY === 0) {
+        const cs = getCityUpsertStats();
+        const elapsed = ((Date.now() - lastProgressTs) / 1000).toFixed(1);
+        console.log(
+          `[washington-li] progress scanned=${scanned} accepted=${accepted} written=${written} ` +
+            `cities_created=${cs.inserted} +${elapsed}s`,
+        );
+        lastProgressTs = Date.now();
+      }
+      scanned += 1;
+
+      const licNum = socrataPick(row, ["contractorlicensenumber", "ubi"]);
+      const name = buildName(row);
+      const cityRaw = socrataPick(row, ["city"]);
+      if (!licNum || !name || !cityRaw) continue;
+
+      const specialty = socrataPick(row, [
+        "specialtycode1desc",
+        "contractorlicensetypecodedesc",
+      ]);
+      const category = specialtyToCategory(specialty);
+
+      const dedupeKey = `${licNum}:${category}`;
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+
+      const cityResult = await ensureCity(client, {
+        name: titleCase(cityRaw),
+        state: socrataPick(row, ["state"]) || "WA",
         country: "US",
-        sourceId: `washington-li:${licence}:${category}`,
+      });
+      if (!cityResult) continue;
+
+      buffer.push({
+        source: SOURCE_NAME as ScrapeSource,
+        sourceId: `washington-li:${licNum}:${category}`,
         name,
         categoryKey: category,
-        citySlug,
-        phone: normaliseNorthAmericanPhone(pick(row, ["phone"])),
-        address: address || undefined,
-        licenseNumber: licence,
+        country: "US",
+        citySlug: cityResult.slug,
+        address: buildAddress(row),
+        phone: normalisePhone(socrataPick(row, ["phonenumber", "phone"])),
+        licenseNumber: licNum,
         metadata: {
-          country: "US",
           state: "WA",
+          country: "US",
           authority: "Washington L&I",
           verified_by_authority: true,
           li_specialty: specialty,
+          license_type: socrataPick(row, ["contractorlicensetypecodedesc"]),
+          expiration_date: socrataPick(row, ["licenseexpirationdate"]),
         },
-      }),
-    );
+      });
+      accepted += 1;
+      if (buffer.length >= batchSize) await flush();
+    }
   }
-  console.log(`[washington-li] parsed=${out.length}`);
-  return out;
+  await flush();
+
+  const cs = getCityUpsertStats();
+  console.log(
+    `[washington-li] done — scanned=${scanned} accepted=${accepted} written=${written} ` +
+      `cities_created=${cs.inserted} geocoded=${cs.geocoded} ungeocoded=${cs.failedGeocode}`,
+  );
+  return { scanned, accepted, written };
 }
 
+// ── ScraperSource wrapper ────────────────────────────────────────────────────
+
 export const washingtonLiSource: ScraperSource = {
-  name: "washington-li",
+  name: SOURCE_NAME as ScrapeSource,
   enabled() {
     return process.env.PROLIO_RUN_WASHINGTON_LI === "true";
   },
@@ -121,16 +223,14 @@ export async function runWashingtonLi(): Promise<{
     return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
   }
   const rawLimit = Number(process.env.PROLIO_WASHINGTON_LI_LIMIT ?? DEFAULT_LIMIT);
-  const limit =
+  const maxRows =
     Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : DEFAULT_LIMIT;
-  const records = await fetchAll(limit);
-  if (records.length === 0) {
-    return { fetched: 0, inserted: 0, updated: 0, skipped: 0 };
-  }
-  const sink = getSink();
-  const { inserted, updated, skipped } = await sink.upsert(records);
+  const client = getSupabaseClient();
+  const { scanned, accepted, written } = await runWashingtonLiBulk(client, {
+    maxRows,
+  });
   console.log(
-    `[washington-li] done — fetched=${records.length} inserted=${inserted} updated=${updated} skipped=${skipped}`,
+    `[washington-li] source done — scanned=${scanned} accepted=${accepted} written=${written}`,
   );
-  return { fetched: records.length, inserted, updated, skipped };
+  return { fetched: accepted, inserted: written, updated: 0, skipped: scanned - accepted };
 }
