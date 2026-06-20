@@ -123,6 +123,8 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
         continue;
       }
       const licNum = pick(row, [
+        "licnbr",
+        "lic_nbr",
         "lic_number",
         "license_number",
         "licence_number",
@@ -145,22 +147,24 @@ async function fetchAll(limit: number): Promise<ScrapedProfessional[]> {
       seen.add(dedupeKey);
 
       const name = pick(row, [
+        "full_name",
+        "dba",
         "lic_holder",
         "holder_name",
         "business_name",
         "name",
-        "full_name",
         "licensee_name",
         "first_name",
       ]);
       if (!name) continue;
       const street = pick(row, [
+        "addr1",
         "address",
         "lic_address",
         "street",
         "street_address",
       ]);
-      const zip = pick(row, ["zip", "zip_code", "postal_code"]);
+      const zip = pick(row, ["zipcode", "zip", "zip_code", "postal_code"]);
       const stateRaw = pick(row, ["state", "lic_state"]) || "OR";
       const address = [street, city, stateRaw, zip]
         .filter(Boolean)

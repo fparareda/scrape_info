@@ -31,6 +31,18 @@
  *
  * Off by default. Enable via PROLIO_RUN_IOWA_DIAL_CONTRACTORS=true.
  * Monthly cron — registrations renew annually.
+ *
+ * ⚠️ BROKEN as of 2026-06 — dataset id `dpf3-iz94` returns HTTP 404 on both
+ * data.iowa.gov and mydata.iowa.gov. The Iowa open-data portal migrated to
+ * a new "Iowa Data Hub" (a Next.js app) and the classic Socrata
+ * `/resource/<id>.json` view for this dataset is gone. The Socrata
+ * discovery API (api.us.socrata.com) no longer federates the Iowa domain,
+ * and catalog.data.gov's CKAN API is also retired, so no replacement 4x4
+ * id could be resolved programmatically. The VIEW_ID below is left as-is
+ * (NOT replaced with a guessed id). To restore: locate the dataset's new
+ * resource id on the Iowa Data Hub and update VIEW_ID + HOST accordingly,
+ * or switch to whatever bulk export the new portal exposes.
+ *   Landing (was): data.iowa.gov/Workforce/Active-Iowa-Construction-Contractor-Registrations/dpf3-iz94
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";

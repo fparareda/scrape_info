@@ -132,13 +132,26 @@ export async function withScrapeRun<T extends ScrapeRunCounts | void>(
     const result = await fn();
     if (id) {
       const counts = (result ?? {}) as ScrapeRunCounts;
+      const upserted = counts.rowsUpserted ?? 0;
+      const fetched = counts.rowsFetched ?? 0;
+      // Silent-breakage guard: a source that finishes "ok" with 0 rows
+      // upserted is almost always broken (markup/endpoint/parser change,
+      // anti-bot, or a slug/category filter dropping everything) — it just
+      // doesn't throw. Surface it loudly so it stops reporting a false
+      // success, and tag the row so it's queryable.
+      const zeroRows = upserted === 0;
+      if (zeroRows) {
+        console.warn(
+          `[scrape-run] ${source} produced 0 rows (fetched=${fetched}, skipped=${counts.rowsSkipped ?? 0}) — possible silent breakage`,
+        );
+      }
       await finishRun(id, {
         finished_at: new Date().toISOString(),
         status: "ok",
-        rows_fetched: counts.rowsFetched ?? 0,
-        rows_upserted: counts.rowsUpserted ?? 0,
+        rows_fetched: fetched,
+        rows_upserted: upserted,
         rows_skipped: counts.rowsSkipped ?? 0,
-        metadata: counts.metadata ?? {},
+        metadata: { ...(counts.metadata ?? {}), ...(zeroRows ? { zero_rows: true } : {}) },
       });
     }
     return result;

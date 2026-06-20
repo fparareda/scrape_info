@@ -52,7 +52,13 @@ const DEFAULT_URL =
   "https://www6.serviciosmin.gob.es/Aplicaciones/OpenDataModule_AC202101/UbicacionRIII/Consulta%20RII%20division%20B.csv";
 
 const DEFAULT_LIMIT = 60_000;
-const REQUEST_TIMEOUT_MS = 300_000; // 5 min — 202 MB CSV
+// Inactivity (idle) timeout, NOT a total wall-clock deadline. The Ministry
+// serves a 202 MB CSV from a slow origin; a fixed total timeout
+// (AbortSignal.timeout) counts the whole body-read against the budget and
+// reliably aborts with "operation aborted due to timeout" on large files.
+// Instead we abort only if NO bytes arrive for this long, so a slow but
+// steadily-progressing download is never killed.
+const IDLE_TIMEOUT_MS = 120_000; // 2 min with zero progress → give up
 const POLITE_UA =
   "Prolio-Bot/1.0 (+https://prolio-web.vercel.app; contact: ferranp.work@gmail.com)";
 
@@ -117,6 +123,53 @@ function resolveCitySlug(
   return undefined;
 }
 
+// ─── Fetch with idle (inactivity) timeout ─────────────────────────────────────
+
+/**
+ * Download a (potentially very large) response body, aborting only if the
+ * stream stalls — i.e. no bytes arrive for IDLE_TIMEOUT_MS. This avoids the
+ * "operation aborted due to timeout" failures that a fixed total deadline
+ * (AbortSignal.timeout) caused on the Ministry's slow 202 MB CSV: the idle
+ * timer is reset on every received chunk, so a slow-but-steady transfer
+ * runs to completion no matter how long it takes overall.
+ */
+async function fetchWithIdleTimeout(
+  url: string,
+  headers: Record<string, string>,
+): Promise<string> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const arm = (): void => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => controller.abort(), IDLE_TIMEOUT_MS);
+  };
+  arm();
+  try {
+    const response = await fetch(url, { headers, signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} from ${url}`);
+    }
+    if (!response.body) {
+      // No streamable body — fall back to buffered read (timer still armed).
+      const t = await response.text();
+      return t;
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let out = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      arm(); // progress → reset the idle deadline
+      if (value) out += decoder.decode(value, { stream: true });
+    }
+    out += decoder.decode();
+    return out;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 // ─── Fetch & parse ────────────────────────────────────────────────────────────
 
 async function fetchAll(limit: number): Promise<{
@@ -125,14 +178,11 @@ async function fetchAll(limit: number): Promise<{
   droppedFiltered: number;
 }> {
   const url = DEFAULT_URL;
-  let response: Response;
+  let text: string;
   try {
-    response = await fetch(url, {
-      headers: {
-        "User-Agent": POLITE_UA,
-        Accept: "text/csv,application/octet-stream,*/*;q=0.1",
-      },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    text = await fetchWithIdleTimeout(url, {
+      "User-Agent": POLITE_UA,
+      Accept: "text/csv,application/octet-stream,*/*;q=0.1",
     });
   } catch (error) {
     console.warn(
@@ -140,11 +190,6 @@ async function fetchAll(limit: number): Promise<{
     );
     return { records: [], droppedNoCity: 0, droppedFiltered: 0 };
   }
-  if (!response.ok) {
-    console.warn(`[rii-div-b-termicas-es] HTTP ${response.status} from ${url}`);
-    return { records: [], droppedNoCity: 0, droppedFiltered: 0 };
-  }
-  const text = await response.text();
   console.log(
     `[rii-div-b-termicas-es] downloaded ${(text.length / 1024 / 1024).toFixed(1)} MB`,
   );

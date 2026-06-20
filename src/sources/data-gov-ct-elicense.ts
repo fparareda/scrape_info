@@ -54,21 +54,27 @@ const DEFAULT_LIMIT = 50_000;
 
 // Server-side SoQL filter: active credentials whose type matches keyword
 // categories we cover. Using UPPER() for case-insensitive match on Socrata.
+//
+// NOTE: the real `ngch-56tr` schema does NOT have `credential_status` or
+// `credential_type` columns (those names produced `no-such-column: cre…`
+// 400s). The actual columns are `status` (Active/Expired/…) and
+// `credentialtype` (the human-readable license type). See dataset:
+//   https://data.ct.gov/resource/ngch-56tr.json?$limit=1
 const WHERE_CLAUSE =
-  "credential_status='Active' AND (" +
-  "UPPER(credential_type) like '%ELECTR%'" +
-  " OR UPPER(credential_type) like '%PLUMB%'" +
-  " OR UPPER(credential_type) like '%DRAIN%'" +
-  " OR UPPER(credential_type) like '%HEAT%'" +
-  " OR UPPER(credential_type) like '%HVAC%'" +
-  " OR UPPER(credential_type) like '%AIR COND%'" +
-  " OR UPPER(credential_type) like '%REFRIGER%'" +
-  " OR UPPER(credential_type) like '%HOME IMPROVEMENT%'" +
-  " OR UPPER(credential_type) like '%GENERAL CONTRACTOR%'" +
-  " OR UPPER(credential_type) like '%HOME CONSTRUCTION%'" +
-  " OR UPPER(credential_type) like '%CARPENT%'" +
-  " OR UPPER(credential_type) like '%ENGINEER%'" +
-  " OR UPPER(credential_type) like '%ARCHITECT%'" +
+  "status='Active' AND (" +
+  "UPPER(credentialtype) like '%ELECTR%'" +
+  " OR UPPER(credentialtype) like '%PLUMB%'" +
+  " OR UPPER(credentialtype) like '%DRAIN%'" +
+  " OR UPPER(credentialtype) like '%HEAT%'" +
+  " OR UPPER(credentialtype) like '%HVAC%'" +
+  " OR UPPER(credentialtype) like '%AIR COND%'" +
+  " OR UPPER(credentialtype) like '%REFRIGER%'" +
+  " OR UPPER(credentialtype) like '%HOME IMPROVEMENT%'" +
+  " OR UPPER(credentialtype) like '%GENERAL CONTRACTOR%'" +
+  " OR UPPER(credentialtype) like '%HOME CONSTRUCTION%'" +
+  " OR UPPER(credentialtype) like '%CARPENT%'" +
+  " OR UPPER(credentialtype) like '%ENGINEER%'" +
+  " OR UPPER(credentialtype) like '%ARCHITECT%'" +
   ")";
 
 interface CategoryRule {
@@ -98,11 +104,11 @@ function mapCredentialType(credType: string | undefined): CategoryKey | null {
 
 function pickName(row: SocrataRow): string | undefined {
   const candidates = [
+    "name",
     "dba_name",
     "business_name",
     "licensee_name",
     "credential_holder_name",
-    "name",
   ];
   for (const key of candidates) {
     const v = row[key];
@@ -113,10 +119,10 @@ function pickName(row: SocrataRow): string | undefined {
 
 function buildAddress(row: SocrataRow): string | undefined {
   const parts: string[] = [];
-  const street = socrataPick(row, ["office_address", "address", "street_address"]);
-  const city = socrataPick(row, ["office_city", "city"]);
-  const state = socrataPick(row, ["office_state", "state"]);
-  const zip = socrataPick(row, ["office_zip", "zip_code", "zip"]);
+  const street = socrataPick(row, ["address", "office_address", "street_address"]);
+  const city = socrataPick(row, ["city", "office_city"]);
+  const state = socrataPick(row, ["state", "office_state"]);
+  const zip = socrataPick(row, ["zip", "office_zip", "zip_code"]);
   if (street) parts.push(street);
   if (city) parts.push(city);
   if (state) parts.push(state);
@@ -173,15 +179,15 @@ export async function runCtElicense(
       }
       scanned += 1;
 
-      const credId = socrataPick(row, ["credential_identifier", "id"]);
-      const credType = socrataPick(row, ["credential_type"]);
+      const credId = socrataPick(row, ["credentialid", "credential_identifier", "id"]);
+      const credType = socrataPick(row, ["credentialtype", "credential_type"]);
       const category = mapCredentialType(credType);
       if (!category) continue;
 
       const rawName = pickName(row);
       if (!rawName || !credId) continue;
 
-      const cityRaw = socrataPick(row, ["office_city", "city"]);
+      const cityRaw = socrataPick(row, ["city", "office_city"]);
       if (!cityRaw) continue;
 
       const cityResult = await ensureCity(client, {
@@ -191,7 +197,7 @@ export async function runCtElicense(
       });
       if (!cityResult) continue;
 
-      const credNum = socrataPick(row, ["credential_number", "license_number"]);
+      const credNum = socrataPick(row, ["credentialnumber", "credential_number", "license_number"]);
       buffer.push({
         source: SOURCE_NAME as ScrapeSource,
         sourceId: `ct-elicense:${credId}`,
@@ -203,9 +209,9 @@ export async function runCtElicense(
         licenseNumber: credNum ?? undefined,
         metadata: {
           credential_type: credType,
-          credential_status: socrataPick(row, ["credential_status"]),
-          expiration_date: socrataPick(row, ["expiration_date"]),
-          issued_date: socrataPick(row, ["issued_date"]),
+          credential_status: socrataPick(row, ["status", "credential_status"]),
+          expiration_date: socrataPick(row, ["expirationdate", "expiration_date"]),
+          issued_date: socrataPick(row, ["issuedate", "issued_date"]),
           state: "CT",
           country: "US",
           verified_by_authority: true,
