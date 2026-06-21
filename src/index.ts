@@ -405,6 +405,8 @@ import { riiDivBTermicasEsSource, runRiiDivBTermicasEs } from "./sources/rii-div
 import { cvoOnVetsSource, runCvoOnVets } from "./sources/cvo-on-vets.js";
 import { cgcfeFisioterapeutasSource, runCgcfeFisioterapeutas } from "./sources/cgcfe-fisioterapeutas.js";
 import { ctElicenseSource, runCtElicense } from "./sources/data-gov-ct-elicense.js";
+// 2026-06-21: CPABC — Chartered Professional Accountants of BC (CA fiscal, ~40k CPAs)
+import { cpabcBcCpaSource, runCpabcBcCpa } from "./sources/cpabc-bc-cpa.js";
 // 2026-06-19: Colombia bulk company registries (datos.gov.co Socrata)
 import { repsSaludCoSource, runRepsSaludCoSource } from "./sources/reps-salud-co.js";
 import {
@@ -719,6 +721,7 @@ async function main(): Promise<void> {
   const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
   const riiGasEsOn = riiGasEsSource.enabled();
   const jcylInstaladoresEsOn = jcylInstaladoresEsSource.enabled();
+  const cpabcBcCpaOn = cpabcBcCpaSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -987,7 +990,8 @@ async function main(): Promise<void> {
     !icomemMedicosEsOn &&
     !indianaPlaOn &&
     !irsPtinOn &&
-    !riiDivBTermicasEsOn
+    !riiDivBTermicasEsOn &&
+    !cpabcBcCpaOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1897,6 +1901,8 @@ async function main(): Promise<void> {
     [cgcfeFisioterapeutasOn, "cgcfe-fisioterapeutas", runCgcfeFisioterapeutas],
     // 2026-05-20: international company registries
     [ctElicenseOn, "data-gov-ct-elicense", runCtElicense],
+    // 2026-06-21: CPABC BC — CPA British Columbia (~40k CPAs, fiscal)
+    [cpabcBcCpaOn, "cpabc-bc-cpa", runCpabcBcCpa],
     // 2026-06-19: Colombia bulk company registries
     [repsSaludCoOn, "reps-salud-co", runRepsSaludCoSource],
     [ruesCoOn, "rues-registro-mercantil-co", runRuesRegistroMercantilCoSource],
