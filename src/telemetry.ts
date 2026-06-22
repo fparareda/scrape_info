@@ -89,11 +89,22 @@ async function finishRun(
 export interface ScrapeRunHandle {
   ok(counts: ScrapeRunCounts): Promise<void>;
   error(err: unknown): Promise<void>;
+  /** Persist partial counts WITHOUT finishing the row (see ScrapeRunReporter).
+   *  Lets a long bulk run reflect progress even if later killed. */
+  heartbeat(counts: ScrapeRunCounts): Promise<void>;
 }
 
 export async function beginScrapeRun(source: string): Promise<ScrapeRunHandle> {
   const id = await insertRunning(source);
   return {
+    async heartbeat(counts) {
+      if (!id) return;
+      await finishRun(id, {
+        rows_fetched: counts.rowsFetched ?? 0,
+        rows_upserted: counts.rowsUpserted ?? 0,
+        rows_skipped: counts.rowsSkipped ?? 0,
+      });
+    },
     async ok(counts) {
       if (!id) return;
       await finishRun(id, {
@@ -117,19 +128,37 @@ export async function beginScrapeRun(source: string): Promise<ScrapeRunHandle> {
 }
 
 /**
- * Wrap a source execution in a scrape_runs row. The callback receives no
- * arguments and must return `ScrapeRunCounts` on success (all fields
- * optional; defaults to 0). If it throws, the row is marked 'error' and
- * the exception is re-thrown so the orchestrator's normal error paths
- * still fire.
+ * Heartbeat reporter handed to the `withScrapeRun` callback. Calling it
+ * persists partial counts to the still-`running` row WITHOUT finishing it.
+ * Long bulk backfills (RUES/SECOP) use it so a run later killed by the CI
+ * timeout/OOM still reflects the rows it wrote, instead of the misleading
+ * rows_upserted=0 the finalizer never got to write. Optional — sources that
+ * ignore it behave exactly as before.
+ */
+export type ScrapeRunReporter = (counts: ScrapeRunCounts) => Promise<void>;
+
+/**
+ * Wrap a source execution in a scrape_runs row. The callback may accept a
+ * `report` heartbeat (see ScrapeRunReporter) and must return `ScrapeRunCounts`
+ * on success (all fields optional; defaults to 0). If it throws, the row is
+ * marked 'error' and the exception is re-thrown so the orchestrator's normal
+ * error paths still fire.
  */
 export async function withScrapeRun<T extends ScrapeRunCounts | void>(
   source: string,
-  fn: () => Promise<T>,
+  fn: (report: ScrapeRunReporter) => Promise<T>,
 ): Promise<T> {
   const id = await insertRunning(source);
+  const report: ScrapeRunReporter = async (counts) => {
+    if (!id) return;
+    await finishRun(id, {
+      rows_fetched: counts.rowsFetched ?? 0,
+      rows_upserted: counts.rowsUpserted ?? 0,
+      rows_skipped: counts.rowsSkipped ?? 0,
+    });
+  };
   try {
-    const result = await fn();
+    const result = await fn(report);
     if (id) {
       const counts = (result ?? {}) as ScrapeRunCounts;
       const upserted = counts.rowsUpserted ?? 0;

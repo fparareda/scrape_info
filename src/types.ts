@@ -234,6 +234,8 @@ export type ScrapeSource =
   | "calgary-business-licences"
   // 2026-05-20: international company registries (hybrid enrichment + selective ingest)
   | "uk-companies-house"
+  // 2026-06-22: Companies House free bulk snapshot (~5M companies, full-register ingest)
+  | "uk-companies-house-bulk"
   | "sec-edgar"
   | "uspto-patentsview"
   // 2026-05-21: CA vet expansion — Alberta Veterinary Medical Association

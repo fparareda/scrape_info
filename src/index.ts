@@ -1901,10 +1901,14 @@ async function main(): Promise<void> {
     [repsSaludCoOn, "reps-salud-co", runRepsSaludCoSource],
     [ruesCoOn, "rues-registro-mercantil-co", runRuesRegistroMercantilCoSource],
     [secopCoOn, "secop-proveedores-co", runSecopProveedoresCoSource],
-  ] as Array<[boolean, string, () => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
+  ] as Array<[boolean, string, (report?: (p: { fetched: number; upserted: number; skipped: number }) => Promise<void> | void) => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
-    await withScrapeRun(name, async () => {
-      const res = await runFn();
+    await withScrapeRun(name, async (report) => {
+      // Heartbeat: bulk CO sources checkpoint partial counts so a CI-killed
+      // run still shows the rows it wrote instead of a misleading 0.
+      const res = await runFn((p) =>
+        report({ rowsFetched: p.fetched, rowsUpserted: p.upserted, rowsSkipped: p.skipped }),
+      );
       if (!res) return {};
       total += res.inserted + res.updated;
       return {

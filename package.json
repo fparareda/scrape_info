@@ -19,7 +19,8 @@
     "osm-locksmith-worldwide": "tsx src/run-osm-locksmith-worldwide.ts",
     "sam-gov-bulk": "tsx src/run-sam-gov-bulk.ts",
     "irs-bmf-bulk": "tsx src/run-irs-bmf-bulk.ts",
-    "enrich-co-nit": "tsx src/run-enrich-co-nit.ts"
+    "enrich-co-nit": "tsx src/run-enrich-co-nit.ts",
+    "uk-ch-bulk": "tsx src/run-uk-companies-house-bulk.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",

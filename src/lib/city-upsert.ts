@@ -26,7 +26,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { slugifyName } from "./slug-id.js";
 
-export type CityCountry = "ES" | "CA" | "US" | "FR" | "MX" | "CO";
+export type CityCountry = "ES" | "CA" | "US" | "FR" | "MX" | "CO" | "GB";
 
 export interface EnsureCityInput {
   /** Raw city name from the source (e.g. "Silver Spring"). Will be normalised. */

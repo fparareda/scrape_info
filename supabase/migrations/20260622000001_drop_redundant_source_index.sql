@@ -1,0 +1,16 @@
+-- Drop the redundant partial unique index on (source, source_id).
+--
+-- professionals_source_source_id_unique is a UNIQUE *constraint* on the full
+-- (source, source_id) pair and is the upsert conflict target (13.7M scans).
+-- professionals_source_unique_idx is a standalone partial unique index on the
+-- same columns WHERE source_id IS NOT NULL — a strict subset of the constraint
+-- above (NULLs are distinct in Postgres unique indexes, so behaviour for
+-- non-NULL source_id is identical). It enforces nothing the constraint doesn't
+-- and backs no constraint of its own, yet costs a 426 MB index write on every
+-- insert/upsert. Dropping it cuts per-row write amplification on the hot bulk
+-- ingestion path (RUES/SECOP), the only throughput lever left with the GIN
+-- trigram already disabled and the Supabase tier fixed.
+--
+-- CONCURRENTLY so the live table (SECOP backfill is running) is never locked.
+-- Reversible: recreate with the original definition if ever needed.
+DROP INDEX CONCURRENTLY IF EXISTS public.professionals_source_unique_idx;

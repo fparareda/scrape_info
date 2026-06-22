@@ -50,6 +50,9 @@ function buildAddress(
 interface RunOptions {
   maxRows?: number;
   batchSize?: number;
+  /** Heartbeat: called after each page checkpoint with running totals so a
+   *  killed run still reports the rows it wrote (see telemetry.ts). */
+  onProgress?: (p: { fetched: number; upserted: number; skipped: number }) => Promise<void> | void;
 }
 
 // ── Resume cursor (public.scrape_cursor) ────────────────────────────────────
@@ -170,6 +173,7 @@ export async function runSecopProveedoresCo(
     offset += page.length;
     await flush();
     await writeCursor(client, offset);
+    await opts.onProgress?.({ fetched: accepted, upserted: written, skipped: scanned - accepted });
   }
   await flush();
   // End of dataset reached → reset cursor for the next full pass.
@@ -195,7 +199,9 @@ export const secopProveedoresCoSource: ScraperSource = {
   },
 };
 
-export async function runSecopProveedoresCoSource(): Promise<{
+export async function runSecopProveedoresCoSource(
+  report?: (p: { fetched: number; upserted: number; skipped: number }) => Promise<void> | void,
+): Promise<{
   fetched: number;
   inserted: number;
   updated: number;
@@ -210,6 +216,7 @@ export async function runSecopProveedoresCoSource(): Promise<{
   const client = getSupabaseClient();
   const { scanned, accepted, written } = await runSecopProveedoresCo(client, {
     maxRows,
+    onProgress: report,
   });
   console.log(
     `[secop-co] source done — scanned=${scanned} accepted=${accepted} written=${written}`,
