@@ -9,4 +9,4 @@ jobs:
     secrets: inherit
     with:
       source: new-jersey-dca
-      timeout_minutes: 60
+      timeout_minutes: 180

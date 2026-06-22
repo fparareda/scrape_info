@@ -95,7 +95,7 @@ jobs:
       PROLIO_DAILY_ROTATE: ${{ inputs.source == 'yelp' && 'true' || 'false' }}
       # CO bulk registries: skip per-row SEO copy → faster million-row ingest.
       # (SKIP_LOOKUP for CO is folded into the shared definition further below.)
-      PROLIO_SINK_SKIP_SEOCOPY: ${{ (inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co') && 'true' || '' }}
+      PROLIO_SINK_SKIP_SEOCOPY: ${{ (inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co' || inputs.source == 'colorado-dora' || inputs.source == 'illinois-idfpr' || inputs.source == 'virginia-dpor' || inputs.source == 'washington-li' || inputs.source == 'oregon-ccb' || inputs.source == 'oregon-bcd' || inputs.source == 'new-york-dos' || inputs.source == 'new-jersey-dca') && 'true' || '' }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       PROLIO_SCRAPE_SHARD: ${{ inputs.shard }}
@@ -406,7 +406,7 @@ jobs:
       # Fast-path sink for bulk first-imports — skips SELECT-existing
       # round-trips. Only safe for sources that don't share their
       # (source,source_id) namespace with prior rows.
-      PROLIO_SINK_SKIP_LOOKUP:           ${{ (inputs.source == 'denue-mx-bulk' || inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co') && 'true' || 'false' }}
+      PROLIO_SINK_SKIP_LOOKUP:           ${{ (inputs.source == 'denue-mx-bulk' || inputs.source == 'reps-salud-co' || inputs.source == 'rues-registro-mercantil-co' || inputs.source == 'secop-proveedores-co' || inputs.source == 'colorado-dora' || inputs.source == 'illinois-idfpr' || inputs.source == 'virginia-dpor' || inputs.source == 'washington-li' || inputs.source == 'oregon-ccb' || inputs.source == 'oregon-bcd' || inputs.source == 'new-york-dos' || inputs.source == 'new-jersey-dca') && 'true' || 'false' }}
 
       # 2026-05-18 wave CA bulk open-data → 500k
       PROLIO_RUN_STATCAN_CBR:                  ${{ inputs.source == 'statcan-cbr' && 'true' || 'false' }}

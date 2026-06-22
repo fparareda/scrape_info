@@ -99,6 +99,29 @@ interface RunOptions {
   batchSize?: number;
 }
 
+// ── Resume cursor (public.scrape_cursor) ────────────────────────────────────
+async function readCursor(client: SupabaseClient): Promise<number> {
+  const { data } = await client
+    .from("scrape_cursor")
+    .select("next_offset")
+    .eq("source", SOURCE_NAME)
+    .maybeSingle();
+  const v = (data as { next_offset?: number | string } | null)?.next_offset;
+  return Number(v ?? 0) || 0;
+}
+
+async function writeCursor(client: SupabaseClient, nextOffset: number): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (client.from("scrape_cursor") as any).upsert(
+    {
+      source: SOURCE_NAME,
+      next_offset: nextOffset,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "source" },
+  );
+}
+
 export async function runIllinoisIdfprSocrata(
   client: SupabaseClient,
   opts: RunOptions = {},
@@ -118,12 +141,20 @@ export async function runIllinoisIdfprSocrata(
     buffer = [];
   };
 
+  // Resume checkpoint: this dataset doesn't finish in one CI window at the DB
+  // write ceiling, so we persist the Socrata $offset and continue from it next
+  // run. Reaching end-of-dataset resets it to 0 for the next full refresh.
+  const startOffset = await readCursor(client);
+  let offset = startOffset;
+  if (startOffset > 0) console.log(`[illinois-idfpr] resuming from offset=${startOffset}`);
+
   for await (const page of fetchSocrataJson({
     host: HOST,
     viewId: VIEW_ID,
     pageSize: 1000,
     maxRows: opts.maxRows,
     where: WHERE_CLAUSE,
+    startOffset,
   })) {
     for (const row of page) {
       scanned += 1;
@@ -176,8 +207,15 @@ export async function runIllinoisIdfprSocrata(
       accepted += 1;
       if (buffer.length >= batchSize) await flush();
     }
+    // Page done — flush, then advance + persist the resume cursor so we only
+    // checkpoint past rows already written.
+    offset += page.length;
+    await flush();
+    await writeCursor(client, offset);
   }
   await flush();
+  // End of dataset reached → reset cursor for the next full pass.
+  await writeCursor(client, 0);
 
   const cs = getCityUpsertStats();
   console.log(

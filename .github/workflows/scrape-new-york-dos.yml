@@ -9,4 +9,4 @@ jobs:
     secrets: inherit
     with:
       source: new-york-dos
-      timeout_minutes: 60
+      timeout_minutes: 350
