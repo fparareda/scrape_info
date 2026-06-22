@@ -76,6 +76,9 @@ function clean(v: string | undefined): string | undefined {
 interface RunOptions {
   maxRows?: number;
   batchSize?: number;
+  /** Heartbeat: called after each page checkpoint with running totals so a
+   *  killed run still reports the rows it wrote (see telemetry.ts). */
+  onProgress?: (p: { fetched: number; upserted: number; skipped: number }) => Promise<void> | void;
 }
 
 // ── Resume cursor (public.scrape_cursor) ────────────────────────────────────
@@ -219,6 +222,7 @@ export async function runRuesRegistroMercantilCo(
     offset += page.length;
     await flush();
     await writeCursor(client, offset);
+    await opts.onProgress?.({ fetched: accepted, upserted: written, skipped: scanned - accepted });
   }
   await flush();
   // Reset the cursor for the next full pass ONLY if we truly reached the end
@@ -251,7 +255,9 @@ export const ruesRegistroMercantilCoSource: ScraperSource = {
   },
 };
 
-export async function runRuesRegistroMercantilCoSource(): Promise<{
+export async function runRuesRegistroMercantilCoSource(
+  report?: (p: { fetched: number; upserted: number; skipped: number }) => Promise<void> | void,
+): Promise<{
   fetched: number;
   inserted: number;
   updated: number;
@@ -266,6 +272,7 @@ export async function runRuesRegistroMercantilCoSource(): Promise<{
   const client = getSupabaseClient();
   const { scanned, accepted, written } = await runRuesRegistroMercantilCo(client, {
     maxRows,
+    onProgress: report,
   });
   console.log(
     `[rues-co] source done — scanned=${scanned} accepted=${accepted} written=${written}`,
