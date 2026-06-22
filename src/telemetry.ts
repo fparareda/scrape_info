@@ -89,11 +89,22 @@ async function finishRun(
 export interface ScrapeRunHandle {
   ok(counts: ScrapeRunCounts): Promise<void>;
   error(err: unknown): Promise<void>;
+  /** Persist partial counts WITHOUT finishing the row (see ScrapeRunReporter).
+   *  Lets a long bulk run reflect progress even if later killed. */
+  heartbeat(counts: ScrapeRunCounts): Promise<void>;
 }
 
 export async function beginScrapeRun(source: string): Promise<ScrapeRunHandle> {
   const id = await insertRunning(source);
   return {
+    async heartbeat(counts) {
+      if (!id) return;
+      await finishRun(id, {
+        rows_fetched: counts.rowsFetched ?? 0,
+        rows_upserted: counts.rowsUpserted ?? 0,
+        rows_skipped: counts.rowsSkipped ?? 0,
+      });
+    },
     async ok(counts) {
       if (!id) return;
       await finishRun(id, {

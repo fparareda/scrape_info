@@ -1,0 +1,65 @@
+name: Scrape · UK Companies House bulk (free full register)
+# Free Company Data Product (~5M UK companies), the only free path to the whole
+# register. The standalone run-uk-companies-house-bulk.ts streams the extracted
+# CSVs (ensureCity no-drop + resume cursor), so a CI-kill resumes next run.
+# Distinct from scrape-uk-companies-house.yml (rate-limited API, enrichment).
+#
+# Cadence: monthly on the 8th (snapshot publishes within ~5 working days of the
+# previous month end) + every 6h backfill until the cursor wraps to 0, then it
+# is a no-op re-scan. Concurrency-guarded so runs can't race the shared cursor.
+on:
+  schedule:
+    - cron: "0 3 8 * *"     # monthly: fresh snapshot
+    - cron: "0 */6 * * *"   # 6h backfill via resume cursor (dial back once it wraps)
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Per-run row cap (optional)"
+        required: false
+        type: string
+concurrency:
+  group: scrape-uk-ch-bulk
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      PROLIO_RUN_UK_CH_BULK: "true"
+      PROLIO_UK_CH_BULK_DIR: /tmp/uk-ch
+      PROLIO_UK_CH_BULK_LIMIT: ${{ inputs.limit || '' }}
+      NODE_OPTIONS: --max-old-space-size=2048
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Download + unzip Companies House snapshot
+        run: |
+          set -e
+          BASE="https://download.companieshouse.gov.uk"
+          mkdir -p /tmp/uk-ch
+          # Resolve the 7 current part filenames from the index page.
+          PARTS=$(curl -sSL "$BASE/en_output.html" \
+            | grep -oE "BasicCompanyData-[0-9]{4}-[0-9]{2}-[0-9]{2}-part[1-7]_7\.zip" \
+            | sort -u)
+          if [ -z "$PARTS" ]; then
+            echo "::error::Could not resolve BasicCompanyData part filenames from index"
+            exit 1
+          fi
+          for f in $PARTS; do
+            echo "Downloading $f"
+            curl -sSL --fail -o "/tmp/uk-ch/$f" "$BASE/$f"
+            unzip -o "/tmp/uk-ch/$f" -d /tmp/uk-ch/ | tail -1
+            rm -f "/tmp/uk-ch/$f"
+          done
+          echo "Extracted CSVs:"
+          ls -lh /tmp/uk-ch/*.csv
+      - name: Run UK Companies House bulk ingest
+        run: npm run uk-ch-bulk
