@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: "0 */6 * * *"   # every 6h (near-continuous backfill via resume cursor; dial back to weekly once cursor wraps to 0)
   workflow_dispatch:
+# Only one SECOP backfill at a time — concurrent runs would race the shared
+# scrape_cursor and double-process the same offset window.
+concurrency:
+  group: scrape-secop-co
+  cancel-in-progress: false
 jobs:
   run:
     uses: ./.github/workflows/_scrape-runner.yml
