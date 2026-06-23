@@ -3,7 +3,7 @@ name: Scrape · SECOP proveedores (datos.gov.co CO)
 # providers → category empresa, with municipio + contact. Auto-seeds municipios.
 on:
   schedule:
-    - cron: "0 */6 * * *"   # every 6h (near-continuous backfill via resume cursor; dial back to weekly once cursor wraps to 0)
+    - cron: "0 5 * * 1"   # weekly Mon 05:00 UTC (backfill complete 2026-06-23; resume cursor keeps refresh incremental)
   workflow_dispatch:
 # Only one SECOP backfill at a time — concurrent runs would race the shared
 # scrape_cursor and double-process the same offset window.
