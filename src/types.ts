@@ -415,7 +415,9 @@ export type ScrapeSource =
   | "rii-div-b-termicas-es"
   | "cvo-on-vets"
   | "cgcfe-fisioterapeutas"
-  | "data-gov-ct-elicense";
+  | "data-gov-ct-elicense"
+  // 2026-06-18: CA Saskatchewan Licensed Practical Nurses (Alinity tenant clpns)
+  | "clpns-sk-nurses";
   // 2026-05-20: data.gov Socrata sources with auto-city-creation
 
 /**

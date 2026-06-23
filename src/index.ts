@@ -333,6 +333,8 @@ import {
   riiInstaladorasGasEsSource,
   runRiiInstaladorasGasEs,
 } from "./sources/rii-instaladores-gas-es.js";
+// 2026-06-18: CA Saskatchewan LPNs (Alinity clpns, enfermeria)
+import { clpnsSkNursesSource, runClpnsSkNurses } from "./sources/clpns-sk-nurses.js";
 // 2026-06-11: scout wave
 import { cdssSkDentistsSource, runCdssSkDentists } from "./sources/cdss-sk-dentists.js";
 // 2026-06-01: US psicologia — Oklahoma OSBEP psychologists
@@ -697,6 +699,7 @@ async function main(): Promise<void> {
   const waCpaBoardOn = waCpaBoardSource.enabled();
   const floridaDbprVetsOn = floridaDbprVetsSource.enabled();
   const riiInstaladorasGasEsOn = riiInstaladorasGasEsSource.enabled();
+  const clpnsSkNursesOn = clpnsSkNursesSource.enabled();
   const cdssSkDentistsOn = cdssSkDentistsSource.enabled();
   const okOsbepPsychologistsOn = okOsbepPsychologistsSource.enabled();
   const bcnaBcNotariesOn = bcnaBcNotariesSource.enabled();
@@ -959,6 +962,7 @@ async function main(): Promise<void> {
     !coevEconomistasOn &&
     !jcylTalleresEsOn &&
     !irsEaFoiaOn &&
+    !clpnsSkNursesOn &&
     !cdssSkDentistsOn &&
     !riiDivBElectricidadEsOn &&
     !rhodeIslandCrbOn &&
@@ -1075,7 +1079,8 @@ async function main(): Promise<void> {
         "PROLIO_RUN_COMPETITOR_NA=true, " +
         "PROLIO_RUN_COMPETITOR_ES_MEGA=true, " +
         "PROLIO_SCRAPE_OVERTURE=true, " +
-        "PROLIO_RUN_IRS_EA_FOIA=true",
+        "PROLIO_RUN_IRS_EA_FOIA=true, " +
+        "PROLIO_RUN_CLPNS_SK_NURSES=true",
         "PROLIO_RUN_RHODE_ISLAND_CRB=true, " +
         "PROLIO_SCRAPE_OVERTURE=true",
     );
@@ -1842,6 +1847,8 @@ async function main(): Promise<void> {
     [lsmLawyersMbOn, "lsm-lawyers-mb", runLsmLawyersMb],
     // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
     [rqciQcCaOn, "rqci-qc-ca", runRqciQcCa],
+    // 2026-06-18: CA SK Licensed Practical Nurses (Alinity clpns, enfermeria)
+    [clpnsSkNursesOn, "clpns-sk-nurses", runClpnsSkNurses],
     // 2026-06-11: scout wave
     [cdssSkDentistsOn, "cdss-sk-dentists", runCdssSkDentists],
     // 2026-05-31: RII División B ES
