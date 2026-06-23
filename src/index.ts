@@ -315,6 +315,8 @@ import { caDirEcuElectriciansSource, runCaDirEcuElectriciansSource } from "./sou
 import { coevEconomistasSource, runCoevEconomistas } from "./sources/coev-economistas.js";
 import { nscpNsPhysioSource, runNscpNsPhysio } from "./sources/nscp-ns-physio.js";
 import { waDohPsychologistsSource, runWaDohPsychologists } from "./sources/wa-doh-psychologists.js";
+// 2026-06-22: CRNS SK — College of Registered Nurses of Saskatchewan (CA enfermeria ~15k)
+import { crnsSkNursesSource, runCrnsSkNurses } from "./sources/crns-sk-nurses.js";
 import { lsmLawyersMbSource, runLsmLawyersMb } from "./sources/lsm-lawyers-mb.js";
 // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
 import { rqciQcCaSource, runRqciQcCa } from "./sources/rqci-qc-ca.js";
@@ -670,6 +672,7 @@ async function main(): Promise<void> {
   const jcylTalleresEsOn = jcylTalleresEsSource.enabled();
   const nscpNsPhysioOn = nscpNsPhysioSource.enabled();
   const waDohPsychologistsOn = waDohPsychologistsSource.enabled();
+  const crnsSkNursesOn = crnsSkNursesSource.enabled();
   const lsmLawyersMbOn = lsmLawyersMbSource.enabled();
   const rqciQcCaOn = rqciQcCaSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
@@ -918,6 +921,7 @@ async function main(): Promise<void> {
     !floridaDbprVetsOn &&
     !nscpNsPhysioOn &&
     !waDohPsychologistsOn &&
+    !crnsSkNursesOn &&
     !lsmLawyersMbOn &&
     !rqciQcCaOn &&
     !okOsbepPsychologistsOn &&
@@ -1839,6 +1843,8 @@ async function main(): Promise<void> {
     // 2026-06-15: ES fontanería — RII Instaladores Gas open CSV
     [riiInstaladorasGasEsOn, "rii-instaladores-gas-es", runRiiInstaladorasGasEs],
     [waDohPsychologistsOn, "wa-doh-psychologists", runWaDohPsychologists],
+    // 2026-06-22: CA SK nurses — CRNS registered nurses/NPs (Alinity, enfermeria ~15k)
+    [crnsSkNursesOn, "crns-sk-nurses", runCrnsSkNurses],
     [lsmLawyersMbOn, "lsm-lawyers-mb", runLsmLawyersMb],
     // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
     [rqciQcCaOn, "rqci-qc-ca", runRqciQcCa],
