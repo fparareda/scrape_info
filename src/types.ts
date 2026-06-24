@@ -415,7 +415,10 @@ export type ScrapeSource =
   | "rii-div-b-termicas-es"
   | "cvo-on-vets"
   | "cgcfe-fisioterapeutas"
-  | "data-gov-ct-elicense";
+  | "data-gov-ct-elicense"
+  // 2026-06-24: ES COPAO — Colegio Oficial de Psicología de Andalucía Oriental
+  // (~601 practicing psychologists, provinces Almería/Granada/Jaén/Málaga).
+  | "copao-psicologia-es";
   // 2026-05-20: data.gov Socrata sources with auto-city-creation
 
 /**
