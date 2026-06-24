@@ -405,6 +405,8 @@ import { riiDivBTermicasEsSource, runRiiDivBTermicasEs } from "./sources/rii-div
 import { cvoOnVetsSource, runCvoOnVets } from "./sources/cvo-on-vets.js";
 import { cgcfeFisioterapeutasSource, runCgcfeFisioterapeutas } from "./sources/cgcfe-fisioterapeutas.js";
 import { ctElicenseSource, runCtElicense } from "./sources/data-gov-ct-elicense.js";
+// 2026-06-21: NASBA ALD — national CPA verify (US fiscal, ~600k CPAs)
+import { nasbaAldCpaUsSource, runNasbaAldCpaUs } from "./sources/nasba-ald-cpa-us.js";
 // 2026-06-19: Colombia bulk company registries (datos.gov.co Socrata)
 import { repsSaludCoSource, runRepsSaludCoSource } from "./sources/reps-salud-co.js";
 import {
@@ -719,6 +721,7 @@ async function main(): Promise<void> {
   const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
   const riiGasEsOn = riiGasEsSource.enabled();
   const jcylInstaladoresEsOn = jcylInstaladoresEsSource.enabled();
+  const nasbaAldCpaUsOn = nasbaAldCpaUsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -987,7 +990,8 @@ async function main(): Promise<void> {
     !icomemMedicosEsOn &&
     !indianaPlaOn &&
     !irsPtinOn &&
-    !riiDivBTermicasEsOn
+    !riiDivBTermicasEsOn &&
+    !nasbaAldCpaUsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -2132,6 +2136,23 @@ async function main(): Promise<void> {
       };
     }).catch((e) =>
       console.error(`[scraper] irs-ea-foia crashed:`, (e as Error).message),
+    );
+  }
+
+  // 2026-06-21: NASBA ALD — national CPA license verify (US fiscal, ~600k CPAs).
+  // Enumerates last-name prefixes A–Z (recurse to AA–AZ on cap-hit).
+  // Monthly cadence via .github/workflows/scrape-nasba-ald-cpa-us.yml.
+  if (nasbaAldCpaUsOn) {
+    await withScrapeRun("nasba-ald-cpa-us", async () => {
+      const res = await runNasbaAldCpaUs();
+      total += res.inserted + res.updated;
+      return {
+        rowsFetched: res.fetched,
+        rowsUpserted: res.inserted + res.updated,
+        rowsSkipped: res.skipped,
+      };
+    }).catch((e) =>
+      console.error(`[scraper] nasba-ald crashed:`, (e as Error).message),
     );
   }
 

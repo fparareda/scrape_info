@@ -415,7 +415,9 @@ export type ScrapeSource =
   | "rii-div-b-termicas-es"
   | "cvo-on-vets"
   | "cgcfe-fisioterapeutas"
-  | "data-gov-ct-elicense";
+  | "data-gov-ct-elicense"
+  // 2026-06-21: NASBA ALD — national CPA verify (US fiscal, ~600k CPAs)
+  | "nasba-ald-cpa-us";
   // 2026-05-20: data.gov Socrata sources with auto-city-creation
 
 /**
