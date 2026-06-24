@@ -415,7 +415,9 @@ export type ScrapeSource =
   | "rii-div-b-termicas-es"
   | "cvo-on-vets"
   | "cgcfe-fisioterapeutas"
-  | "data-gov-ct-elicense";
+  | "data-gov-ct-elicense"
+  // 2026-06-21: CPABC — Chartered Professional Accountants of BC (CA fiscal, ~40k CPAs)
+  | "cpabc-bc-cpa";
   // 2026-05-20: data.gov Socrata sources with auto-city-creation
 
 /**
