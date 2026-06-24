@@ -312,6 +312,8 @@ export type ScrapeSource =
   | "rii-instaladores-gas-es"
   // 2026-06-16: WA DOH psychologist credentials — first US psicologia source
   | "wa-doh-psychologists"
+  // 2026-06-22: WA DOH dentist credentials — fills US dentista gap for WA (~6.8k active)
+  | "wa-doh-dentists"
   // 2026-06-16: CA Manitoba lawyers
   | "lsm-lawyers-mb"
   // 2026-06-14: IRS FOIA — active Enrolled Agents (US fiscal / tax pros).
