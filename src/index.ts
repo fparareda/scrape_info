@@ -415,6 +415,7 @@ import {
   secopProveedoresCoSource,
   runSecopProveedoresCoSource,
 } from "./sources/secop-proveedores-co.js";
+import { copAoPsicologiaEsSource, runCopAoPsicologiaEs } from "./sources/copao-psicologia-es.js";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { beginScrapeRun, withScrapeRun } from "./telemetry.js";
 import type { ScrapedProfessional, ScraperSource } from "./types.js";
@@ -719,6 +720,7 @@ async function main(): Promise<void> {
   const riiInstaladoresEsOn = riiInstaladoresEsSource.enabled();
   const riiGasEsOn = riiGasEsSource.enabled();
   const jcylInstaladoresEsOn = jcylInstaladoresEsSource.enabled();
+  const copAoPsicologiaEsOn = copAoPsicologiaEsSource.enabled();
 
   if (
     sources.length === 0 &&
@@ -987,7 +989,8 @@ async function main(): Promise<void> {
     !icomemMedicosEsOn &&
     !indianaPlaOn &&
     !irsPtinOn &&
-    !riiDivBTermicasEsOn
+    !riiDivBTermicasEsOn &&
+    !copAoPsicologiaEsOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1901,6 +1904,8 @@ async function main(): Promise<void> {
     [repsSaludCoOn, "reps-salud-co", runRepsSaludCoSource],
     [ruesCoOn, "rues-registro-mercantil-co", runRuesRegistroMercantilCoSource],
     [secopCoOn, "secop-proveedores-co", runSecopProveedoresCoSource],
+    // 2026-06-24: ES COPAO psychologists (Andalucía Oriental)
+    [copAoPsicologiaEsOn, "copao-psicologia-es", runCopAoPsicologiaEs],
   ] as Array<[boolean, string, (report?: (p: { fetched: number; upserted: number; skipped: number }) => Promise<void> | void) => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async (report) => {
