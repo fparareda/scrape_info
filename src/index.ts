@@ -407,6 +407,8 @@ import { cgcfeFisioterapeutasSource, runCgcfeFisioterapeutas } from "./sources/c
 import { ctElicenseSource, runCtElicense } from "./sources/data-gov-ct-elicense.js";
 // 2026-06-19: Colombia bulk company registries (datos.gov.co Socrata)
 import { repsSaludCoSource, runRepsSaludCoSource } from "./sources/reps-salud-co.js";
+// 2026-06-26: US notario — Texas Notary Public Commissions (data.texas.gov Socrata, ~558k)
+import { txNotaryPublicSource, runTxNotaryPublic } from "./sources/tx-notary-public.js";
 import {
   ruesRegistroMercantilCoSource,
   runRuesRegistroMercantilCoSource,
@@ -680,6 +682,8 @@ async function main(): Promise<void> {
   const repsSaludCoOn = repsSaludCoSource.enabled();
   const ruesCoOn = ruesRegistroMercantilCoSource.enabled();
   const secopCoOn = secopProveedoresCoSource.enabled();
+  // 2026-06-26: US notario — Texas Notary Public Commissions
+  const txNotaryPublicOn = txNotaryPublicSource.enabled();
   const cgcfeFisioterapeutasOn = cgcfeFisioterapeutasSource.enabled();
   const cvoOnVetsOn = cvoOnVetsSource.enabled();
   const riiDivBTermicasEsOn = riiDivBTermicasEsSource.enabled();
@@ -987,7 +991,8 @@ async function main(): Promise<void> {
     !icomemMedicosEsOn &&
     !indianaPlaOn &&
     !irsPtinOn &&
-    !riiDivBTermicasEsOn
+    !riiDivBTermicasEsOn &&
+    !txNotaryPublicOn
   ) {
     console.warn(
       "[scraper] no sources enabled — set one of: " +
@@ -1901,6 +1906,8 @@ async function main(): Promise<void> {
     [repsSaludCoOn, "reps-salud-co", runRepsSaludCoSource],
     [ruesCoOn, "rues-registro-mercantil-co", runRuesRegistroMercantilCoSource],
     [secopCoOn, "secop-proveedores-co", runSecopProveedoresCoSource],
+    // 2026-06-26: US notario — Texas Notary Public Commissions (Socrata, ~558k)
+    [txNotaryPublicOn, "tx-notary-public", runTxNotaryPublic],
   ] as Array<[boolean, string, (report?: (p: { fetched: number; upserted: number; skipped: number }) => Promise<void> | void) => Promise<{ fetched: number; inserted: number; updated: number; skipped: number }>]>) {
     if (!flag) continue;
     await withScrapeRun(name, async (report) => {
