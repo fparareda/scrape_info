@@ -318,6 +318,8 @@ import { waDohPsychologistsSource, runWaDohPsychologists } from "./sources/wa-do
 import { lsmLawyersMbSource, runLsmLawyersMb } from "./sources/lsm-lawyers-mb.js";
 // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
 import { rqciQcCaSource, runRqciQcCa } from "./sources/rqci-qc-ca.js";
+// 2026-07-01: CA Saskatchewan architects (SAA public member-register PDF)
+import { saaSkArchitectsSource, runSaaSkArchitects } from "./sources/saa-sk-architects.js";
 import { colfisiocvFisioSource, runColfisiocvFisio } from "./sources/colfisiocv-fisio-cv.js";
 // 2026-06-05: new per-country sources
 import { texasBhecPsySource, runTexasBhecPsy } from "./sources/texas-bhec-psy.js";
@@ -672,6 +674,7 @@ async function main(): Promise<void> {
   const waDohPsychologistsOn = waDohPsychologistsSource.enabled();
   const lsmLawyersMbOn = lsmLawyersMbSource.enabled();
   const rqciQcCaOn = rqciQcCaSource.enabled();
+  const saaSkArchitectsOn = saaSkArchitectsSource.enabled();
   const colfisiocvFisioOn = colfisiocvFisioSource.enabled();
   const coptocylToOn = coptocylToSource.enabled();
   // 2026-06-05: new per-country sources
@@ -920,6 +923,7 @@ async function main(): Promise<void> {
     !waDohPsychologistsOn &&
     !lsmLawyersMbOn &&
     !rqciQcCaOn &&
+    !saaSkArchitectsOn &&
     !okOsbepPsychologistsOn &&
     !bcnaBcNotariesOn &&
     !sicSsMedicinaOn &&
@@ -1842,6 +1846,8 @@ async function main(): Promise<void> {
     [lsmLawyersMbOn, "lsm-lawyers-mb", runLsmLawyersMb],
     // 2026-06-14: CA Quebec immigration consultants (MIFI open data, CC-BY 4.0)
     [rqciQcCaOn, "rqci-qc-ca", runRqciQcCa],
+    // 2026-07-01: CA Saskatchewan architects (SAA member-register PDF, ~536 rows)
+    [saaSkArchitectsOn, "saa-sk-architects", runSaaSkArchitects],
     // 2026-06-11: scout wave
     [cdssSkDentistsOn, "cdss-sk-dentists", runCdssSkDentists],
     // 2026-05-31: RII División B ES
