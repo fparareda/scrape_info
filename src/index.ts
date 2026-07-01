@@ -246,6 +246,10 @@ import {
   runNyDmvRepairShops,
 } from "./sources/ny-dmv-repair-shops.js";
 import {
+  nyDmvInspectionStationsSource,
+  runNyDmvInspectionStations,
+} from "./sources/ny-dmv-inspection-stations.js";
+import {
   cvbcBcVetsSource,
   runCvbcBcVets,
 } from "./sources/cvbc-bc-vets.js";
@@ -602,6 +606,8 @@ async function main(): Promise<void> {
   const riiDivATalleresEsOn = riiDivATalleresEsSource.enabled();
   // 2026-05-25: US NY DMV repair shops
   const nyDmvRepairShopsOn = nyDmvRepairShopsSource.enabled();
+  // 2026-07-01: US NY DMV vehicle inspection stations (itv)
+  const nyDmvInspectionStationsOn = nyDmvInspectionStationsSource.enabled();
   // 2026-05-25: CA CVBC BC veterinary facilities
   const cvbcBcVetsOn = cvbcBcVetsSource.enabled();
   const ncarbArchitectsOn = ncarbArchitectsSource.enabled();
@@ -965,6 +971,7 @@ async function main(): Promise<void> {
     !riiInstaladoresEsOn &&
     !riiDivATalleresEsOn &&
     !nyDmvRepairShopsOn &&
+    !nyDmvInspectionStationsOn &&
     !cvbcBcVetsOn &&
     !ncarbArchitectsOn &&
     !mediadoresSegurosMadridOn &&
@@ -1860,6 +1867,8 @@ async function main(): Promise<void> {
     [riiDivATalleresEsOn, "rii-div-a-talleres-es", runRiiDivATalleresEs],
     // 2026-05-25: US NY DMV repair shops (mecanica)
     [nyDmvRepairShopsOn, "ny-dmv-repair-shops", runNyDmvRepairShops],
+    // 2026-07-01: US NY DMV vehicle inspection stations (itv)
+    [nyDmvInspectionStationsOn, "ny-dmv-inspection-stations", runNyDmvInspectionStations],
     // 2026-05-25: CA CVBC BC veterinary facility registry
     [cvbcBcVetsOn, "cvbc-bc-vets", runCvbcBcVets],
     // 2026-05-26: US NCARB certified architects

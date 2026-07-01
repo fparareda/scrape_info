@@ -356,6 +356,7 @@ export type ScrapeSource =
   | "rii-div-a-talleres-es"
   // 2026-05-25: US NY DMV repair shops — Socrata open data, ~18k mecanica.
   | "ny-dmv-repair-shops"
+  | "ny-dmv-inspection-stations"
   // 2026-05-25: CA CVBC — BC veterinary facility/practice registry (~670 active).
   | "cvbc-bc-vets"
   // 2026-05-26: US architects — NCARB certified architect directory
